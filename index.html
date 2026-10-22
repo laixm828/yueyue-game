@@ -401,6 +401,54 @@ h1{ font-weight:800; letter-spacing:.06em;
 }
 .seed.on{ background:#ffe3e3; border-color:#e08a8a }
 .seed:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(74,59,53,.15) }
+
+/* ===== 房间化 + 家具槽位 ===== */
+#stage{ background:linear-gradient(var(--sky1) 0%, var(--sky2) 56%, var(--grass1) 58%, var(--grass2) 100%) !important; }
+#stage::before{ height:44% !important;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.10) 0 14px, transparent 14px 28px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.07) 0 14px, transparent 14px 28px) !important; }
+#stage::after{ top:56% !important; height:3px !important;
+  background:linear-gradient(rgba(255,255,255,.7), rgba(255,255,255,0)) !important; }
+#charBox::after{ bottom:36% !important; width:30% !important; height:10px !important; }
+#roomGrid{ position:absolute; left:5%; right:5%; bottom:3%; height:30%;
+  display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(2,1fr);
+  gap:2.5%; z-index:3; }
+.slot{ border:2px dashed rgba(90,70,60,.32); border-radius:6px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.10); cursor:pointer;
+  transition:transform .12s, background .12s; }
+.slot:active{ transform:scale(.94); }
+.slot.has{ border-color:transparent; background:rgba(255,255,255,.26);
+  box-shadow:0 3px 0 rgba(74,59,53,.18); }
+.slot em{ font-style:normal; font-size:20px; line-height:1;
+  filter:drop-shadow(0 2px 0 rgba(74,59,53,.25)); }
+.slot .plus{ color:rgba(90,70,60,.42); font-size:15px; font-weight:700; }
+#furnList{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.fitem{ background:var(--px_card); border:2px solid var(--px_line); border-radius:5px;
+  box-shadow:0 4px 0 rgba(74,59,53,.16); padding:8px 6px; text-align:center; }
+.fe{ font-size:26px; line-height:1.1; }
+.fn{ font-size:12px; color:#6b5750; margin-top:2px; }
+.fp{ font-size:11px; color:#c2685f; margin:3px 0 5px; }
+.fbtn{ width:100%; font:inherit; font-size:12px; padding:5px 0;
+  background:#ffd9dd; border:2px solid var(--px_line); border-radius:4px;
+  color:#7d4f48; box-shadow:0 3px 0 rgba(74,59,53,.16); }
+.fbtn:active{ transform:translateY(2px); box-shadow:none; }
+.fbtn.on{ background:#fff; color:#b08f88; }
+#furnPick{ position:fixed; left:12px; right:12px; bottom:86px; z-index:120;
+  background:var(--px_card); border:2px solid var(--px_line); border-radius:6px;
+  box-shadow:0 6px 0 rgba(74,59,53,.2); padding:10px; display:none; }
+#furnPick.on{ display:block; }
+#furnPick .fpt{ font-size:12px; color:#7d6a62; margin-bottom:8px; }
+#furnPick .fr2{ display:flex; flex-wrap:wrap; gap:8px; }
+#furnPick .fpick{ font-size:22px; width:46px; height:46px; display:flex; align-items:center;
+  justify-content:center; background:#fff; border:2px solid var(--px_line); border-radius:5px; }
+
+#roomGrid{height:27% !important;bottom:4% !important;}
+#roomGrid .slot em{font-size:30px;line-height:1;font-style:normal;filter:saturate(1.15) contrast(1.05);}
+#roomGrid .slot .plus{font-size:20px;color:rgba(90,70,60,.30);font-weight:700;}
+#roomGrid .slot.has{background:rgba(255,255,255,.42);}
+#roomGrid .slot.has em{font-size:32px;}
 </style>
 </head>
 <body>
@@ -437,6 +485,7 @@ h1{ font-weight:800; letter-spacing:.06em;
           <div id="tripText">你们在外面</div>
           <div id="tripTime">--:--</div>
         </div>
+        <div id="roomGrid"></div>
       </div>
       <div id="actions">
         <button class="btn" data-act="pat"><span class="ico">🤚</span><span>摸摸头</span><span class="cd" id="cd-pat"></span></button>
@@ -881,9 +930,9 @@ h1{ font-weight:800; letter-spacing:.06em;
     const aw = charBox.clientWidth, ah = charBox.clientHeight;
     if(!aw || !ah) return;
     const nw = IMG.naturalWidth || 430, nh = IMG.naturalHeight || 684;
-    const s = Math.min(aw/nw, ah/nh) * 0.68;
+    const s = Math.min(aw/nw, ah/nh) * 0.42;
     const w = Math.max(1, Math.round(nw*s)), h = Math.max(1, Math.round(nh*s));
-    const lift = Math.round(ah*0.24);
+    const lift = Math.round(ah*0.40);
     if(stageInner._w === w && stageInner._h === h && stageInner._lift === lift) return;
     stageInner._w = w; stageInner._h = h; stageInner._lift = lift;
     stageInner.style.width = w+"px";
@@ -1608,8 +1657,9 @@ h1{ font-weight:800; letter-spacing:.06em;
       if(S.trip && Date.now() >= S.trip.endAt) finishTrip();
       render();
     }
-  setInterval(renderGarden, 1000);
   });
+  window.__YS = S; window.__YSAVE = save; window.__YRENDER = render;
+  setInterval(renderGarden, 1000);
 })();
 </script>
 <div id="housePick">
@@ -1692,5 +1742,175 @@ h1{ font-weight:800; letter-spacing:.06em;
 })();
 </script>
 
+
+<script>
+(function(){
+  var S = window.__YS, save = window.__YSAVE;
+  if(!S){ return; }
+  S.furn = S.furn || {};
+  S.furnOwned = S.furnOwned || [];
+
+  var FURN = [
+    {id:"plant",  e:"🪴", n:"盆栽",   p:40 },
+    {id:"chair",  e:"🪑", n:"椅子",   p:60 },
+    {id:"gift",   e:"🎁", n:"礼物盒", p:70 },
+    {id:"paint",  e:"🖼", n:"挂画",   p:80 },
+    {id:"guitar", e:"🎸", n:"吉他",   p:90 },
+    {id:"sofa",   e:"🛋", n:"沙发",   p:120},
+    {id:"fish",   e:"🐟", n:"鱼缸",   p:130},
+    {id:"tv",     e:"📺", n:"电视",   p:150},
+    {id:"bed",    e:"🛏", n:"床",     p:200}
+  ];
+  var SLOTS = 8;
+  function byId(id){ for(var i=0;i<FURN.length;i++){ if(FURN[i].id===id) return FURN[i]; } return null; }
+
+  function toast(msg){
+    var t = document.getElementById("toast");
+    if(!t){ t = document.createElement("div"); t.id = "toast"; document.body.appendChild(t); }
+    t.textContent = msg; t.classList.add("on");
+    clearTimeout(t._tm); t._tm = setTimeout(function(){ t.classList.remove("on"); }, 1800);
+  }
+  function styleToast(){
+    if(document.getElementById("__fstyle")) return;
+    var st = document.createElement("style"); st.id = "__fstyle";
+    st.textContent = "#toast{position:fixed;left:50%;bottom:150px;transform:translate(-50%,8px);"+
+      "background:rgba(74,59,53,.92);color:#fff;font-size:12px;padding:8px 14px;border-radius:6px;"+
+      "opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:200;max-width:80%;text-align:center}"+
+      "#toast.on{opacity:1;transform:translate(-50%,0)}";
+    document.head.appendChild(st);
+  }
+
+  /* ---- 房间槽位 ---- */
+  var lastSig = "";
+  function renderRoom(){
+    var grid = document.getElementById("roomGrid");
+    if(!grid) return;
+    var sig = JSON.stringify(S.furn) + "|" + S.furnOwned.join(",");
+    if(sig === lastSig) return;
+    lastSig = sig;
+    var h = "";
+    for(var i=0;i<SLOTS;i++){
+      var id = S.furn[String(i)];
+      if(id){
+        var it = byId(id);
+        h += '<div class="slot has" data-slot="'+i+'"><em>'+(it?it.e:"❓")+'</em></div>';
+      }else{
+        h += '<div class="slot" data-slot="'+i+'"><span class="plus">+</span></div>';
+      }
+    }
+    grid.innerHTML = h;
+  }
+
+  function placed(){
+    var n = 0;
+    for(var k in S.furn){ if(S.furn[k]) n++; }
+    return n;
+  }
+
+  /* ---- 选择面板 ---- */
+  function closePick(){
+    var p = document.getElementById("furnPick");
+    if(p) p.classList.remove("on");
+  }
+  function openPick(slot){
+    var p = document.getElementById("furnPick");
+    if(!p){
+      p = document.createElement("div"); p.id = "furnPick";
+      document.body.appendChild(p);
+    }
+    var used = {};
+    for(var k in S.furn){ used[S.furn[k]] = 1; }
+    var avail = S.furnOwned.filter(function(id){ return !used[id]; });
+    var h = '<div class="fpt">放到这里 · 点一下摆上去</div><div class="fr2">';
+    if(!avail.length){
+      h += '<div style="font-size:12px;color:#a08e86">还没有空着的家具，先去商店买</div>';
+    }else{
+      avail.forEach(function(id){
+        var it = byId(id);
+        h += '<button class="fpick" data-put="'+id+'" data-slot="'+slot+'">'+(it?it.e:"❓")+'</button>';
+      });
+    }
+    h += '</div>';
+    p.innerHTML = h;
+    p.classList.add("on");
+    closePick._slot = slot;
+  }
+
+  /* ---- 商店家具区 ---- */
+  function styleShop(){
+    var shop = document.getElementById("p-shop");
+    if(!shop || document.getElementById("furnList")) return;
+    var box = document.createElement("div");
+    box.innerHTML = '<div style="height:12px"></div><div class="sec-title">🛋 家具 <span id="furnCount"></span></div><div id="furnList"></div>';
+    shop.appendChild(box);
+  }
+  function renderShop(){
+    var list = document.getElementById("furnList");
+    if(!list) return;
+    var cnt = document.getElementById("furnCount");
+    if(cnt) cnt.textContent = "（" + placed() + "/" + SLOTS + " 已摆）";
+    var h = "";
+    FURN.forEach(function(it){
+      var owned = S.furnOwned.indexOf(it.id) >= 0;
+      h += '<div class="fitem"><div class="fe">'+it.e+'</div><div class="fn">'+it.n+'</div>'+
+           '<div class="fp">💗 '+it.p+'</div>'+
+           '<button class="fbtn'+(owned?" on":"")+'" data-buy="'+it.id+'"'+(owned?" disabled":"")+'>'+
+           (owned?"已有":"买")+'</button></div>';
+    });
+    list.innerHTML = h;
+  }
+
+  function buy(id){
+    var it = byId(id);
+    if(!it) return;
+    if(S.furnOwned.indexOf(id) >= 0){ toast("已经有了"); return; }
+    if(S.coins < it.p){ toast("爱心不够，还差 " + (it.p - S.coins)); return; }
+    S.coins -= it.p;
+    S.furnOwned.push(id);
+    S.happy = (S.happy||0) + 1;
+    save(); lastSig = "";
+    renderShop(); renderRoom();
+    if(window.__YRENDER) try{ window.__YRENDER(); }catch(e){}
+    toast("买到了 " + it.n + "，去房间摆上");
+  }
+
+  function put(id, slot){
+    S.furn[String(slot)] = id;
+    save(); lastSig = ""; renderRoom(); renderShop(); closePick();
+    toast("摆好了");
+  }
+  function takeOut(slot){
+    var id = S.furn[String(slot)];
+    if(!id) return;
+    delete S.furn[String(slot)];
+    save(); lastSig = ""; renderRoom(); renderShop();
+    toast("收起来了");
+  }
+
+  document.addEventListener("click", function(ev){
+    var t = ev.target;
+    var b = t.closest ? t.closest("[data-buy]") : null;
+    if(b){ buy(b.getAttribute("data-buy")); return; }
+    var p = t.closest ? t.closest("[data-put]") : null;
+    if(p){ put(p.getAttribute("data-put"), parseInt(p.getAttribute("data-slot"),10)); return; }
+    var s2 = t.closest ? t.closest(".slot") : null;
+    if(s2){
+      var idx = parseInt(s2.getAttribute("data-slot"),10);
+      if(S.furn[String(idx)]) takeOut(idx);
+      else openPick(idx);
+      return;
+    }
+    if(!t.closest || !t.closest("#furnPick")) closePick();
+  }, true);
+
+  function boot(){
+    styleToast(); styleShop(); renderShop(); renderRoom();
+    setInterval(function(){ styleShop(); renderShop(); renderRoom(); }, 1200);
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+  window.__FRENDER = function(){ styleShop(); renderShop(); lastSig=""; renderRoom(); };
+})();
+</script>
 </body>
 </html>
