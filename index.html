@@ -457,6 +457,87 @@ h1{ font-weight:800; letter-spacing:.06em;
 #shopCats .chip{font-size:11px;}
 
 .item .ii img{background:#efeae5;border-radius:7px;padding:2px;}
+
+/* ===== 元气骑士大厅：墙面 + 木地板 + 装饰 ===== */
+#stage{
+  background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 50%,var(--grass1) 54%,var(--grass2) 100%) !important;
+  overflow:hidden !important;
+  border-radius:0 !important;
+}
+/* 木地板横条纹理 */
+#stage::before{
+  content:"" !important; position:absolute !important; left:0 !important; right:0 !important;
+  top:54% !important; bottom:0 !important; height:auto !important;
+  background:
+    repeating-linear-gradient(180deg, rgba(72,44,26,.20) 0 3px, rgba(255,255,255,.055) 3px 5px, rgba(0,0,0,0) 5px 34px),
+    repeating-linear-gradient(90deg, rgba(72,44,26,.10) 0 2px, rgba(0,0,0,0) 2px 74px) !important;
+  pointer-events:none !important; z-index:0 !important;
+}
+/* 墙裙踢脚线 */
+#stage::after{
+  content:"" !important; position:absolute !important; left:0 !important; right:0 !important;
+  top:calc(54% - 11px) !important; height:11px !important;
+  background:linear-gradient(180deg, rgba(50,30,18,.42), rgba(50,30,18,.16)) !important;
+  border-top:2px solid rgba(255,255,255,.10) !important;
+  pointer-events:none !important; z-index:1 !important;
+}
+/* 墙面装饰层 */
+#wallDeco{ position:absolute; left:0; right:0; top:0; height:54%; pointer-events:none; z-index:1; }
+#wallDeco .win{
+  position:absolute; left:6%; top:13%; width:25%; height:25%;
+  background:linear-gradient(180deg,#cfeaff,#eef9ff);
+  border:4px solid #5d4433; border-radius:5px;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.55), 0 3px 6px rgba(50,30,18,.28);
+}
+#wallDeco .win::before,#wallDeco .win::after{ content:""; position:absolute; background:#5d4433; }
+#wallDeco .win::before{ left:50%; top:0; bottom:0; width:4px; margin-left:-2px; }
+#wallDeco .win::after{ top:50%; left:0; right:0; height:4px; margin-top:-2px; }
+#wallDeco .pic{
+  position:absolute; right:7%; top:15%; width:19%; height:21%;
+  border:4px solid #5d4433; border-radius:4px;
+  box-shadow:0 3px 6px rgba(50,30,18,.28);
+}
+#wallDeco .pic.a{ background:linear-gradient(135deg,#e6d3ab,#b8966a); }
+#wallDeco .pic.b{ background:linear-gradient(135deg,#c9dcc0,#94ab84); right:auto; left:36%; top:18%; width:13%; height:15%; }
+#wallDeco .torch{
+  position:absolute; top:9%; font-size:19px; line-height:1;
+  filter:drop-shadow(0 2px 3px rgba(40,20,10,.45));
+}
+#wallDeco .torch.l{ left:35%; } #wallDeco .torch.r{ right:35%; }
+/* 家具位：去掉虚线格子，像真摆在地上 */
+#roomGrid .slot{
+  border:2px solid rgba(255,255,255,0) !important;
+  background:rgba(255,255,255,0) !important;
+  box-shadow:none !important;
+  transition:background .15s, border-color .15s;
+}
+#roomGrid .slot:active{ background:rgba(255,255,255,.22) !important; }
+#roomGrid .slot.has{ background:rgba(255,255,255,0) !important; border-color:rgba(255,255,255,0) !important; }
+#roomGrid .slot .plus{ opacity:.34 !important; font-size:18px !important; color:#3f2b1c !important; }
+#roomGrid .slot.has em{ font-size:40px !important; filter:drop-shadow(0 4px 3px rgba(40,24,14,.34)) saturate(1.15) !important; }
+#roomGrid .slot em{ font-size:38px !important; }
+/* 角色脚下柔光影子 */
+#stageInner #c, #stage #c{ filter:drop-shadow(0 7px 7px rgba(46,28,16,.30)); }
+
+/* 天花板横梁 + 地毯 */
+#wallDeco::before{
+  content:""; position:absolute; left:0; right:0; top:0; height:9%;
+  background:linear-gradient(180deg, rgba(38,24,14,.55), rgba(38,24,14,.12));
+  border-bottom:2px solid rgba(255,255,255,.10);
+}
+#rug{
+  position:absolute; left:50%; top:44%; width:52%; height:15%;
+  transform:translateX(-50%); border-radius:50%;
+  background:radial-gradient(closest-side, rgba(214,166,120,.55), rgba(214,166,120,.26) 62%, rgba(214,166,120,0) 100%);
+  pointer-events:none; z-index:0;
+}
+
+/* 壁纸竖纹 */
+#wallDeco::after{
+  content:""; position:absolute; left:0; right:0; top:9%; height:45%;
+  background:repeating-linear-gradient(90deg, rgba(255,255,255,.055) 0 2px, rgba(0,0,0,0) 2px 40px);
+  pointer-events:none;
+}
 </style>
 </head>
 <body>
@@ -493,7 +574,9 @@ h1{ font-weight:800; letter-spacing:.06em;
           <div id="tripText">你们在外面</div>
           <div id="tripTime">--:--</div>
         </div>
-        <div id="roomGrid"></div>
+        <div id="rug"></div>
+    <div id="wallDeco"><div class="win"></div><div class="pic a"></div><div class="pic b"></div><div class="torch l">🕯️</div><div class="torch r">🕯️</div></div>
+    <div id="roomGrid"></div>
       </div>
       <div id="actions">
         <button class="btn" data-act="pat"><span class="ico">🤚</span><span>摸摸头</span><span class="cd" id="cd-pat"></span></button>
@@ -690,7 +773,7 @@ h1{ font-weight:800; letter-spacing:.06em;
     { id:"brand_tee", name:"北野 · 联名短袖", cat:"brand", slot:"body", price:260, desc:"北野 NORTHFIELD 联名，限量", sprite:"tee_black", box:{x:50.4, y:74.5, w:88, h:34} },
     { id:"brand_hood", name:"星野 · 城市限定卫衣", cat:"brand", slot:"body", price:380, desc:"星野 STARFIELD 城市限定", sprite:"hood_grey", box:{x:50.4, y:74.5, w:88, h:34} },
     { id:"brand_wind", name:"拾光 · 机能风衣", cat:"brand", slot:"body", price:520, desc:"拾光 LIGHTYEAR 机能线", sprite:"wind_black", box:{x:50.4, y:74.5, w:88, h:34} },
-    { id:"cap", name:"棒球帽", cat:"acc", slot:"acc", price:60, desc:"头上一顶，显年轻", emoji:"🧢", pos:{x:55, y:13, size:11, rot:-8} },
+    { id:"cap", name:"棒球帽", cat:"acc", slot:"acc", price:60, desc:"头上一顶，显年轻", emoji:"🧢", pos:{x:50, y:2.5, size:20, rot:-9} },
     { id:"scarf", name:"围巾", cat:"acc", slot:"acc", price:80, desc:"冷了记得围上", emoji:"🧣", pos:{x:56, y:80, size:10, rot:2} },
     { id:"glasses", name:"墨镜", cat:"acc", slot:"acc", price:100, desc:"装酷用", emoji:"🕶️", pos:{x:58, y:64, size:10, rot:0} },
     { id:"headset", name:"耳机", cat:"acc", slot:"acc", price:120, desc:"听歌的时候别叫我", emoji:"🎧", pos:{x:38, y:54, size:9, rot:0} },
@@ -978,7 +1061,7 @@ h1{ font-weight:800; letter-spacing:.06em;
     const aw = charBox.clientWidth, ah = charBox.clientHeight;
     if(!aw || !ah) return;
     const nw = IMG.naturalWidth || 430, nh = IMG.naturalHeight || 684;
-    const s = Math.min(aw/nw, ah/nh) * 0.42;
+    const s = Math.min(aw/nw, ah/nh) * 0.355;
     const w = Math.max(1, Math.round(nw*s)), h = Math.max(1, Math.round(nh*s));
     const lift = Math.round(ah*0.40);
     if(stageInner._w === w && stageInner._h === h && stageInner._lift === lift) return;
@@ -1385,12 +1468,19 @@ h1{ font-weight:800; letter-spacing:.06em;
               : kind==="gear"  ? has("gear", it.id)
               : (S.furnOwned||[]).indexOf(it.id) >= 0;
     const attr = kind==="cloth" ? "data-buy-cloth" : kind==="gear" ? "data-buy-gear" : "data-buy-furn";
+    const nm = it.name || it.n || "";
+    const ds = it.desc || it.d || "";
+    const pr = (it.price != null) ? it.price : (it.p != null ? it.p : 0);
+    const em = it.emoji || it.e || "";
+    const thumb = (it.sprite && GARMENTS[it.sprite])
+      ? '<img src="'+GARMENTS[it.sprite]+'" style="width:34px;height:34px;image-rendering:pixelated;object-fit:contain">'
+      : (em || "📦");
     return '<div class="item '+(own?"owned":"")+'">'
       + (own?'<span class="tag">已拥有</span>':'')
-      + '<div class="ii">'+(it.emoji || (it.sprite && GARMENTS[it.sprite] ? '<img src="'+GARMENTS[it.sprite]+'" style="width:34px;height:34px;image-rendering:pixelated;object-fit:contain">' : "👕"))+'</div>'
-      + '<div class="in">'+it.name+'</div>'
-      + '<div class="id">'+it.desc+'</div>'
-      + '<div class="ip">'+(own?"—":"💗 "+it.price)+'</div>'
+      + '<div class="ii">'+thumb+'</div>'
+      + '<div class="in">'+nm+'</div>'
+      + '<div class="id">'+ds+'</div>'
+      + '<div class="ip">'+(own?"—":"💗 "+pr)+'</div>'
       + (own?"":'<button '+attr+'="'+it.id+'">买</button>')
       + '</div>';
   }
@@ -1774,13 +1864,13 @@ h1{ font-weight:800; letter-spacing:.06em;
   var K = "yueyue-game-v2";
   var HS = [
     {id:"cottage", e:"🪵", n:"小木屋", d:"木头味，冬天最暖和",
-     sky1:"#ffe2c4", sky2:"#ffd0a8", grass1:"#d9b483", grass2:"#b8925f", deco:"🪵||🌾"},
+     sky1:"#6d4c39", sky2:"#8f6a51", grass1:"#c49061", grass2:"#9c6b42", deco:"🪵||🌾"},
     {id:"seaside", e:"🌊", n:"海边小屋", d:"推开门就是海",
-     sky1:"#a8dcfb", sky2:"#d8f0ff", grass1:"#f2e2b8", grass2:"#e0cd94", deco:"🌊||🐚"},
+     sky1:"#5f7386", sky2:"#8ea3b4", grass1:"#cbb08a", grass2:"#a2865f", deco:"🌊||🐚"},
     {id:"city",    e:"🏙️", n:"城市公寓", d:"楼下车很多，但有你",
-     sky1:"#f7d9e8", sky2:"#e6c8ea", grass1:"#c3b3d4", grass2:"#a292b9", deco:"🏙️||🌃"},
+     sky1:"#585573", sky2:"#87829e", grass1:"#c2ae95", grass2:"#9c8a72", deco:"🏙️||🌃"},
     {id:"forest",  e:"🌲", n:"森林小屋", d:"早上是鸟把你叫醒",
-     sky1:"#cdeacb", sky2:"#e8f6e2", grass1:"#8fc98a", grass2:"#6aa86a", deco:"🌲||🍃"}
+     sky1:"#4e6446", sky2:"#79926c", grass1:"#bd9d72", grass2:"#957550", deco:"🌲||🍃"}
   ];
 
   function read(){
