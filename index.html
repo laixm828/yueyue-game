@@ -1608,6 +1608,7 @@ h1{ font-weight:800; letter-spacing:.06em;
       if(S.trip && Date.now() >= S.trip.endAt) finishTrip();
       render();
     }
+  setInterval(renderGarden, 1000);
   });
 })();
 </script>
@@ -1688,7 +1689,6 @@ h1{ font-weight:800; letter-spacing:.06em;
   document.getElementById("btnHouse").addEventListener("click", function(){
     document.getElementById("housePick").classList.add("on");
   });
-  setInterval(renderGarden, 1000);
 })();
 </script>
 
