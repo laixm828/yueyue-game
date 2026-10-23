@@ -720,6 +720,16 @@ h1{ font-weight:800; letter-spacing:.06em;
 .seedbar{padding-bottom:4px}
 
 .ii{background:linear-gradient(160deg,#efe6da,#e3d8ca)!important}
+
+/* 面板不许挡住底栏：抬到 nav 之上，nav 再加高层级兜底 */
+.roomPanel{bottom:74px!important;max-height:52vh!important;z-index:61!important}
+#nav{position:relative!important;z-index:90!important}
+
+#p-travel{position:relative}
+#tripBg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.30;
+  filter:saturate(1.05);pointer-events:none;z-index:0;transition:opacity .35s}
+#p-travel > *:not(#tripBg){position:relative;z-index:1}
+#tripBg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,252,247,.10),rgba(255,252,247,.58))}
 </style>
 </head>
 <body>
@@ -825,6 +835,7 @@ h1{ font-weight:800; letter-spacing:.06em;
     </section>
 
     <section class="page scroll" id="p-travel">
+      <div id="tripBg"></div>
       <div class="sec-title">🎒 一起出去玩</div>
       <div class="know">
         <p>你们一起去过的地方：<b>合肥 → 昆明 → 丽江 → 大理 → 上海</b>。<br>
@@ -1006,26 +1017,26 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
   ];
 
   /* 你们那一趟的真实路线，按顺序一站一站走 */
-  const ROUTE = [
+  const ROUTE = window.__ROUTE = [
     { id:"hefei", name:"合肥", emoji:"🚉",
       bg:"linear-gradient(160deg,#cfd8e3,#e6ecf3 55%,#f3e3d6)",
       photos:HEFEI_PHOTOS,
       cards:["从合肥走的，站台上风挺大。","出站的时候回头看了一眼。","这趟车，我先替你坐着。"],
       mem:"这是我们那趟的起点。" },
     { id:"kunming", name:"昆明", emoji:"🌸",
-      bg:"linear-gradient(160deg,#bfe3c6,#e3f2d9 55%,#fbe7c0)",
+      bg:"linear-gradient(160deg,#bfe3c6,#e3f2d9 55%,#fbe7c0)",art:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAADICAYAAACZBDirAAAFgUlEQVR42u3dv4scZQDH4XfnRogRshBSHWhzKYSzskqK9BZCsLHQUvv7ByRFyD+QxupSJkUaDQhJZXOgqSxEIYVpIpwWixBBCSTHpQie62XdnZ1539l35n2eKuTXfXfm8rn39n5kcv/R7DgAFKhyCQABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAgBhqlwDK9sGFuyt/z4PZx6N87BP/LSYI3rrGEkQBBOErNoQCCMJXbAgFEISv2BD6KDCI3+BfrgACWURoSBEUQBC/YiMogCB+xUZQAEH8io2gAIL4FbtPAEH8it0pgEDw3WAAp7/C9gog4AQIOE2VtlsAASdAwCmqtP0CCDgBAggggAACwfNno34cAggUq56+8dxVAHqXQ3ucAIHgOUAAAQQQQAABBBBAAAEENuH7px95HAIIIIAAAggggBA8D2i/AAIIIDgF2i2AAAIIToH2CiDgBAg4BZa3UwBBBIvdJ4AggsXGWQBBBIt991wAQQSLfW5SAEEEi/30HAEEESz2cxMn3z3+7dirC4zX5elXwieAIITCJ4AghL41vwACzYI4luAJIEDwUWBAAAEEEEAAAQQQQAABBBBAAAEEEGCg6nP1c1cBcAIEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAFyVb+59cJVAJwAAQQQQAABBBBAAAEEEEAAAQQQQAABhqA+s3XkKgBOgAACCCCAAAIIIIAAAggwcPXTxz8n+8unO7snP/ZyvBwvx8vJ7eU4AQLeBQYQQAABBBBAAAEEEEAAAQQQQIDBqZv+xvPf/PLaz/3x4cXeBy/acbS3m8WOXK5HyTu2bt57tcf1yHDHv1vOZ3I96jYX8PSv9fFAlu3455X+aO9qb//Acr4eue3o4w3U6X9g7osdTXZUbce3+X0pLmLTOKWOX47Xo5T7MrTrYUc+O6pYo1I9CDvGsSNVBN0XO7r8vXXbMWfeny34c3GPs3aMa8ezm/dCcD2yvC8xnz7K5Xo0eaNbr/uXLho+/2vbh7NwuH0p+fv0dthhR7wd4eBW+OvKZ8Vdj2qdei8bP2/78GHStyJ22GFH/B1vHdwazfVYdvqb31HFKHeqB2GHHXbYkXJHHWv8oyefv/Zz7x7sRz1Wt94R9qMeq+2ww45x7Ki7/qWLhv/n126H8Panx8nfp1+540kI5y79ZMfcjumO+2JH2TuqLvVeNn7er7cnSd+KNN3x58P37HBf7LDj/wPY9MPQTce3fRB29LNj3Qi6L3YMYUfTT+upYh9bU5fcjvg7YpwE3Rf3ZYg7qi4VT80OO+ywo60mp8Bq3QfRtt6xj9R22FHCjlhPUbgvi3dUq/7wsx8uZPEWJYcdR3tXXQ877BjRjsqxOiR5ctW7O3bYkf+ORh8E6eNr84a0o4+vmXRf3Bc70u+o1/nDq7485c7ZGyc//uTvL5I9CDvsWBbBVV/T6r7YcRLA6U7z79Z77cevw/V39js9kfnqq0K6fYfgHHZMd3Z72dHk/rgvp3bMfu9tx7L7E+96NHs98PrR7P7M76javHLlwA477LCj645Wnwg9f1Rt89YsFjvssMOOLjuqrkfzTY23ww477Aib/H+Bm5Y89XeDscMOO+wIKf9f4FUPYtFHbfr4Nlh22GGHHRs5AS4b2+dFtMMOO+xoY/Llt9c384gBNqxyCQABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEECA9b0E08tycAHN0WQAAAAASUVORK5CYII=",
       cards:["到昆明了，天比家里蓝。","花市里全是花，我一种也叫不上名。","这里的太阳晒得人想睡觉。"],
       mem:"" },
     { id:"lijiang", name:"丽江", emoji:"🏘️",
-      bg:"linear-gradient(160deg,#e2cbb0,#f2e2cc 55%,#cfe0e6)",
+      bg:"linear-gradient(160deg,#e2cbb0,#f2e2cc 55%,#cfe0e6)",art:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAADICAYAAACZBDirAAAEuklEQVR42u3dsWoUURQG4DMyJCYseQBBlC1ERFJYpZBoKSEQUZA0gqWdbZ7ER1gsLbcUQdhqiyASLDQxKNhYpAzC2pjCDcHVbGbu7vm+Bwg/s84/59xZk+rlzvNRMNfubm64CP/p/ds3LsIcu+QSAAoQ0x+n3F6/7yIoQAAFCKAAwRqMAiSc/4ECBFCAAAoQwjkgCpBw/gcKEEABgjUYBQigAAnnf6AAwRqMAgRQgFh/QQECKEAI54AoQAAFGM7/AAUI1mAUIIACBFCA4fwPazAKEFCAAAoQQAESzv8I54AKEEABAihArL9YgxUggAIEUIBgDUYBEs7/QAECKEAABQjhHBAFSDj/AwUIoADBGowCBFCAhPM/UIBgDUYBAihA6y+gAAEUIIRzQBQggAIM53+AAgRrMAoQQAECCpBw/oc1WAECKEAABQigAAnnf4RzQAUIoAABFCDWX6zBM6d2CcrW6XRcBDABAihAmElrG5suggJkUg+2n7gIoAABFCCAAoRwDogCDOd/gAIEUIBgDUYBAijAcP4HKECwBqMAAQWI9RfCr8OiAIuXF10EMAHCfLv36LGLoAABrMDpbT176iKYAjEBAihAAAUIoADD+R+gAAEUIIACBFCA4fwPUIAAZ6m+7r0buQyACRBAAQIoQAAFCDBv6sP9g6ICDV+99qmMubP90EUAEyDAFCfAq9evTeUHnUyS5/15Q5/JKee5ptP6XEr59yGHHCZAgFIKsJSnCJ7ucshhAgRQgAAXWIDWX+uvHHLMag5/FhOi+e+5lvJthzZzbO28CH8XeMzqetddApS/Alt/rb9y/HsOyvlcvAQBTICmP09VOUx/MUP/y8kECKAAARoqQOuv9VcO98usr7+H+wcmQCCv2tPM9CdHcznWNlb9Yy3ofjEBAuEMEEABWn+tv3KElx8p7hcTIGACBFCAxnnrrxzW3yT3iwkQMAF6mpn+5DD9ZbtfqkG/Nyop5M9vuz6pMfUVX56dFwtHn1yE345Xul6CALQ2XPxtTG96nP9sAoxJ/tO4dW82c3zfNQG28csQzvpcTIBAeAniMDe8/JAjvPxIdb+YAAETIIACNM5bf+Ww/ia5X0yAgAkQQAEa562/clh/k9wvJkDABOhpZvqTw/SX7X4xAQImQIDUBWict/7KYf3NdL+YAAEToKdZ+NVBpi7TX7JtyQQIpFVHob/+3RP+zxzABa3A1go55LD+ZnxZaAUGvAQBSFeA1go55LD+Zv2urAkQiNRvgW/cutlqiI8f9kIOOeTIZWl5qfXPpRr0eyMfBTRj4cjfBT5xvNL1PUBw09OW6seX4chaIYcccmTM4SUIEL4H6CkihxxyJMthAgRMgAAK0BgthxxyJMlhAgRMgAAK0BgthxxyJMlhAgRMgJ4icsghR7YcJkDABAigAI3RcsghR5IcJkDABOgpIocccmTLYQIETIAACtAYLYccciTJYQIETIAACtAYLYccciTJYQIETICeInLIIUe2HNWg32v17wIDeAkC0LB6udNxFQATIIACBFCAAAoQQAECKEAABQigAAEUIIACBFCAAAoQQAECKEAABQigAAEUIIACBFCAAAoQQAECKEAABQgwmV+iZ+snNL/AcQAAAABJRU5ErkJggg==",
       cards:["丽江的巷子绕来绕去，差点没找回来。","晚上很吵，但有风。","石板路走久了脚疼。"],
       mem:"" },
     { id:"dali", name:"大理", emoji:"🌊",
-      bg:"linear-gradient(160deg,#a9d7e8,#d3ecf5 55%,#f6e4c8)",
+      bg:"linear-gradient(160deg,#a9d7e8,#d3ecf5 55%,#f6e4c8)",art:"data:image/png;base64,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",
       cards:["大理的风真大，帽子差点飞走。","在洱海边上坐了一会儿，什么也没想。","这边天黑得晚。"],
       mem:"" },
     { id:"shanghai", name:"上海", emoji:"🌃",
-      bg:"linear-gradient(160deg,#3d4a6b,#6b5f86 55%,#c99a9a)",
+      bg:"linear-gradient(160deg,#3d4a6b,#6b5f86 55%,#c99a9a)",art:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAADICAYAAACZBDirAAADqElEQVR42u3dPUozURSA4TNmSKG4CW0Fq0haG/FnAansBNHC2h3YpBc3Iq7B2p0IdhJbC8GQZCb3znmeMnzxw9G8c+/MSWwm09kiABLacQgAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEECAbrQOAfDb+9vtv//m5PxlEN9r448iAcuGb2ghFEAQvrW/Rq0hFEAQvo2pLYRugoD4Ff91BRCoIlI1RVAAQfzSRlAAQfzSRlAAgfBOEMDqL9kqUAABK0DA6i/bKlAAAStAwOov2ypQAAErQAABBBBAAAEEEEAAAQQQQAABBApUykfUl/pR+QIIWAECVoGZVn8CCFgBAlaB2VZ/AghYAQJWgRn/SLoAggimjJ8AggimjZ8AggimjV9ERDOZzhZ+HSB8bH6i8AkgsHYIaw2fAAIrh7D28AkgEOYAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABNqDdG7eOAmAFCCCAAAIIIIAAAggggAACCCCAAFVpxyMNBKwAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAGW1DoELGO0u9/5//H99elAYwUIIIAAAggggAACCCCA9O71+ajTx6Evzdnp9cJhIIzBEOYAASekNCckW2Ag7wqwjzMJlLKqwc/DChBAAAEBBBBAIMxlCiB4wdXh8u6j08cFEKHwgmOAmoure+8EAcI1QAABBBBAAAEEEECAGMb0hACCYBQ1btXnmJUAkvYFN5Tvw1xmmAMsNRR//VJt6nFAAAHCTRCAoQTQm+sBW2AAW2AAAQTCmFUYhAbBMAgdBqHxgguD0Aahw00Qg9CAAALYAgMYhAawBQasAAEEECC2fWmqz/EkW2AwbhVZx62sAJ2hiz5DG4QOg9DhJogzs0FoEEAAW2CAPgK4rWslBqEBW2AAW2DCXW07AQSQPIxzGLMyCA2EcSsrQAxCG4Q2CB1ugjgzAwIIYAvsLiNgEDrcZQRsgaHua8PYAuMSxWAuUdhZCCC4ROGEZBAaMG4VrgEC2AIDCCCAAAIIIIAAAqytPT48cBQAK0AAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAgAID+HSz2hM9z/M8z/Nqf17z+DD3kfiALTCAAAIIIIAAAggggAACCCCAAAIIIIAAAhTsByds4DCjOqRVAAAAAElFTkSuQmCC",
       cards:["到上海了，人好多。","外滩的灯亮起来了。","最后一站了。想快点回去见你。"],
       mem:"这趟走完，就该回家了。" },
   ];
@@ -1309,7 +1320,11 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
     return PC_URLS[i];
   }
   function pcArt(p){
-    const src = (typeof p.photo === "number") ? pcUrl(p.photo) : null;
+    let src = (typeof p.photo === "number") ? pcUrl(p.photo) : null;
+    if(!src){
+      const rd = (window.__ROUTE || []).find(function(x){ return x.id === p.dest; });
+      if(rd && rd.art) src = rd.art;
+    }
     if(src){
       return '<div class="pc-art photo"><img class="pc-img" loading="lazy" decoding="async" src="'
         + src + '"><span class="pc-date">' + p.date + '</span></div>';
@@ -1890,6 +1905,19 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
   function renderRouteBar(){
     const bar = $("routeBar");
     if(!bar) return;
+    (function paintBg(){
+      const bgEl = document.getElementById("tripBg");
+      if(!bgEl) return;
+      const st = Math.min(S.routeStep, ROUTE.length-1);
+      const dest = S.trip ? (ROUTE.find(function(x){ return x.id === S.trip.dest; }) || ROUTE[st]) : ROUTE[st];
+      let src = null;
+      if(dest){
+        if(dest.art) src = dest.art;
+        else if(dest.photos && dest.photos.length) src = dest.photos[0].src;
+      }
+      bgEl.style.backgroundImage = src ? "url(" + src + ")" : (dest ? dest.bg : "none");
+      bgEl.style.opacity = src ? ".62" : ".30";
+    })();
     bar.innerHTML = ROUTE.map((r,i)=>{
       const done = i < S.routeStep, now = i === S.routeStep;
       return '<div class="rd'+(done?" done":"")+(now?" now":"")+'">'
@@ -2442,6 +2470,11 @@ const FURN_ART = {"rug":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAC
   }
   document.addEventListener("click", function(e){
     var t = e.target;
+    if(t.closest && t.closest("#nav .tab")){
+      ["decoPick","storePick","wallPick","furnPick"].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.classList.remove("on");
+      });
+    }
     if(!t.closest) return;
     var w = t.closest(".wslot");
     if(w){ open(parseInt(w.getAttribute("data-wall"),10)); return; }
