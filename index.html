@@ -636,6 +636,29 @@ h1{ font-weight:800; letter-spacing:.06em;
 #wallPick .fpick img{width:46px;height:46px;object-fit:contain;image-rendering:pixelated}
 #wallPick .wname{font-size:11px;text-align:center;color:#6b564c;margin:-4px 0 6px}
 #wallPick .wmsg{font-size:12px;color:#c0553f;text-align:center;height:16px;margin-top:6px}
+
+/* ===== 装饰面板 / 仓库 / 分组标题 ===== */
+.roomChip{position:absolute;right:8px;z-index:22;background:rgba(255,255,255,.9);
+  border:2px solid #33251f;border-radius:10px;box-shadow:0 3px 0 rgba(51,37,31,.25);
+  font-size:13px;line-height:1;padding:5px 8px;cursor:pointer;user-select:none}
+.roomChip:active{transform:translateY(1px)}
+#decoBtn{top:8px}
+#storeBtn{top:46px}
+.roomPanel{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(110%);
+  width:min(94vw,470px);background:#fffaf4;border:2px solid #33251f;border-radius:14px 14px 0 0;
+  padding:14px;z-index:61;transition:transform .22s;box-shadow:0 -8px 24px rgba(40,24,14,.25);
+  max-height:70vh;overflow:auto}
+.roomPanel.on{transform:translateX(-50%) translateY(0)}
+.roomPanel .fpt{font-size:13px;color:#8a746a;margin-bottom:10px;text-align:center}
+.roomPanel .wmsg{font-size:12px;color:#c0553f;text-align:center;margin-top:6px}
+.roomPanel .fcat{font-size:12px;color:#6b564c;margin:8px 0 6px;font-weight:700}
+.sw{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:6px}
+.sw i{display:block;height:34px;border-radius:8px;border:2px solid rgba(51,37,31,.35);cursor:pointer}
+.sw i.on{outline:3px solid #d98b8b;outline-offset:1px}
+.stlist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stlist button{background:#fff;border:2px solid #e2d6cc;border-radius:10px;padding:6px;cursor:pointer}
+.stlist button img{width:40px;height:40px;object-fit:contain;image-rendering:pixelated}
+.stlist .nm{font-size:10px;color:#6b564c;text-align:center;margin-top:2px}
 </style>
 </head>
 <body>
@@ -2119,22 +2142,37 @@ const FURN_ART = {"rug":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAC
     var used = {};
     for(var k in S.furn){ used[S.furn[k]] = 1; }
     var avail = S.furnOwned.filter(function(id){ return !used[id]; });
-    var h = '<div class="fpt">放到这里 · 点一下摆上去</div><div class="fr2">';
-    if(!avail.length){
-      h += '<div style="font-size:12px;color:#a08e86">还没有空着的家具，先去商店买</div>';
+    var CC = {plant:"deco",paint:"deco",gift:"deco",
+              chair:"living",sofa:"living",tv:"living",rug:"living",lamp:"living",
+              fish:"living",guitar:"living",bed:"bedroom",desk:"bedroom",shelf:"bedroom",stool:"bedroom"};
+    var CATN = {living:"🛋 客厅", bedroom:"🛏 卧室", deco:"🖼 摆件"};
+    var nPlaced = 0; for(var kk in S.furn){ if(S.furn[kk]) nPlaced++; }
+    var h = '<div class="fpt">放到这里 · 已摆 '+nPlaced+' / '+SLOTS+'</div>';
+    if(nPlaced >= SLOTS){
+      h += '<div class="wmsg">屋子摆满了，先收起一件再摆</div>';
+    }else if(!avail.length){
+      h += '<div class="wmsg">仓库是空的，先去商店买家具</div>';
     }else{
-      avail.forEach(function(id){
-        var it = byId(id);
-        h += '<button class="fpick" data-put="'+id+'" data-slot="'+slot+'">'+(FURN_ART[id]?'<img class="fi" alt="" src="'+FURN_ART[id]+'">':(it?it.e:"❓"))+'</button>';
+      ["living","bedroom","deco"].forEach(function(cat){
+        var list = avail.filter(function(id){ return (CC[id]||"deco") === cat; });
+        if(!list.length) return;
+        h += '<div class="fcat">'+CATN[cat]+'</div><div class="fr2">';
+        list.forEach(function(id){
+          h += '<button class="fpick" data-put="'+id+'" data-slot="'+slot+'">'
+             + (FURN_ART[id] ? '<img class="fi" alt="" src="'+FURN_ART[id]+'">' : "❓")
+             + '</button>';
+        });
+        h += '</div>';
       });
     }
-    h += '</div>';
     p.innerHTML = h;
     p.classList.add("on");
     closePick._slot = slot;
   }
 
   window.__FURN = FURN; window.__SLOTS = SLOTS;
+  window.__FPUT = put; window.__FTAKE = takeOut; window.__FART = FURN_ART;
+  window.__FBYID = byId;
 
   function buy(id){
     var it = byId(id);
@@ -2267,6 +2305,174 @@ const FURN_ART = {"rug":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAC
   }, true);
   setTimeout(draw, 150);
   setInterval(draw, 900);
+})();
+</script>
+
+<script>
+(function(){
+  var S = window.__YS;
+  if(!S) return;
+  var HOUSE = {
+    cottage:{sky:["#ffe2c4","#ffd0a8"], grass:["#d9b483","#b8925f"]},
+    seaside:{sky:["#a8dcfb","#d8f0ff"], grass:["#f2e2b8","#e0cd94"]},
+    city:   {sky:["#f7d9e8","#e6c8ea"], grass:["#c3b3d4","#a292b9"]},
+    forest: {sky:["#cdeacb","#e8f6e2"], grass:["#8fc98a","#6aa86a"]}
+  };
+  var PAPERS = [
+    {id:"def",  n:"原色",  a:null},
+    {id:"cream",n:"米白",  a:["#f6ebda","#e9d7be"]},
+    {id:"rose", n:"藕粉",  a:["#f9e0da","#efcac6"]},
+    {id:"mint", n:"薄荷",  a:["#ddf1e6","#c5e3d4"]},
+    {id:"blue", n:"雾蓝",  a:["#ddecf9","#c6dbef"]},
+    {id:"wood", n:"木纹",  a:["#e9d6be","#dac1a4"]}
+  ];
+  var FLOORS = [
+    {id:"def",  n:"原色",  a:null},
+    {id:"oak",  n:"浅橡",  a:["#dcb98c","#bd976a"]},
+    {id:"grey", n:"灰石",  a:["#d3d3cf","#b6b6b1"]},
+    {id:"tile", n:"青砖",  a:["#bcd2ca","#9eb9af"]},
+    {id:"warm", n:"暖木",  a:["#cd9e6e","#ab7c50"]},
+    {id:"ice",  n:"米砖",  a:["#e8dfd0","#d1c5b0"]}
+  ];
+  if(!S.paper) S.paper = "def";
+  if(!S.floor) S.floor = "def";
+
+  var lastKey = "";
+  function applyDeco(){
+    var pp = null, ff = null;
+    for(var i=0;i<PAPERS.length;i++) if(PAPERS[i].id===S.paper) pp = PAPERS[i];
+    for(var j=0;j<FLOORS.length;j++) if(FLOORS[j].id===S.floor) ff = FLOORS[j];
+    var pDef = !(pp && pp.a), fDef = !(ff && ff.a);
+    var key = S.paper+"|"+S.floor+"|"+(S.house||"");
+    if(key === lastKey) return;
+    lastKey = key;
+    var st = document.documentElement.style;
+    if(pDef && fDef){
+      ["--sky1","--sky2","--grass1","--grass2"].forEach(function(k){ st.removeProperty(k); });
+      return;
+    }
+    var base = HOUSE[S.house] || HOUSE.forest;
+    var wall   = (pp && pp.a) ? pp.a : base.sky;
+    var ground = (ff && ff.a) ? ff.a : base.grass;
+    st.setProperty("--sky1", wall[0]); st.setProperty("--sky2", wall[1]);
+    st.setProperty("--grass1", ground[0]); st.setProperty("--grass2", ground[1]);
+  }
+  setInterval(applyDeco, 700);
+  setTimeout(applyDeco, 60);
+
+  function toast(msg){
+    var t = document.getElementById("roomToast");
+    if(!t){ t = document.createElement("div"); t.id = "roomToast";
+      t.style.cssText = "position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:99;background:rgba(51,37,31,.92);color:#fff;font-size:13px;padding:8px 14px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none";
+      document.body.appendChild(t);
+    }
+    t.textContent = msg; t.style.opacity = "1";
+    clearTimeout(toast._t); toast._t = setTimeout(function(){ t.style.opacity = "0"; }, 1500);
+  }
+
+  function closeAll(){
+    ["decoPick","storePick"].forEach(function(id){
+      var e = document.getElementById(id); if(e) e.classList.remove("on");
+    });
+  }
+  function panel(id){
+    var e = document.getElementById(id);
+    if(!e){ e = document.createElement("div"); e.id = id; e.className = "roomPanel"; document.body.appendChild(e); }
+    return e;
+  }
+
+  /* ---- 墙纸 / 地板 ---- */
+  function openDeco(){
+    var e = panel("decoPick");
+    var h = '<div class="fpt">墙纸</div><div class="sw">';
+    PAPERS.forEach(function(it){
+      var c = it.a ? "background:linear-gradient(180deg,"+it.a[0]+","+it.a[1]+")" : "background:linear-gradient(180deg,var(--sky1),var(--sky2))";
+      h += '<i data-paper="'+it.id+'" class="'+(S.paper===it.id?"on":"")+'" style="'+c+'"></i>';
+    });
+    h += '</div><div class="fpt">地板</div><div class="sw">';
+    FLOORS.forEach(function(it){
+      var c = it.a ? "background:linear-gradient(180deg,"+it.a[0]+","+it.a[1]+")" : "background:linear-gradient(180deg,var(--grass1),var(--grass2))";
+      h += '<i data-floor="'+it.id+'" class="'+(S.floor===it.id?"on":"")+'" style="'+c+'"></i>';
+    });
+    h += '</div><div style="font-size:11px;color:#a08e86;text-align:center">「原色」会跟着屋子变</div>';
+    e.innerHTML = h; e.classList.add("on");
+  }
+  function baseColors(){
+    var b = HOUSE[S.house] || HOUSE.forest;
+    return {sky:b.sky, grass:b.grass};
+  }
+  function paintPanels(){
+    var b = baseColors();
+    var e = document.getElementById("decoPick");
+    if(!e) return;
+    e.querySelectorAll("[data-paper]").forEach(function(el){
+      var id = el.getAttribute("data-paper");
+      if(id === "def") el.style.background = "linear-gradient(180deg,"+b.sky[0]+","+b.sky[1]+")";
+    });
+    e.querySelectorAll("[data-floor]").forEach(function(el){
+      var id = el.getAttribute("data-floor");
+      if(id === "def") el.style.background = "linear-gradient(180deg,"+b.grass[0]+","+b.grass[1]+")";
+    });
+  }
+
+  /* ---- 仓库 ---- */
+  function openStore(){
+    var e = panel("storePick");
+    var FURN = window.__FURN || [];
+    var used = {}; for(var k in S.furn){ used[S.furn[k]] = 1; }
+    var store = (S.furnOwned||[]).filter(function(id){ return !used[id]; });
+    var nPlaced = 0; for(var kk in S.furn){ if(S.furn[kk]) nPlaced++; }
+    var h = '<div class="fpt">仓库 · 已摆 '+nPlaced+' / '+(window.__SLOTS||8)+'，点家具自动摆进空位</div>';
+    if(!store.length){ h += '<div class="wmsg">仓库是空的（买过的都摆出来啦）</div>'; }
+    else{
+      h += '<div class="stlist">';
+      store.forEach(function(id){
+        var it = (window.__FBYID ? window.__FBYID(id) : null);
+        var art = (window.__FART && window.__FART[id]) ? window.__FART[id] : "";
+        h += '<button data-store="'+id+'">'
+           + (art ? '<img alt="" src="'+art+'">' : "")
+           + '<div class="nm">'+(it?it.n:id)+'</div></button>';
+      });
+      h += '</div>';
+    }
+    e.innerHTML = h; e.classList.add("on");
+  }
+
+  document.addEventListener("click", function(ev){
+    var t = ev.target; if(!t.closest) return;
+    if(t.closest("#decoBtn")){ openDeco(); return; }
+    if(t.closest("#storeBtn")){ openStore(); return; }
+    var pp = t.closest("[data-paper]");
+    if(pp){ S.paper = pp.getAttribute("data-paper"); if(window.__YSAVE) window.__YSAVE(); lastKey=""; applyDeco(); openDeco(); return; }
+    var ff = t.closest("[data-floor]");
+    if(ff){ S.floor = ff.getAttribute("data-floor"); if(window.__YSAVE) window.__YSAVE(); lastKey=""; applyDeco(); openDeco(); return; }
+    var st = t.closest("[data-store]");
+    if(st){
+      var id = st.getAttribute("data-store");
+      var SLOTS = window.__SLOTS || 8, free = -1;
+      for(var i=0;i<SLOTS;i++){ if(!S.furn[String(i)]){ free = i; break; } }
+      if(free < 0){ toast("没有空位了，先收起一件"); return; }
+      if(window.__FPUT) window.__FPUT(id, free);
+      closeAll(); return;
+    }
+    if(!t.closest(".roomPanel")) closeAll();
+  }, true);
+
+  // 挂两个入口按钮
+  function chips(){
+    var st = document.getElementById("stage");
+    if(!st || document.getElementById("decoBtn")) return;
+    var a = document.createElement("div"); a.id="decoBtn"; a.className="roomChip"; a.textContent="🎨";
+    var b = document.createElement("div"); b.id="storeBtn"; b.className="roomChip"; b.textContent="📦";
+    st.appendChild(a); st.appendChild(b);
+    var upd = function(){
+      var used = {}; for(var k in S.furn){ used[S.furn[k]] = 1; }
+      var n = (S.furnOwned||[]).filter(function(id){ return !used[id]; }).length;
+      b.textContent = "📦" + (n ? n : "");
+    };
+    upd(); setInterval(upd, 1200);
+  }
+  setTimeout(chips, 120);
 })();
 </script>
 </body>
