@@ -560,6 +560,29 @@ h1{ font-weight:800; letter-spacing:.06em;
   background:rgba(255,248,225,.85); box-shadow:0 0 6px rgba(255,240,200,.8);
   animation:moteUp 7s linear infinite; pointer-events:none; z-index:1;
 }
+
+/* ===== 家具围着屋子，人站中间 ===== */
+#roomGrid{
+  position:absolute !important; left:0 !important; right:0 !important;
+  top:0 !important; bottom:0 !important; height:auto !important;
+  display:block !important; z-index:1; pointer-events:none;
+}
+#roomGrid .slot{
+  position:absolute !important; margin:0 !important;
+  width:24% !important; height:18% !important;
+  transform:translate(-50%,-50%);
+  pointer-events:auto;
+}
+#roomGrid .slot:nth-child(1){ left:11%; top:50%; }
+#roomGrid .slot:nth-child(2){ left:35%; top:45%; z-index:1; }
+#roomGrid .slot:nth-child(3){ left:65%; top:45%; z-index:1; }
+#roomGrid .slot:nth-child(4){ left:6%;  top:68%; }
+#roomGrid .slot:nth-child(5){ left:94%; top:68%; }
+#roomGrid .slot:nth-child(6){ left:18%; top:88%; z-index:4; }
+#roomGrid .slot:nth-child(7){ left:82%; top:88%; z-index:4; }
+#roomGrid .slot:nth-child(8){ left:50%; top:90%; z-index:4; }
+#roomGrid .slot em{ font-size:clamp(24px, 7.2vw, 42px) !important; }
+#roomGrid .slot .plus{ font-size:15px !important; }
 </style>
 </head>
 <body>
