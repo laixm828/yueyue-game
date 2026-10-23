@@ -892,6 +892,19 @@ h1{ font-weight:800; letter-spacing:.06em;
     normal: ["嗯？我在呢。","嗯嗯，看到了。","刚在发呆，被你摸醒了。"],
     sad   : ["哼，你都不理我。","…… 我也不是非要你来。","你忙你的吧，我没事。"],
     cold  : ["……","…… 哦。"],
+    talk: {
+      happy : ["今天训练完你走回来的时候，我在窗户那儿看了你半天。",
+               "其实你不在的时候我会数着点，等你回来。",
+               "你刚才是不是想我了？…… 我也是。"],
+      normal: ["嗯，我听着呢，你慢慢说。",
+               "今天楼下有只猫，从早上蹲到太阳下山。",
+               "你说话的时候我就在想，这声音还挺好听的。",
+               "要不要跟我说说今天遇到什么事了？"],
+      sad   : ["…… 我有点不想说话，但你说吧，我听着。",
+               "你忙你的吧，我就坐一会儿。",
+               "…… 其实也没什么，就是有点闷。"],
+      cold  : ["…… 嗯。", "…… 你继续。", "…… 我在。"],
+    },
     pat: {
       happy : ["再摸就秃了，笨蛋。","…… 好啦好啦，给你摸。"],
       normal: ["嗯，摸吧。","…… 你手怎么这么凉。"],
@@ -1416,11 +1429,26 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
     });
   }
 
-  function say(text){
-    bubble.textContent = text || "……";
+  function say(text, opts){
+    const t = (text === undefined || text === null) ? "……" : String(text);
     bubble.classList.add("show");
-    clearTimeout(say._t);
-    say._t = setTimeout(()=>bubble.classList.remove("show"), 4200);
+    clearTimeout(say._t); clearInterval(say._i);
+    bubble.textContent = "";
+    const cps = (opts && opts.speed) || 36;
+    let i = 0;
+    if(!t.length){ bubble.textContent = "……"; }
+    else {
+      say._i = setInterval(()=>{
+        i++;
+        if(i >= t.length){
+          clearInterval(say._i);
+          bubble.textContent = t;
+          return;
+        }
+        bubble.textContent = t.slice(0, i) + "▍";
+      }, cps);
+    }
+    say._t = setTimeout(()=>bubble.classList.remove("show"), Math.max(3200, 1800 + t.length*70));
   }
   function toast(msg){
     const t = $("toast");
@@ -1450,11 +1478,17 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
 
     const g = CFG[kind.toUpperCase()];
     const tier = moodTier();
+    const pool = LINES[kind] && LINES[kind][tier];
+    const line = pool ? pick(pool) : "……";
 
     let moodGain = g.mood;
     if(kind==="pat" && ownedGear("mat")) moodGain += 6;
-    const loveGain = g.love + (ownedGear("bag") ? 1 : 0);
+    let loveGain = g.love + (ownedGear("bag") ? 1 : 0);
     const coinGain = g.coin + (ownedGear("rope") ? 2 : 0);
+    if(kind==="talk"){
+      /* 说得越多越亲近：每 6 个字 +1 亲密度，单次封顶 +8 */
+      loveGain += Math.max(0, Math.min(8, Math.floor(line.length / 6)));
+    }
 
     S.mood = Math.min(100, S.mood + moodGain);
     S.love += loveGain;
@@ -1466,8 +1500,7 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
     if(kind==="pat")  burstHearts(5);
     if(kind==="feed") burstHearts(8);
 
-    const pool = LINES[kind] && LINES[kind][tier];
-    say(pool ? pick(pool) : "……");
+    say(line);
 
     checkMilestone();
     save(); render();
