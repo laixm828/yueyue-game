@@ -1750,7 +1750,11 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
   function openTrip(){
     if(S.trip) return;
     if(S.routeStep >= ROUTE.length){
-      showSheet("已经走完了", "合肥 → 昆明 → 丽江 → 大理 → 上海<br>这一趟你们一起走完了。", null, "");
+      S.loop = (S.loop||1) + 1;
+      S.routeStep = 0; save();
+      showSheet("再走一趟？· 第 "+(S.loop)+" 圈",
+        "合肥 → 昆明 → 丽江 → 大理 → 上海<br>这条路你们已经走完 "+(S.loop-1)+" 遍了。<br>想再走一遍就点下面，从合肥重新开始。",
+        null, '<div class="row"><button class="opt" data-again="1"><b>再走一趟</b></button></div>');
       return;
     }
     const d = ROUTE[S.routeStep];
@@ -1830,7 +1834,7 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
     const row = $("explainRow");
     if(!row) return;
     const ded = Math.round(S.decayApplied || 0);
-    const show = !S.trip && ded >= 5;
+    const show = !S.trip && ded >= 3;
     row.classList.toggle("show", show);
     if(show) $("btnExplain").textContent =
       "告诉他你刚刚干嘛去了 · 退一半（已扣 " + ded + "）";
@@ -1838,7 +1842,7 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
 
   function openExplain(){
     const ded = Math.round(S.decayApplied || 0);
-    if(ded < 5) return;
+    if(ded < 3) return;
     showSheet("你刚刚干嘛去了？",
       "随便说一句就行，不用挑。<br>说清楚就退你一半：<b>+" + Math.floor(ded/2) + "</b> 点心情。",
       null,
@@ -1849,10 +1853,11 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
 
   function doExplain(){
     const ded = Math.round(S.decayApplied || 0);
-    if(ded < 5) return;
+    if(ded < 3) return;
     const why = ($("exInput") && $("exInput").value || "").trim();
     const back = Math.floor(ded/2);
     S.mood = Math.min(100, S.mood + back);
+    S.love = Math.min(100, (S.love||0) + 1);
     S.decayApplied = 0;
     S.lastMoodAt = Date.now();
     closeModal(); save(); render();
@@ -1972,6 +1977,8 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
     if(x){ doExplain(); return; }
     const w = e.target.closest("[data-share-w]");
     if(w){ shareWhisper(w.dataset.shareW); return; }
+    const ag = e.target.closest("[data-again]");
+    if(ag){ closeModal(); setTimeout(openTrip, 60); return; }
     const t = e.target.closest("[data-bento]");
     if(t) depart(parseInt(t.dataset.bento,10));
   });
