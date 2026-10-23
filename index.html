@@ -583,6 +583,16 @@ h1{ font-weight:800; letter-spacing:.06em;
 #roomGrid .slot:nth-child(8){ left:50%; top:90%; z-index:4; }
 #roomGrid .slot em{ font-size:clamp(24px, 7.2vw, 42px) !important; }
 #roomGrid .slot .plus{ font-size:15px !important; }
+
+#roomGrid .slot .fi, #furnPick .fi{
+  width:clamp(34px, 10vw, 56px); height:auto; image-rendering:pixelated;
+  filter:drop-shadow(0 3px 2px rgba(40,24,14,.32));
+  animation:yFloat 3.4s ease-in-out infinite;
+}
+#roomGrid .slot:nth-child(2n) .fi{ animation-delay:.7s; }
+#roomGrid .slot:nth-child(3n) .fi{ animation-delay:1.3s; }
+#furnPick .fi{ width:40px; animation:none; }
+#roomGrid .slot.has em{ display:none; }
 </style>
 </head>
 <body>
@@ -2019,6 +2029,12 @@ h1{ font-weight:800; letter-spacing:.06em;
 
   /* ---- 房间槽位 ---- */
   var lastSig = "";
+  const FURN_ART = {"plant": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABTUlEQVR4nO3ZoU4DQRAG4J8/o1AkhKSQNkFQhcNUYPFoRAWvAM8Br4BA9CWwFRgcqogmJaEJIUFhISQ1JQ2we7OzxzCf63VvZndnt9dtgRBCCCGE0FJrFkkO9/vvGnHG95Pk/opG4l8lOt5Zet3d6yTdP724y8uLihWxILk37p4fJLV/fJivvN7rbK28Pps/QwPhnGgFKl2JXIRzUrsDpStMOCdtr0Tu8681S7TUN5jGS/RzZpvOrgXmzmiTWbVEOEc4J7USW+1fQUUW+1isKvH1PGhFLCpQ8/woGkFyB/DTfRpLWKDk+mTw7funb7Ok9sPRrUq/COcI58Qq0dV6D396gMPFnrk86jeKc3YzQesGOF582tX8gfff7kHCOcI5wjnCOcI5wjkpFfjp5TWp/fbmRpF+EM4RzhHOEc4Rzol2wPzjTt1/gkMIATk+ANHCTzdhpYU6AAAAAElFTkSuQmCC", "chair": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABCElEQVR4nO3arU4DURDF8X9PRtVjqEI0FQgeAI/lTXgY3gSLr0RUIBoEhsVQCxZsISENd+fS5nR+cjdz9u5HdrKThVJKKaXYmmSEXJ7PP+lg+fg0en2RsxS4uTol0+39a0qOMCfMRY/Q2eykqW4Y3tLXIswJc8KcMCfMCXPCnDAnzAlzwpwwJ8xFj9AeXwWthLk4pBnMruO0zGjiUGYwu/JbZzTCXIwNWCzO6Gm9fh5VL8zFvq9wb8JctBZuv9WuL6bf9t2tPpoys3JGn+B2P/qtJ/61Z2XlHN0jKswJc8KcMCfMCXPCXGSEvGzef2yZ7DXnqO6gMCfMRUbIw5DyP1FaTiml8F++AME8N6KKRycHAAAAAElFTkSuQmCC", "gift": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABC0lEQVR4nO3Yv0pDMRTH8e/9kYe4uAu27i59ARdHH8Hdzp076+4jOLr4Andx7x9wl+IifYIWpR0UCiaNF/xxPpAhkHOSEEjCgRBCCOGghopG56ebGnm62Wu1dSUqe3ocHxV/dX1HTaJHq5flV+uTMCfMCXPCnDAnzAlzqc+fSntxVmWenJ9O89uB+4kfRgNKtLeX3/qr++eiPDfdImuDwlw69iRKFefpFlnDhTlhTphLuQGlt1+tWzSXMJdK3qFP0+FJVlz7o//+sc6Kn8zf+PMNdrsHtlbtpY9ajTAnzAlzwpwwJ8wJc8KcMCfMCXPCnDAnzAlzwpwwJ8wJc8JcUxL0n4pOIYQQAodtAUxHNzeGQLjmAAAAAElFTkSuQmCC", "paint": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABEElEQVR4nO3ZMYoCQRAF0O+3s4n3CEYeQHBvYbpXWE9g7A28gpFgIngDFzdd1sgjGAtGKoKBiDLt2F0O5X/h0FXdf2o6GkBERERERLJoxCz6bLcOqKHFal16/hDb7Kv7gToZ/2yi1hHOEc4RzoWqhb3BCJamw+9KdYRzhHOEc7TaaP538Btwfg73ipCEc8y9wfXUrKfInM3vhbEMyVyNy0JYhSScY46msdOxmGKoWjj5X958Xuw7D/U5hdzyt3RdEzWYYPFguGfrYugOWk0h1xRDiiaXh4u5T9c1l89i680+0SLxm0/dj3COdbw3KfuG1IdIdbhTn92s/7qAuwSbWyCcI5wLqf8FiIiIiIjImzgCXW5JbiArjc4AAAAASUVORK5CYII=", "guitar": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABmklEQVR4nO2aPU7EMBCFn5+WAjgBFFRQUVBQIs7AGTgEp6DkJJwB7QEoqKCiWE4AFBSgIAUhE9tre8ZoJ/6kFJudcfzmOT8TBeh0Oh1FnNbAZ8dHn6H/lg+Pasf1WUCR3e2tP/te3z/QEsI4hHEI4xDGWWgOPlxQLk52fn7f3r/BjIPLwK2g5S1iFkuUMA5hHMI4hHEI4xDGIYxDGIcwDrW6+VBHH+v0N8rBq/O9783f1xpKD9jaoRROQ1TMqeu7l6bdhZMSV7L8RrGaIp2EazXn1m9HNYS61q61dpMa4g4O97MnMo4nfZFiSVJI3CAsJS4Wo3EbYU5wrLr+pEchwzYsP19YrBCSLjI3YarKJUsylCftItcNDFW1VFwqX8pF5gS3etSSPA5rkmvdkx5nit4ubTqEcQjjsCb5+WklMgmpcaoF+r2cFpLH4bqBoaf82uqH8qW6CkpUNyXy5vJ0cv9UnvQqYU5wrKq5TsbiJXtCliSFqjxMOiU0FqNxjjvrHb0rTTT9TmYWb9Vm8160pFFt/SlJp9PBv/EF0A2m4xwz7/QAAAAASUVORK5CYII=", "sofa": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABCElEQVR4nO3YwQoBQRgH8L+veQMXJTlIKcJ9b97AO7h7AidP4O4dvIGDckeUkoOkHChvQDkxMWax2f38f5etne/bb6adnW0GICIiIiIiIiIiIrqTgkNQLp6RAOPF6uk4zKvkRquLOBv2O852gXLGNzCXzSBOtru9V5z6Nyj4pykaJGTVtAVWv29X1ZQdWGu2nQ+rVyv4pcls7myfDnp3A1Q/RQXKCZQzUf1/4kKgnAmbUC4V8Euj8SFUvEA5gXIC5UzYhMVyjSQRKCdQTvBv3+B00HsYmM+mr9eTdX+zO0bTM6su3qxrfE6nXu0TXadan/hGXYFyAuUEygmUM76BUa+WcatLRAQfF0ktOtOK06KrAAAAAElFTkSuQmCC", "fish": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABVUlEQVR4nO3ZsU4CQRAG4J8/W9haqxWxsiCxJTwABfSihaVv4DP4BpQWgj0WPACxJaGwMlZgbWuniVGDZr3b27s59ybzNYSwO/kHhrvLHWCMMcYYY4wxxqOFAN2jwzck6P7hMTe/Cy12dbdASi4HvaB1hHKEcoRyLmbT8uUV/+F4d6fwHkI5QjlCOYdErdY3P953Ds6i6hDKEcoRyjnJ4sP5xZ+fzfpjJNng/vQcy5xwWY39XiPdKGM2ZTUQ0lyZ9bX9B4eeYLFhJZt0ZTZvj1lIyNPbp4/XyUnbW2t7XGPPeyJHUekxa8yVzMTzy0kjlGMVReo6p9Xe4Kw//m6ubJNSXxKrDBQbUnICWHWgomGlx9sV3bAZXQM592S+QjfyWrRpBx9CORfzTCLm9p2E7me+rGcUrbwCvc4eUrZYPWc2qH5ECeUI5QjlCOVcyFHKGGMM/N4B1IxYVtIXgM8AAAAASUVORK5CYII=", "tv": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABIElEQVR4nO3ZsWvCQBQG8C8fb3Ny1qkgFty6+g8VZ4cOHR0cnKX/UFa3Qovg1MxOnSt0U1pzuVwC+e79lnC5vJeE3L0jHOCcc84555zrRNFF0uVi9vPX+fL9WIT0p2ToyGQ2v2pXx89G/akQ4ghxhDhCnN3r/K/axarLF3u/8k71ra2it9UuVl2e2PtUNdVXfogS4ghx1jTgcbVBnz72r63iCXEWG/j0MG10/eH0hTZe1s9X7e3uLShO/gsS4ghxhoEInXPZfUFCHCHOYgPbrmtN+TqY6xAlxBkGwtfBXIcoIc76/sPuGyGOEEfkPgerwH270Xj8e/w+n1s9UKo8QS8YuuN6u6cQu1ObKk9WQ5QQR4gjxFmqRKmqXqo8zmEYLsEWRdGbEClCAAAAAElFTkSuQmCC", "bed": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABIElEQVR4nO3YMUoDQRQG4N+fdwAbESLYpUqRShCDpQew9ggWFp7D0iMIdh7AUtbGKkUaBTsDKiw5gRECAZU1GbO7Yff3/5phZ98b3rLDwBvAzMzMzMzMzMysYhtFk4Ned5qSnI2eCvObJH57cXKwtTDx6v4dbRBlklP/dKo6dkQsC+hsb357Hr9OZuPtw7DSQo72+qgDIY4QR4gjxAUapOypnBWcwn/+wP2z69mY5zmqdHpxUyr/8vz4f25RQhwhLlZNfJt8oA0CDfH4PK5lXUIcIY4QR4gjxBHiCHGEuFgWML+DmdtFuxBCBr3u9GdPmXzxe9jfWbj43fAF65BSR/al8Y2UzrgpN92rdPyEOEIcIY4QF6mB6zol21KHGarxCYLUPsUjUcbDAAAAAElFTkSuQmCC"};
+  function furnIcon(it){
+    if(!it) return '<em>❓</em>';
+    if(FURN_ART[it.id]) return '<img class="fi" alt="" src="'+FURN_ART[it.id]+'">';
+    return '<em>'+it.e+'</em>';
+  }
   function renderRoom(){
     var grid = document.getElementById("roomGrid");
     if(!grid) return;
@@ -2030,7 +2046,7 @@ h1{ font-weight:800; letter-spacing:.06em;
       var id = S.furn[String(i)];
       if(id){
         var it = byId(id);
-        h += '<div class="slot has" data-slot="'+i+'"><em>'+(it?it.e:"❓")+'</em></div>';
+        h += '<div class="slot has" data-slot="'+i+'">'+furnIcon(it)+'</div>';
       }else{
         h += '<div class="slot" data-slot="'+i+'"><span class="plus">+</span></div>';
       }
@@ -2064,7 +2080,7 @@ h1{ font-weight:800; letter-spacing:.06em;
     }else{
       avail.forEach(function(id){
         var it = byId(id);
-        h += '<button class="fpick" data-put="'+id+'" data-slot="'+slot+'">'+(it?it.e:"❓")+'</button>';
+        h += '<button class="fpick" data-put="'+id+'" data-slot="'+slot+'">'+(FURN_ART[id]?'<img class="fi" alt="" src="'+FURN_ART[id]+'">':(it?it.e:"❓"))+'</button>';
       });
     }
     h += '</div>';
