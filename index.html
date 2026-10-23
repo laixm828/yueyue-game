@@ -707,6 +707,10 @@ h1{ font-weight:800; letter-spacing:.06em;
 
 .ii{height:58px;display:flex;align-items:center;justify-content:center;}
 .ii img{width:44px!important;height:44px!important;object-fit:contain;}
+
+.roomPanel{bottom:66px!important;max-height:50vh!important;border-radius:14px!important;}
+#roomPanelClose{position:absolute;right:10px;top:8px;width:26px;height:26px;line-height:22px;text-align:center;
+  border-radius:50%;border:2px solid #33251f;background:#fff;font-size:14px;font-weight:800;cursor:pointer}
 </style>
 </head>
 <body>
@@ -950,14 +954,14 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
     { id:"sport_blue", name:"运动短袖 · 蓝", cat:"top", slot:"body", price:60, desc:"出汗了也不显", sprite:"sport_blue", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"polo_navy", name:"海军蓝 Polo", cat:"top", slot:"body", price:80, desc:"出门见人穿这个", sprite:"polo_navy", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"polo_cream", name:"米色 Polo", cat:"top", slot:"body", price:80, desc:"显得人很温柔", sprite:"polo_cream", box:{x:50.4, y:75.4, w:62, h:29} },
-    { id:"hood_grey", name:"灰色连帽卫衣", cat:"top", slot:"body", price:120, desc:"帽子一戴谁也不爱", sprite:"hood_grey", box:{x:50.4, y:75.4, w:62, h:29} },
-    { id:"hood_pink", name:"粉色连帽卫衣", cat:"top", slot:"body", price:120, desc:"故意的，就想看你穿", sprite:"hood_pink", box:{x:50.4, y:75.4, w:62, h:29} },
-    { id:"wind_khaki", name:"卡其风衣", cat:"outer", slot:"body", price:160, desc:"下雨也好看", sprite:"wind_khaki", box:{x:50.4, y:75.4, w:62, h:29} },
+    { id:"hood_grey", name:"灰色连帽卫衣", cat:"top", slot:"body", price:120, desc:"帽子一戴谁也不爱", sprite:"hoodie_grey", box:{x:50.4, y:75.4, w:62, h:29} },
+    { id:"hood_pink", name:"粉色连帽卫衣", cat:"top", slot:"body", price:120, desc:"故意的，就想看你穿", sprite:"hoodie_pink", box:{x:50.4, y:75.4, w:62, h:29} },
+    { id:"wind_khaki", name:"卡其风衣", cat:"outer", slot:"body", price:160, desc:"下雨也好看", sprite:"wind_beige", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"wind_black", name:"黑色风衣", cat:"outer", slot:"body", price:160, desc:"走路带风那种", sprite:"wind_black", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"down_white", name:"白色羽绒服", cat:"outer", slot:"body", price:220, desc:"裹成一团", sprite:"down_white", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"down_orange", name:"橘色羽绒服", cat:"outer", slot:"body", price:220, desc:"远远就能看见你", sprite:"down_orange", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"brand_tee", name:"北野 · 联名短袖", cat:"brand", slot:"body", price:260, desc:"北野 NORTHFIELD 联名，限量", sprite:"tee_black", box:{x:50.4, y:75.4, w:62, h:29} },
-    { id:"brand_hood", name:"星野 · 城市限定卫衣", cat:"brand", slot:"body", price:380, desc:"星野 STARFIELD 城市限定", sprite:"hood_grey", box:{x:50.4, y:75.4, w:62, h:29} },
+    { id:"brand_hood", name:"星野 · 城市限定卫衣", cat:"brand", slot:"body", price:380, desc:"星野 STARFIELD 城市限定", sprite:"hoodie_grey", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"brand_wind", name:"拾光 · 机能风衣", cat:"brand", slot:"body", price:520, desc:"拾光 LIGHTYEAR 机能线", sprite:"wind_black", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"cap", name:"棒球帽", cat:"acc", slot:"acc", price:60, desc:"头上一顶，显年轻", emoji:"🧢", pos:{x:50, y:2.5, size:20, rot:-9} },
     { id:"scarf", name:"围巾", cat:"acc", slot:"acc", price:80, desc:"冷了记得围上", emoji:"🧣", pos:{x:56, y:80, size:10, rot:2} },
@@ -1772,9 +1776,19 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
 
   function wear(id){
     const i = S.wearing.indexOf(id);
-    if(i >= 0) S.wearing.splice(i,1); else S.wearing.push(id);
-    save(); render();
-    toast(i>=0 ? "脱下了" : "换上了");
+    if(i >= 0){
+      S.wearing.splice(i,1); save(); render(); toast("脱下了"); return;
+    }
+    const it = CLOTHES.find(c=>c.id===id);
+    if(it && it.slot){
+      /* 同一个部位只能穿一件：换新的先脱掉旧的 */
+      S.wearing = S.wearing.filter(w=>{
+        const o = CLOTHES.find(c=>c.id===w);
+        return !o || o.slot !== it.slot;
+      });
+    }
+    S.wearing.push(id);
+    save(); render(); toast("换上了");
   }
 
   /* ================= 旅行 ================= */
@@ -2748,6 +2762,18 @@ const FURN_ART = {"rug":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAC
   }
   watch();
 })();
+</script>
+
+<script>
+/* 房间面板：点空白处关闭，避免卡在面板里出不来 */
+document.addEventListener("click", function(e){
+  var open = document.querySelectorAll(".roomPanel.on");
+  if(!open.length) return;
+  var inside = e.target.closest && e.target.closest(".roomPanel");
+  var chip = e.target.closest && e.target.closest("#decoBtn,#storeBtn,#wallBtn,.roomChip");
+  if(inside || chip) return;
+  for(var i=0;i<open.length;i++) open[i].classList.remove("on");
+}, true);
 </script>
 </body>
 </html>
