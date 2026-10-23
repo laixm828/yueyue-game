@@ -593,6 +593,49 @@ h1{ font-weight:800; letter-spacing:.06em;
 #roomGrid .slot:nth-child(3n) .fi{ animation-delay:1.3s; }
 #furnPick .fi{ width:40px; animation:none; }
 #roomGrid .slot.has em{ display:none; }
+
+/* ===== 家具"被使用"小动画 ===== */
+#roomGrid .slot .fx{display:inline-flex;align-items:center;justify-content:center;position:relative}
+#roomGrid .slot .fx img{animation:yFloat 3.4s ease-in-out infinite}
+#roomGrid .slot:nth-child(2n) .fx img{animation-delay:.7s}
+#roomGrid .slot:nth-child(3n) .fx img{animation-delay:1.3s}
+@keyframes tvGlow{0%,88%,100%{filter:drop-shadow(0 3px 2px rgba(40,24,14,.32))}
+  91%{filter:drop-shadow(0 3px 2px rgba(40,24,14,.32)) brightness(1.35) drop-shadow(0 0 8px rgba(126,196,216,.9))}
+  94%{filter:drop-shadow(0 3px 2px rgba(40,24,14,.32))}}
+.fx[data-id="tv"] img{animation:yFloat 3.4s ease-in-out infinite, tvGlow 4.2s linear infinite}
+@keyframes lampGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(255,214,140,.55))}
+  50%{filter:drop-shadow(0 0 12px rgba(255,214,140,.95))}}
+.fx[data-id="lamp"] img{animation:yFloat 3.4s ease-in-out infinite, lampGlow 2.6s ease-in-out infinite}
+@keyframes bub{0%{transform:translate(0,0) scale(.6);opacity:0}
+  20%{opacity:.85} 100%{transform:translate(0,-26px) scale(1);opacity:0}}
+.fx[data-id="fish"] i{position:absolute;width:3px;height:3px;border-radius:50%;
+  background:rgba(220,244,255,.95);left:50%;top:46%;animation:bub 2.8s linear infinite;font-style:normal}
+.fx[data-id="fish"] i.b2{left:62%;top:58%;animation-duration:3.6s;animation-delay:1.1s}
+.fx[data-id="fish"] i.b3{left:40%;top:62%;animation-duration:3.1s;animation-delay:2.0s}
+@keyframes plantSway{0%,100%{transform:rotate(-1.4deg)}50%{transform:rotate(1.4deg)}}
+.fx[data-id="plant"] img, .fx[data-id="shelf"] img{animation:yFloat 3.4s ease-in-out infinite, plantSway 5.5s ease-in-out infinite;
+  transform-origin:50% 92%}
+
+/* ===== 墙面装饰可换 ===== */
+.wslot{position:absolute;display:flex;align-items:center;justify-content:center;
+  pointer-events:auto;cursor:pointer;border-radius:6px;transition:box-shadow .15s}
+.wslot:active{box-shadow:0 0 0 3px rgba(255,255,255,.45)}
+.wslot[data-wall="0"]{left:6%;top:12%;width:25%;height:26%}
+.wslot[data-wall="1"]{left:37%;top:14%;width:17%;height:22%}
+.wslot[data-wall="2"]{left:74%;top:13%;width:19%;height:23%}
+.wslot img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;
+  filter:drop-shadow(0 4px 6px rgba(40,24,14,.30))}
+#wallPick{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(110%);
+  width:min(94vw,470px);background:#fffaf4;border:2px solid #33251f;border-radius:14px 14px 0 0;
+  padding:14px;z-index:60;transition:transform .22s;box-shadow:0 -8px 24px rgba(40,24,14,.25)}
+#wallPick.on{transform:translateX(-50%) translateY(0)}
+#wallPick .fpt{font-size:13px;color:#8a746a;margin-bottom:10px;text-align:center}
+#wallPick .fr2{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#wallPick .fpick{background:#fff;border:2px solid #e2d6cc;border-radius:10px;padding:6px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer}
+#wallPick .fpick img{width:46px;height:46px;object-fit:contain;image-rendering:pixelated}
+#wallPick .wname{font-size:11px;text-align:center;color:#6b564c;margin:-4px 0 6px}
+#wallPick .wmsg{font-size:12px;color:#c0553f;text-align:center;height:16px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -631,7 +674,7 @@ h1{ font-weight:800; letter-spacing:.06em;
         </div>
         <div id="stageMotes"><div class="mote" style="left:8%;animation-delay:0.0s;animation-duration:6.2s"></div><div class="mote" style="left:21%;animation-delay:1.1s;animation-duration:7.1s"></div><div class="mote" style="left:34%;animation-delay:2.3s;animation-duration:8.0s"></div><div class="mote" style="left:47%;animation-delay:3.4s;animation-duration:6.2s"></div><div class="mote" style="left:60%;animation-delay:4.6s;animation-duration:7.1s"></div><div class="mote" style="left:73%;animation-delay:5.8s;animation-duration:8.0s"></div></div>
     <div id="rug"></div>
-    <div id="wallDeco"><div class="win"></div><div class="pic a"></div><div class="pic b"></div><div class="torch l">🕯️</div><div class="torch r">🕯️</div></div>
+    <div id="wallDeco"><div class="wslot" data-wall="0"></div><div class="wslot" data-wall="1"></div><div class="wslot" data-wall="2"></div><div class="torch l">🕯️</div><div class="torch r">🕯️</div></div>
     <div id="roomGrid"></div>
       </div>
       <div id="actions">
@@ -2007,7 +2050,7 @@ h1{ font-weight:800; letter-spacing:.06em;
     {id:"fish",   e:"🐟", n:"鱼缸",   p:130},
     {id:"tv",     e:"📺", n:"电视",   p:150},
     {id:"bed",    e:"🛏", n:"床",     p:200}
-  ];
+  ,{id:"rug",e:"🧶",n:"地毯",p:90},{id:"stool",e:"🪑",n:"小圆凳",p:55},{id:"lamp",e:"💡",n:"落地灯",p:160},{id:"shelf",e:"📚",n:"书架",p:180},{id:"desk",e:"🗄️",n:"书桌",p:220}];
   var SLOTS = 8;
   function byId(id){ for(var i=0;i<FURN.length;i++){ if(FURN[i].id===id) return FURN[i]; } return null; }
 
@@ -2029,10 +2072,12 @@ h1{ font-weight:800; letter-spacing:.06em;
 
   /* ---- 房间槽位 ---- */
   var lastSig = "";
-  const FURN_ART = {"plant": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABTUlEQVR4nO3ZoU4DQRAG4J8/o1AkhKSQNkFQhcNUYPFoRAWvAM8Br4BA9CWwFRgcqogmJaEJIUFhISQ1JQ2we7OzxzCf63VvZndnt9dtgRBCCCGE0FJrFkkO9/vvGnHG95Pk/opG4l8lOt5Zet3d6yTdP724y8uLihWxILk37p4fJLV/fJivvN7rbK28Pps/QwPhnGgFKl2JXIRzUrsDpStMOCdtr0Tu8681S7TUN5jGS/RzZpvOrgXmzmiTWbVEOEc4J7USW+1fQUUW+1isKvH1PGhFLCpQ8/woGkFyB/DTfRpLWKDk+mTw7funb7Ok9sPRrUq/COcI58Qq0dV6D396gMPFnrk86jeKc3YzQesGOF582tX8gfff7kHCOcI5wjnCOcI5wjkpFfjp5TWp/fbmRpF+EM4RzhHOEc4Rzol2wPzjTt1/gkMIATk+ANHCTzdhpYU6AAAAAElFTkSuQmCC", "chair": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABCElEQVR4nO3arU4DURDF8X9PRtVjqEI0FQgeAI/lTXgY3gSLr0RUIBoEhsVQCxZsISENd+fS5nR+cjdz9u5HdrKThVJKKaXYmmSEXJ7PP+lg+fg0en2RsxS4uTol0+39a0qOMCfMRY/Q2eykqW4Y3tLXIswJc8KcMCfMCXPCnDAnzAlzwpwwJ8xFj9AeXwWthLk4pBnMruO0zGjiUGYwu/JbZzTCXIwNWCzO6Gm9fh5VL8zFvq9wb8JctBZuv9WuL6bf9t2tPpoys3JGn+B2P/qtJ/61Z2XlHN0jKswJc8KcMCfMCXPCXGSEvGzef2yZ7DXnqO6gMCfMRUbIw5DyP1FaTiml8F++AME8N6KKRycHAAAAAElFTkSuQmCC", "gift": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABC0lEQVR4nO3Yv0pDMRTH8e/9kYe4uAu27i59ARdHH8Hdzp076+4jOLr4Andx7x9wl+IifYIWpR0UCiaNF/xxPpAhkHOSEEjCgRBCCOGghopG56ebGnm62Wu1dSUqe3ocHxV/dX1HTaJHq5flV+uTMCfMCXPCnDAnzAlzqc+fSntxVmWenJ9O89uB+4kfRgNKtLeX3/qr++eiPDfdImuDwlw69iRKFefpFlnDhTlhTphLuQGlt1+tWzSXMJdK3qFP0+FJVlz7o//+sc6Kn8zf+PMNdrsHtlbtpY9ajTAnzAlzwpwwJ8wJc8KcMCfMCXPCnDAnzAlzwpwwJ8wJc8JcUxL0n4pOIYQQAodtAUxHNzeGQLjmAAAAAElFTkSuQmCC", "paint": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABEElEQVR4nO3ZMYoCQRAF0O+3s4n3CEYeQHBvYbpXWE9g7A28gpFgIngDFzdd1sgjGAtGKoKBiDLt2F0O5X/h0FXdf2o6GkBERERERLJoxCz6bLcOqKHFal16/hDb7Kv7gToZ/2yi1hHOEc4RzoWqhb3BCJamw+9KdYRzhHOEc7TaaP538Btwfg73ipCEc8y9wfXUrKfInM3vhbEMyVyNy0JYhSScY46msdOxmGKoWjj5X958Xuw7D/U5hdzyt3RdEzWYYPFguGfrYugOWk0h1xRDiiaXh4u5T9c1l89i680+0SLxm0/dj3COdbw3KfuG1IdIdbhTn92s/7qAuwSbWyCcI5wLqf8FiIiIiIjImzgCXW5JbiArjc4AAAAASUVORK5CYII=", "guitar": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABmklEQVR4nO2aPU7EMBCFn5+WAjgBFFRQUVBQIs7AGTgEp6DkJJwB7QEoqKCiWE4AFBSgIAUhE9tre8ZoJ/6kFJudcfzmOT8TBeh0Oh1FnNbAZ8dHn6H/lg+Pasf1WUCR3e2tP/te3z/QEsI4hHEI4xDGWWgOPlxQLk52fn7f3r/BjIPLwK2g5S1iFkuUMA5hHMI4hHEI4xDGIYxDGIcwDrW6+VBHH+v0N8rBq/O9783f1xpKD9jaoRROQ1TMqeu7l6bdhZMSV7L8RrGaIp2EazXn1m9HNYS61q61dpMa4g4O97MnMo4nfZFiSVJI3CAsJS4Wo3EbYU5wrLr+pEchwzYsP19YrBCSLjI3YarKJUsylCftItcNDFW1VFwqX8pF5gS3etSSPA5rkmvdkx5nit4ubTqEcQjjsCb5+WklMgmpcaoF+r2cFpLH4bqBoaf82uqH8qW6CkpUNyXy5vJ0cv9UnvQqYU5wrKq5TsbiJXtCliSFqjxMOiU0FqNxjjvrHb0rTTT9TmYWb9Vm8160pFFt/SlJp9PBv/EF0A2m4xwz7/QAAAAASUVORK5CYII=", "sofa": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABCElEQVR4nO3YwQoBQRgH8L+veQMXJTlIKcJ9b97AO7h7AidP4O4dvIGDckeUkoOkHChvQDkxMWax2f38f5etne/bb6adnW0GICIiIiIiIiIiIrqTgkNQLp6RAOPF6uk4zKvkRquLOBv2O852gXLGNzCXzSBOtru9V5z6Nyj4pykaJGTVtAVWv29X1ZQdWGu2nQ+rVyv4pcls7myfDnp3A1Q/RQXKCZQzUf1/4kKgnAmbUC4V8Euj8SFUvEA5gXIC5UzYhMVyjSQRKCdQTvBv3+B00HsYmM+mr9eTdX+zO0bTM6su3qxrfE6nXu0TXadan/hGXYFyAuUEygmUM76BUa+WcatLRAQfF0ktOtOK06KrAAAAAElFTkSuQmCC", "fish": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABVUlEQVR4nO3ZsU4CQRAG4J8/W9haqxWxsiCxJTwABfSihaVv4DP4BpQWgj0WPACxJaGwMlZgbWuniVGDZr3b27s59ybzNYSwO/kHhrvLHWCMMcYYY4wxxqOFAN2jwzck6P7hMTe/Cy12dbdASi4HvaB1hHKEcoRyLmbT8uUV/+F4d6fwHkI5QjlCOYdErdY3P953Ds6i6hDKEcoRyjnJ4sP5xZ+fzfpjJNng/vQcy5xwWY39XiPdKGM2ZTUQ0lyZ9bX9B4eeYLFhJZt0ZTZvj1lIyNPbp4/XyUnbW2t7XGPPeyJHUekxa8yVzMTzy0kjlGMVReo6p9Xe4Kw//m6ubJNSXxKrDBQbUnICWHWgomGlx9sV3bAZXQM592S+QjfyWrRpBx9CORfzTCLm9p2E7me+rGcUrbwCvc4eUrZYPWc2qH5ECeUI5QjlCOVcyFHKGGMM/N4B1IxYVtIXgM8AAAAASUVORK5CYII=", "tv": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABIElEQVR4nO3ZsWvCQBQG8C8fb3Ny1qkgFty6+g8VZ4cOHR0cnKX/UFa3Qovg1MxOnSt0U1pzuVwC+e79lnC5vJeE3L0jHOCcc84555zrRNFF0uVi9vPX+fL9WIT0p2ToyGQ2v2pXx89G/akQ4ghxhDhCnN3r/K/axarLF3u/8k71ra2it9UuVl2e2PtUNdVXfogS4ghx1jTgcbVBnz72r63iCXEWG/j0MG10/eH0hTZe1s9X7e3uLShO/gsS4ghxhoEInXPZfUFCHCHOYgPbrmtN+TqY6xAlxBkGwtfBXIcoIc76/sPuGyGOEEfkPgerwH270Xj8e/w+n1s9UKo8QS8YuuN6u6cQu1ObKk9WQ5QQR4gjxFmqRKmqXqo8zmEYLsEWRdGbEClCAAAAAElFTkSuQmCC", "bed": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABIElEQVR4nO3YMUoDQRQG4N+fdwAbESLYpUqRShCDpQew9ggWFp7D0iMIdh7AUtbGKkUaBTsDKiw5gRECAZU1GbO7Yff3/5phZ98b3rLDwBvAzMzMzMzMzMysYhtFk4Ned5qSnI2eCvObJH57cXKwtTDx6v4dbRBlklP/dKo6dkQsC+hsb357Hr9OZuPtw7DSQo72+qgDIY4QR4gjxAUapOypnBWcwn/+wP2z69mY5zmqdHpxUyr/8vz4f25RQhwhLlZNfJt8oA0CDfH4PK5lXUIcIY4QR4gjxBHiCHGEuFgWML+DmdtFuxBCBr3u9GdPmXzxe9jfWbj43fAF65BSR/al8Y2UzrgpN92rdPyEOEIcIY4QF6mB6zol21KHGarxCYLUPsUjUcbDAAAAAElFTkSuQmCC"};
+  const WALL_ART = window.__WALL_ART = {"win":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAA2klEQVR4nO3boU0EURRG4TMno/FYEtRaHAUg6IAiEBSCoIjtAEEBOCyKBIunASiAmWRJNivmvE/+ubk3T/95MAzDEDYthde7yx826PX9489757Xhi/MztuTz63sxlziJk7j50MGH/dtRDz/eXZ10/xqJkziJkziJkziJkziJkziJkziJkziJkziJkziJm9aKkS32AkvFiMRJnMTNhw7ePr0c9fDz/c1J96+ROImTOImTOImTOImTOImTOImTOImTOImTOImTuGkpHL1AiMRJ3PzfPzbDMAwD2/ELS1IkKdwgIfwAAAAASUVORK5CYII=","art1":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABVklEQVR4nO3aMU4DQQwF0J+f6ag5AhUSLRLcgJKWK3ADam7AEaBCQqLJDUDQolBxBOq0BK1ERbLs7GbsWfb7lSOvHXu8SooAIYQQQgiiZtsOTw8P1pigp/ePjX5TW/DFyT6m5O75c+s5IY4QR4hLuYHnVzf4Tx6uL7PiCHGsVXjxttYdwOKn+TEMgRBH74K/b732FtCzWFuzNYdAr0JdTdYaAiGOHkVyb7fGFtC6QN+mvIdAy+RDm/EcAiGOVol3vUWvLaBF0lIf3mMIhLhUOmHbrZ0dzQY915x3PTuaDVgYrazlq8BSiazfV6v8hDiWSOL1lWVRh7sm8P7pWrpeyg28X75snO19HaOGZggrvv4ZM8/MRYhLQx/se/ulV7ep37UFpgNYFSg+BoQ4QhwhjhBHiCPEEeIIcYQ4QlzKDZw/3mKKCHGEOEJc6vvf2hBCCCGEgGn4BgxsazZ2/ykNAAAAAElFTkSuQmCC","art2":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABHElEQVR4nO3aPUpDQRiF4dfDRyqLYCXYBawU0ooiuAlTZQUpRCxdgKVICldgpZsQRLAVtBLs0gbrNArpjdy5N3rj+Z5mipkzP80wMwyklFJKttYWVR7sbH/yDzy+vn27zvgpfNjfYpU9PE8W1gtzwpwwF1UDpxeXtNnV+Vml9sJclAanN+NaA28MT+bl9f0HTRgddYtywpwwJ8wJc8KcMCfMCXPCnDAnzMVfT6D0DN8UYS5+e8D1/c15OXu/bbTfTm9QlBPmhDlhTpgT5qLum15VTe/+dQlzURq8e3mq1P54d482EuaEOWFOmBPmhDlhTpgT5oQ5YU6YE+aiNFh6uyt9vV0WYS6W/Q+v7YQ5YU6Yi7r/7VNKKaXEqvoC25QgGkZhL7cAAAAASUVORK5CYII=","clock":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAB/ElEQVR4nO2boU7EQBCGZ//U8wCnUQgchvACBIsCi8FjEVg8BgsKS3gBcgaHQKHvAXgCSEhKmku7OzPdTrfMfskll9y2M/+/s71NdkpUqVQqlYpbgmWww73db+7Y9cenSW7BWvDR/ip53ev7xsyQMLVwjmCJIbmNCCULtzAiUGbxUwgfMiKHCcF61q/vHpJjbi7PzaohkMGsc0RrzRhbDWFK8WOES4wYY0KYQnxO4VwjtCZgSeJj92/zkWy2VAbMKT4VR/MPBMngmLsa8afHJ78fDbF4kipAjtK3mnlOXOlSgCRgSeJj8SVLAZxBQ27OLT6VB6cKwA1iscXNCTdfLH32x1YB/uPsS/KG5salzf6YvEDOQexH6bayVGI6IF1HpZb/UH6p5wDIOc1cgd8uzuhqtfP3/Xbzxbru6eU5ax4g5zRUCLlnlgvIOc1cgQ/uH6kEQM4BOQfSg0rOocWcbOfXd9DKNmBtdEQ9NTEdIOdAc1Gpy0CTFziDUuuoVDh5Q7t+SquCoXxSzzFwAyytCrj5gjOo9CrQzr74Idjn6twm9MWXVCu4A1s3SzIhJp67h4EkYOym1ibE4kk2cNAEHyoxKxNSTRISIL0gthRiyZXaIRK0ibjuEWpx3SXW4rpPsIvbTtEurnuFu7jtFt/G7fsCS3pjpFKpVCrkmB+xMSP1hrGSlAAAAABJRU5ErkJggg==","photo":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABXUlEQVR4nO3asUoDQRAG4N+ffQXBB0gqewsFEexC8AVs7QULSwtLC8He1hcQuU4QQQt7K/MAgu+gYmGQI7ebm9ucd/fPV10yN0tmZ7PskQDOOeecc85JWosFdzbHXxiAp9e3yjpDKvlwex19dvP8EY0T4ghxhLhQN+Ho6i4af3n/xCptbcR7dn08rTUeIY4QR4gjxBHiQtu7dNcQ4ghxhLiQe8Di8mx+PTk5X3leZyag+FNA+b1YQda8zq6ANs1uL+bXo4PT/9sDigVdXCZuzSsXv+j1oDfBWUWxlklg0w+T6mLVfda83IieSXV5b3932BOQGyGOEMemAyx7WCnfZ82D+goYJQ48D/eP7U/AJNGlqrg1T3oFxFaB5TgckMlvt+o+1VnzforN8SwQkJl12VryrEX3/iuQEyGOEEeII8QR4kLdhLq/v3cdIY4QR4gLTf9n55xzzjnnnEMffQOB/lvh6S3M1AAAAABJRU5ErkJggg==",};
+const WALL_ITEMS = window.__WALL_ITEMS = [{id:"win",n:"木窗",p:0},{id:"art1",n:"风景画",p:120},{id:"art2",n:"抽象画",p:140},{id:"clock",n:"挂钟",p:100},{id:"photo",n:"合照",p:60}];
+const FURN_ART = {"rug":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABf0lEQVR4nO2ZPW7DMAxGRU49RKYg7ZIjdAmQpWtOkzP0NF27FOiSI3Rpg0w5RLcGHQTYrmxTImW74Pc2AY7E7zmQ9RMCAAAAAAAAAAAAAAAAAOAGqj3A4/b+R9vH6eOrWp00Rdjnw764z+PLW1UpZB1aE7ZUikYGzRV687Rrtc+v77PIoNLg2jdtJaBPhlQETRV8tV612ncPm1b7+/P85zfXy7W6CJKGzwneDZtCIiBFjpQoYkgCWYWXhLYQkCtjTAJpw+cGtxQgFTEkgUrDlwRvFjo2CWr7l0qgmuGHCsr9CliMmZLAqQe14X+LKJ3BtX0O1ZfKxTnrdmn4mmgldHOy9O0vIXzOOH31dvPxlEVZYjUeB+dwcA5bdVS6IJp7PJYeQFjMvlZoJuRuPm42xnZOS5Bg8TUaXQgde/4Fks5jkdYipH1KVoJNKPWg671AxPVuMOL6PCDi+kQo4vpMsInbU+ElXIYs4l4ghcuboT5c3g3+99thAAAAAAAQnHIDn3YlOU1JiZQAAAAASUVORK5CYII=","stool":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABRUlEQVR4nO3XsUoDQRQF0DuXgGAlpBCEEFKksgipxdbWP8nH5E9sbUNqsbBKEUIgYCFYCVZKioAJm1l3Z96w8O7plmHezrssM7OAiIiIiIiIiIiIiIiIE6HES+5uxz9t5y7fVqZrDKUanj3cNK4zf96ZBxKsGm/TcJNAcgURSjY+HA3+XXOz3hYJIiBT81WNN2m4TSCHIFJCCBbN52y8LojUEJi6oJLNV9VP3WsI55i7YGzz6mJ9phaoOqv3i8y90HM1q97fmVPA6hjszCkQuwds3j/x1/D6Ck3E5nfqHnAuiMfJZTSAl/XH0fN01K8NwOIm2ENGh0Wl/PxYfu7mAcScblb344vo+OkXZPVnSBS0byDWRN24BcI5wjnCOcI5wjnCOcI5wjnCOcI5wjnCOcK5nlXhp9ev6Phi9Z00X0RERESQ5hdsmIyYsVQ45wAAAABJRU5ErkJggg==","lamp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABiElEQVR4nO3boU7EUBQE0HmTOkiAbyAoDMlKMEgEiiDRfAWKr0AjCQqBxIAkwaAIDkkCJItCQHCbsCxbOve2zfTIZju377W9bbotMBhYKxlFNtfXPv+z3s39Q/j2VUhyfbZX6/db++fIULW1d5XZTY6UCgJXl8d//2h8J88cPz9h9+AEvTgFPhY30EVEjzXd+72fAMWVolJsxPbOES5OD9FHbBqQca2OxC6dj23UoyKkraNAUZcwR5ijMiyrDyjrUBWU3QdU9QhzhDmqA6P7gDqfyrCsPqCsQ5gjzDEiNKoPRORSHRjdB9T5hLkqKnjW4bq8tDB1+evbO7KV7ILfj7pnTUD2LTVhjjBHmCPMEeYIc4Q5whxhjjBHmCPMEeYIc4Q5whxhjjBHmCPMEeYIcyWr0OSb3/P+L5DxiLxkvuo+Wl2Ze/3bx5cfyyImpEQOvM6A60yIciIKAgavHPhvE9HZl6RGgYOPyCfMEeaoDpzWvbucX6Rp7leBSbb3AcrvC/v+NcoAPfAFXzZ99g5cAJ8AAAAASUVORK5CYII=","shelf":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABkUlEQVR4nO3bsUrDUBgF4JPDdXAQ3AQXJydxcFAEwdFJfABfwM3dJ3Dv5gv4AOLkKAiig4N1cpCiCDoJHRwclC4lN8T0JrkJTc//Tb03/72lbSA5fyhgjDHGyEpCinbWVn/RQTdPzxM/nwvd7HhvGV3Su3oPqiPEEeJclUWDjy9Mo5WlxdJrCHGEOEIcIc5VWbS7vY5pNHh5Lb2GEEeIc1UWXd8+/nts68e/Ft/Nhd8z7B9seOPLiwdvv0l72X1AW2dA0S+WZ7h5Mn69cH/qjdPzIcqcESEIcYQ4QhwhjhBHiCPEJaFd4XRTtAsdoVFTNGpXOM3S4AwhxLnYaTBGrsjLFNnckVdXJQ061FAlmNQJQk1wMTfL6wVkk2CsMyIWQhwhjhBHiCPEEeIIcUlIkaXBDEuDM4QQ55pIgyHJrQmtp8E21Xno2tgXMCwZbbP1o9r5w6Px+Pv8zBun55tCiCPEEeIIcYQ4V+d62y84ljffz5n7LBh7e76FvU9ZhLikShrsgujPBnuB/8AwxhiD7vgD+8N7uumhyaIAAAAASUVORK5CYII=","desk":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABSUlEQVR4nO3YvUrEQBQF4OPlVhYKloKIhZWIlgsLljYWFhY+ge2CD2DlE5jWJ7CwsLCxUwhsqYiVhYhgKWhhqyAs7IZ1NySTyeg5XxMymTkz5GcuBBARERERERERNjNtTNpdW/0a154/PEZfj6Mlp0fdkfOD47yVdRjIeQqvfvF6zE/BEdn55dnP8a2fjW3f29nn2AMWOj2kwEDOQM5Azuvs2k0JPe+kquLTBve2FxFT6Pmyq9e0qsD1ySFS4mU7Lq8s4S95fnop1c9AzkDOQ79S/+4GZEO76O7GbOWJLu4+J15vMrvyDciH6meI2vxbPW4yexoDOQM5rzpwq7Neqt9N/z6p7CIDOQM5AzmvOjDE99dGdpGBnNcNuP2YH9u+OfeOlLMHDOS8bkDIpxEze8BAzkDOQM5AzkDOY/15aTNbREREREREMOob1f1QaU48ccUAAAAASUVORK5CYII=","plant": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABTUlEQVR4nO3ZoU4DQRAG4J8/o1AkhKSQNkFQhcNUYPFoRAWvAM8Br4BA9CWwFRgcqogmJaEJIUFhISQ1JQ2we7OzxzCf63VvZndnt9dtgRBCCCGE0FJrFkkO9/vvGnHG95Pk/opG4l8lOt5Zet3d6yTdP724y8uLihWxILk37p4fJLV/fJivvN7rbK28Pps/QwPhnGgFKl2JXIRzUrsDpStMOCdtr0Tu8681S7TUN5jGS/RzZpvOrgXmzmiTWbVEOEc4J7USW+1fQUUW+1isKvH1PGhFLCpQ8/woGkFyB/DTfRpLWKDk+mTw7funb7Ok9sPRrUq/COcI58Qq0dV6D396gMPFnrk86jeKc3YzQesGOF582tX8gfff7kHCOcI5wjnCOcI5wjkpFfjp5TWp/fbmRpF+EM4RzhHOEc4Rzol2wPzjTt1/gkMIATk+ANHCTzdhpYU6AAAAAElFTkSuQmCC", "chair": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABCElEQVR4nO3arU4DURDF8X9PRtVjqEI0FQgeAI/lTXgY3gSLr0RUIBoEhsVQCxZsISENd+fS5nR+cjdz9u5HdrKThVJKKaXYmmSEXJ7PP+lg+fg0en2RsxS4uTol0+39a0qOMCfMRY/Q2eykqW4Y3tLXIswJc8KcMCfMCXPCnDAnzAlzwpwwJ8xFj9AeXwWthLk4pBnMruO0zGjiUGYwu/JbZzTCXIwNWCzO6Gm9fh5VL8zFvq9wb8JctBZuv9WuL6bf9t2tPpoys3JGn+B2P/qtJ/61Z2XlHN0jKswJc8KcMCfMCXPCXGSEvGzef2yZ7DXnqO6gMCfMRUbIw5DyP1FaTiml8F++AME8N6KKRycHAAAAAElFTkSuQmCC", "gift": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABC0lEQVR4nO3Yv0pDMRTH8e/9kYe4uAu27i59ARdHH8Hdzp076+4jOLr4Andx7x9wl+IifYIWpR0UCiaNF/xxPpAhkHOSEEjCgRBCCOGghopG56ebGnm62Wu1dSUqe3ocHxV/dX1HTaJHq5flV+uTMCfMCXPCnDAnzAlzqc+fSntxVmWenJ9O89uB+4kfRgNKtLeX3/qr++eiPDfdImuDwlw69iRKFefpFlnDhTlhTphLuQGlt1+tWzSXMJdK3qFP0+FJVlz7o//+sc6Kn8zf+PMNdrsHtlbtpY9ajTAnzAlzwpwwJ8wJc8KcMCfMCXPCnDAnzAlzwpwwJ8wJc8JcUxL0n4pOIYQQAodtAUxHNzeGQLjmAAAAAElFTkSuQmCC", "paint": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABEElEQVR4nO3ZMYoCQRAF0O+3s4n3CEYeQHBvYbpXWE9g7A28gpFgIngDFzdd1sgjGAtGKoKBiDLt2F0O5X/h0FXdf2o6GkBERERERLJoxCz6bLcOqKHFal16/hDb7Kv7gToZ/2yi1hHOEc4RzoWqhb3BCJamw+9KdYRzhHOEc7TaaP538Btwfg73ipCEc8y9wfXUrKfInM3vhbEMyVyNy0JYhSScY46msdOxmGKoWjj5X958Xuw7D/U5hdzyt3RdEzWYYPFguGfrYugOWk0h1xRDiiaXh4u5T9c1l89i680+0SLxm0/dj3COdbw3KfuG1IdIdbhTn92s/7qAuwSbWyCcI5wLqf8FiIiIiIjImzgCXW5JbiArjc4AAAAASUVORK5CYII=", "guitar": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABmklEQVR4nO2aPU7EMBCFn5+WAjgBFFRQUVBQIs7AGTgEp6DkJJwB7QEoqKCiWE4AFBSgIAUhE9tre8ZoJ/6kFJudcfzmOT8TBeh0Oh1FnNbAZ8dHn6H/lg+Pasf1WUCR3e2tP/te3z/QEsI4hHEI4xDGWWgOPlxQLk52fn7f3r/BjIPLwK2g5S1iFkuUMA5hHMI4hHEI4xDGIYxDGIcwDrW6+VBHH+v0N8rBq/O9783f1xpKD9jaoRROQ1TMqeu7l6bdhZMSV7L8RrGaIp2EazXn1m9HNYS61q61dpMa4g4O97MnMo4nfZFiSVJI3CAsJS4Wo3EbYU5wrLr+pEchwzYsP19YrBCSLjI3YarKJUsylCftItcNDFW1VFwqX8pF5gS3etSSPA5rkmvdkx5nit4ubTqEcQjjsCb5+WklMgmpcaoF+r2cFpLH4bqBoaf82uqH8qW6CkpUNyXy5vJ0cv9UnvQqYU5wrKq5TsbiJXtCliSFqjxMOiU0FqNxjjvrHb0rTTT9TmYWb9Vm8160pFFt/SlJp9PBv/EF0A2m4xwz7/QAAAAASUVORK5CYII=", "sofa": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABCElEQVR4nO3YwQoBQRgH8L+veQMXJTlIKcJ9b97AO7h7AidP4O4dvIGDckeUkoOkHChvQDkxMWax2f38f5etne/bb6adnW0GICIiIiIiIiIiIrqTgkNQLp6RAOPF6uk4zKvkRquLOBv2O852gXLGNzCXzSBOtru9V5z6Nyj4pykaJGTVtAVWv29X1ZQdWGu2nQ+rVyv4pcls7myfDnp3A1Q/RQXKCZQzUf1/4kKgnAmbUC4V8Euj8SFUvEA5gXIC5UzYhMVyjSQRKCdQTvBv3+B00HsYmM+mr9eTdX+zO0bTM6su3qxrfE6nXu0TXadan/hGXYFyAuUEygmUM76BUa+WcatLRAQfF0ktOtOK06KrAAAAAElFTkSuQmCC", "fish": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABVUlEQVR4nO3ZsU4CQRAG4J8/W9haqxWxsiCxJTwABfSihaVv4DP4BpQWgj0WPACxJaGwMlZgbWuniVGDZr3b27s59ybzNYSwO/kHhrvLHWCMMcYYY4wxxqOFAN2jwzck6P7hMTe/Cy12dbdASi4HvaB1hHKEcoRyLmbT8uUV/+F4d6fwHkI5QjlCOYdErdY3P953Ds6i6hDKEcoRyjnJ4sP5xZ+fzfpjJNng/vQcy5xwWY39XiPdKGM2ZTUQ0lyZ9bX9B4eeYLFhJZt0ZTZvj1lIyNPbp4/XyUnbW2t7XGPPeyJHUekxa8yVzMTzy0kjlGMVReo6p9Xe4Kw//m6ubJNSXxKrDBQbUnICWHWgomGlx9sV3bAZXQM592S+QjfyWrRpBx9CORfzTCLm9p2E7me+rGcUrbwCvc4eUrZYPWc2qH5ECeUI5QjlCOVcyFHKGGMM/N4B1IxYVtIXgM8AAAAASUVORK5CYII=", "tv": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABIElEQVR4nO3ZsWvCQBQG8C8fb3Ny1qkgFty6+g8VZ4cOHR0cnKX/UFa3Qovg1MxOnSt0U1pzuVwC+e79lnC5vJeE3L0jHOCcc84555zrRNFF0uVi9vPX+fL9WIT0p2ToyGQ2v2pXx89G/akQ4ghxhDhCnN3r/K/axarLF3u/8k71ra2it9UuVl2e2PtUNdVXfogS4ghx1jTgcbVBnz72r63iCXEWG/j0MG10/eH0hTZe1s9X7e3uLShO/gsS4ghxhoEInXPZfUFCHCHOYgPbrmtN+TqY6xAlxBkGwtfBXIcoIc76/sPuGyGOEEfkPgerwH270Xj8e/w+n1s9UKo8QS8YuuN6u6cQu1ObKk9WQ5QQR4gjxFmqRKmqXqo8zmEYLsEWRdGbEClCAAAAAElFTkSuQmCC", "bed": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAABIElEQVR4nO3YMUoDQRQG4N+fdwAbESLYpUqRShCDpQew9ggWFp7D0iMIdh7AUtbGKkUaBTsDKiw5gRECAZU1GbO7Yff3/5phZ98b3rLDwBvAzMzMzMzMzMysYhtFk4Ned5qSnI2eCvObJH57cXKwtTDx6v4dbRBlklP/dKo6dkQsC+hsb357Hr9OZuPtw7DSQo72+qgDIY4QR4gjxAUapOypnBWcwn/+wP2z69mY5zmqdHpxUyr/8vz4f25RQhwhLlZNfJt8oA0CDfH4PK5lXUIcIY4QR4gjxBHiCHGEuFgWML+DmdtFuxBCBr3u9GdPmXzxe9jfWbj43fAF65BSR/al8Y2UzrgpN92rdPyEOEIcIY4QF6mB6zol21KHGarxCYLUPsUjUcbDAAAAAElFTkSuQmCC"};
   function furnIcon(it){
     if(!it) return '<em>❓</em>';
-    if(FURN_ART[it.id]) return '<img class="fi" alt="" src="'+FURN_ART[it.id]+'">';
+    if(FURN_ART[it.id]) return '<span class="fx" data-id="'+it.id+'"><img class="fi" alt="" src="'+FURN_ART[it.id]+'">'+(it.id==="fish"?'<i></i><i class="b2"></i><i class="b3"></i>':'')+'</span>';
     return '<em>'+it.e+'</em>';
   }
   function renderRoom(){
@@ -2154,6 +2199,74 @@ h1{ font-weight:800; letter-spacing:.06em;
     document.documentElement.style.setProperty("--idle", d.toFixed(2)+"s");
   }
   upd(); setInterval(upd, 2500);
+})();
+</script>
+
+<script>
+(function(){
+  var S = window.__YS;
+  var WALL_ART = window.__WALL_ART, WALL_ITEMS = window.__WALL_ITEMS;
+  if(!S || !WALL_ART || !WALL_ITEMS) return;
+  if(!S.wall) S.wall = {"0":"win","1":"art1","2":"art2"};
+  if(!S.wallOwned) S.wallOwned = ["win","art1","art2"];
+  var msg = "";
+  function byId(id){ for(var i=0;i<WALL_ITEMS.length;i++){ if(WALL_ITEMS[i].id===id) return WALL_ITEMS[i]; } return null; }
+  function draw(){
+    for(var i=0;i<3;i++){
+      var el = document.querySelector('.wslot[data-wall="'+i+'"]');
+      if(!el) continue;
+      var id = S.wall[String(i)], a = WALL_ART[id];
+      el.innerHTML = a ? '<img alt="" src="'+a+'">' : '';
+    }
+  }
+  function close(){ var p=document.getElementById("wallPick"); if(p) p.classList.remove("on"); }
+  function open(slot){
+    var p = document.getElementById("wallPick");
+    if(!p){ p = document.createElement("div"); p.id="wallPick"; document.body.appendChild(p); }
+    var h = '<div class="fpt">换墙面装饰 · 点一下挂上去</div><div class="fr2">';
+    WALL_ITEMS.forEach(function(it){
+      var own = S.wallOwned.indexOf(it.id) >= 0;
+      var on  = S.wall[String(slot)] === it.id;
+      h += '<button class="fpick" data-wput="'+it.id+'" data-slot="'+slot+'"'
+        + (on ? ' style="outline:3px solid #d98b8b"' : '') + '>'
+        + (WALL_ART[it.id] ? '<img alt="" src="'+WALL_ART[it.id]+'">' : '') + '</button>';
+    });
+    h += '</div>';
+    h += '<div class="fr2" style="grid-template-columns:repeat(5,1fr);margin-top:-4px">';
+    WALL_ITEMS.forEach(function(it){
+      var own = S.wallOwned.indexOf(it.id) >= 0;
+      h += '<div class="wname">'+it.n+(own?'':'<br>'+it.p+'❤')+'</div>';
+    });
+    h += '</div><div class="wmsg" id="wpMsg"></div>';
+    p.innerHTML = h; p.classList.add("on");
+  }
+  document.addEventListener("click", function(e){
+    var t = e.target;
+    if(!t.closest) return;
+    var w = t.closest(".wslot");
+    if(w){ open(parseInt(w.getAttribute("data-wall"),10)); return; }
+    var b = t.closest("[data-wput]");
+    if(b){
+      var id = b.getAttribute("data-wput"), slot = parseInt(b.getAttribute("data-slot"),10);
+      if(S.wallOwned.indexOf(id) < 0){
+        var it = byId(id);
+        if(!it) return;
+        if(S.coins < it.p){
+          var m = document.getElementById("wpMsg"); if(m) m.textContent = "❤ 不够啦，先去赚点";
+          return;
+        }
+        S.coins -= it.p; S.wallOwned.push(id);
+      }
+      S.wall[String(slot)] = id;
+      if(window.__YSAVE) window.__YSAVE();
+      if(window.__YRENDER) window.__YRENDER();
+      draw(); close();
+      return;
+    }
+    if(!t.closest("#wallPick")) close();
+  }, true);
+  setTimeout(draw, 150);
+  setInterval(draw, 900);
 })();
 </script>
 </body>
