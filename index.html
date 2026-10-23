@@ -1605,10 +1605,12 @@ h1{ font-weight:800; letter-spacing:.06em;
     const thumb = (it.sprite && GARMENTS[it.sprite])
       ? '<img src="'+GARMENTS[it.sprite]+'" style="width:34px;height:34px;image-rendering:pixelated;object-fit:contain">'
       : (em || "📦");
+    const HN = {cottage:"小木屋", seaside:"海边小屋", city:"城市公寓", forest:"森林小屋"};
+    const hb = (kind==="furn" && it.h && HN[it.h]) ? ' <span style="font-size:10px;color:#b07a3a">·仅'+HN[it.h]+'</span>' : '';
     return '<div class="item '+(own?"owned":"")+'">'
       + (own?'<span class="tag">已拥有</span>':'')
       + '<div class="ii">'+thumb+'</div>'
-      + '<div class="in">'+nm+'</div>'
+      + '<div class="in">'+nm+hb+'</div>'
       + '<div class="id">'+ds+'</div>'
       + '<div class="ip">'+(own?"—":"💗 "+pr)+'</div>'
       + (own?"":'<button '+attr+'="'+it.id+'">买</button>')
@@ -2277,15 +2279,20 @@ const FURN_ART = {"rug":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAC
     WALL_ITEMS.forEach(function(it){
       var own = S.wallOwned.indexOf(it.id) >= 0;
       var on  = S.wall[String(slot)] === it.id;
+      var placed = Object.keys(S.furn||{}).filter(function(k){ return S.furn[k]; }).length;
+      var locked = it.req && !own && placed < it.req;
       h += '<button class="fpick" data-wput="'+it.id+'" data-slot="'+slot+'"'
-        + (on ? ' style="outline:3px solid #d98b8b"' : '') + '>'
-        + (WALL_ART[it.id] ? '<img alt="" src="'+WALL_ART[it.id]+'">' : '') + '</button>';
+        + (on ? ' style="outline:3px solid #d98b8b"' : '')
+        + (locked ? ' style="opacity:.35;filter:grayscale(1)"' : '') + '>'
+        + (WALL_ART[it.id] ? '<img alt="" src="'+WALL_ART[it.id]+'">' : '')
+        + (locked ? '<span style="position:absolute;font-size:15px">🔒</span>' : '') + '</button>';
     });
     h += '</div>';
-    h += '<div class="fr2" style="grid-template-columns:repeat(5,1fr);margin-top:-4px">';
+    h += '<div class="fr2" style="grid-template-columns:repeat(3,1fr);margin-top:-4px;gap:8px">';
     WALL_ITEMS.forEach(function(it){
       var own = S.wallOwned.indexOf(it.id) >= 0;
-      h += '<div class="wname">'+it.n+(own?'':'<br>'+it.p+'❤')+'</div>';
+      var _placed = Object.keys(S.furn||{}).filter(function(k){ return S.furn[k]; }).length;
+      h += '<div class="wname">'+it.n+(own?'':(it.req ? '<br>摆满'+it.req+'件解锁' : '<br>'+it.p+'❤'))+'</div>';
     });
     h += '</div><div class="wmsg" id="wpMsg"></div>';
     p.innerHTML = h; p.classList.add("on");
@@ -2301,6 +2308,13 @@ const FURN_ART = {"rug":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAC
       if(S.wallOwned.indexOf(id) < 0){
         var it = byId(id);
         if(!it) return;
+        if(it.req){
+          var _pc = Object.keys(S.furn||{}).filter(function(k){ return S.furn[k]; }).length;
+          if(_pc < it.req){
+            var m0 = document.getElementById("wpMsg"); if(m0) m0.textContent = "摆满 " + it.req + " 件家具才能解锁（现在 " + _pc + " 件）";
+            return;
+          }
+        }
         if(S.coins < it.p){
           var m = document.getElementById("wpMsg"); if(m) m.textContent = "❤ 不够啦，先去赚点";
           return;
