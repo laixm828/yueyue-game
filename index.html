@@ -711,6 +711,13 @@ h1{ font-weight:800; letter-spacing:.06em;
 .roomPanel{bottom:66px!important;max-height:50vh!important;border-radius:14px!important;}
 #roomPanelClose{position:absolute;right:10px;top:8px;width:26px;height:26px;line-height:22px;text-align:center;
   border-radius:50%;border:2px solid #33251f;background:#fff;font-size:14px;font-weight:800;cursor:pointer}
+
+#wallPick .fr2{display:grid!important;gap:8px!important}
+#wallPick .fr2.wicons{grid-template-columns:repeat(3,1fr)!important}
+#wallPick .fr2.wnames{grid-template-columns:repeat(3,1fr)!important;margin-top:-2px!important}
+
+#p-garden{padding-bottom:88px!important}
+.seedbar{padding-bottom:4px}
 </style>
 </head>
 <body>
@@ -1165,7 +1172,12 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
       el.addEventListener("click", function(){
         const i = +el.getAttribute("data-g");
         const g = S.garden[i];
-        if(!g){ gSel = (gSel===i ? -1 : i); renderGarden(); }
+        if(!g){
+          const was = gSel;
+          gSel = (gSel===i ? -1 : i);
+          if(gSel >= 0 && was !== i) toast("选了第 " + (i+1) + " 块空地，下面挑一包种子");
+          renderGarden();
+        }
         else if(gardenLeft(g) > 0) gWater(i);
         else gPick(i);
       });
@@ -1175,7 +1187,11 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
         el.addEventListener("click", function(){
           const id = el.getAttribute("data-seed");
           if(gSel >= 0 && !S.garden[gSel]){ gSeedId = id; gPlant(gSel); }
-          else { gSeedId = (gSeedId===id ? null : id); renderGarden(); }
+          else {
+            gSeedId = (gSeedId===id ? null : id);
+            if(gSeedId && gSel < 0) toast("先点上面一块空地");
+            renderGarden();
+          }
         });
       });
     }
@@ -2321,9 +2337,27 @@ const FURN_ART = {"rug":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAC
     save(); lastSig = ""; renderRoom(); toast("收起来了");
   }
 
+  /* S4：点已摆的家具先问一句，别一键就收走 */
   document.addEventListener("click", function(ev){
+    if(window.__justDragged) return;
     var t = ev.target;
-    var b = t.closest ? t.closest("[data-buy]") : null;
+    if(!t.closest) return;
+    var slotEl = t.closest("#roomGrid .slot.has");
+    if(slotEl){
+      var slot = parseInt(slotEl.getAttribute("data-slot"),10);
+      var fid = S.furn[String(slot)];
+      var item = (window.__FURN||[]).filter(function(x){ return x.id === fid; })[0];
+      var nm = item ? item.n : "这件家具";
+      if(!window.confirm) return;
+      if(window.__confirming) return;
+      window.__confirming = true;
+      setTimeout(function(){ window.__confirming = false; }, 400);
+      if(confirm("把「"+nm+"」收起来？\n\n想换位置的话，直接按住它拖动。")){
+        takeOut(slot);
+      }
+      return;
+    }
+    var b = t.closest("[data-buy]");
     if(b){ buy(b.getAttribute("data-buy")); return; }
     var p = t.closest ? t.closest("[data-put]") : null;
     if(p){ put(p.getAttribute("data-put"), parseInt(p.getAttribute("data-slot"),10)); return; }
@@ -2382,7 +2416,7 @@ const FURN_ART = {"rug":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAC
   function open(slot){
     var p = document.getElementById("wallPick");
     if(!p){ p = document.createElement("div"); p.id="wallPick"; document.body.appendChild(p); }
-    var h = '<div class="fpt">换墙面装饰 · 点一下挂上去</div><div class="fr2">';
+    var h = '<div class="fpt">换墙面装饰 · 点一下挂上去</div><div class="fr2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
     WALL_ITEMS.forEach(function(it){
       var own = S.wallOwned.indexOf(it.id) >= 0;
       var on  = S.wall[String(slot)] === it.id;
@@ -2622,7 +2656,13 @@ const FURN_ART = {"rug":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAC
     if(!t) return;
     drag = { from: parseInt(t.getAttribute("data-slot"),10), x:e.clientX, y:e.clientY, el:t, moved:false };
     t.style.opacity = ".55";
+    try{ if(t.setPointerCapture) t.setPointerCapture(e.pointerId); }catch(err){}
+    t.style.touchAction = "none";
   }, true);
+  function endDrag(){ if(drag){ drag.el.style.opacity = ""; drag = null; } }
+  document.addEventListener("pointercancel", endDrag, true);
+  document.addEventListener("lostpointercapture", function(){ if(drag && !drag.moved) endDrag(); }, true);
+  window.addEventListener("blur", endDrag);
   document.addEventListener("pointermove", function(e){
     if(!drag) return;
     if(Math.abs(e.clientX-drag.x) + Math.abs(e.clientY-drag.y) > 10) drag.moved = true;
