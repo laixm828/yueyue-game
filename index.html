@@ -775,7 +775,7 @@ h1{ font-weight:800; letter-spacing:.06em;
     </section>
 
     <section class="page scroll" id="p-fit">
-      <div class="sec-title">📊 今天动了多少</div>
+      <div class="sec-title">📊 他今天动了多少</div>
       <div class="fit-card">
         <div class="frow"><label>目标</label>
           <div class="chips" id="fitGoals" style="padding-left:0;margin:0"></div></div>
@@ -791,11 +791,11 @@ h1{ font-weight:800; letter-spacing:.06em;
         <div class="chips" id="fitActs"></div>
         <div class="fit-res" id="fitRes"></div>
         <div id="fitBmi" style="margin:2px 0 10px;font-size:11.5px;color:#7a6a66;line-height:1.9;border-top:2px dashed #f0ddd6;padding-top:8px"></div>
-        <button class="wbtn" id="btnFitLog" style="margin-top:8px">📝 把今天记下来</button>
+        <button class="wbtn" id="btnFitLog" style="margin-top:8px">📝 记下他今天动的</button>
         <div id="fitBurnTxt" style="margin-top:6px;text-align:center;font-size:11px;color:#9a8280;line-height:1.6"></div>
       </div>
 
-      <div class="sec-title">💡 每天该动多少</div>
+      <div class="sec-title">💡 他每天该动多少</div>
       <div class="know">
         <p>· 步数：建议每天 <b>6000～8000 步</b> 主动走动；不到 5000 步基本算久坐。<br>
         · 有氧：每周 <b>150 分钟</b> 中等强度（快走、骑车、游泳）就够了；忙的话拆成每天 20～30 分钟。<br>
@@ -804,7 +804,7 @@ h1{ font-weight:800; letter-spacing:.06em;
         · 强度判断：运动时还能说话、但没法唱歌，就是中等强度。</p>
       </div>
 
-      <div class="sec-title">🔥 常见运动消耗（按你的体重算 30 分钟）</div>
+      <div class="sec-title">🔥 常见运动消耗（按他的体重算 30 分钟）</div>
       <div class="metwrap" id="metList"></div>
       <div style="height:14px"></div>
     </section>
@@ -955,7 +955,7 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
     { id:"polo_navy", name:"海军蓝 Polo", cat:"top", slot:"body", price:80, desc:"出门见人穿这个", sprite:"polo_navy", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"polo_cream", name:"米色 Polo", cat:"top", slot:"body", price:80, desc:"显得人很温柔", sprite:"polo_cream", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"hood_grey", name:"灰色连帽卫衣", cat:"top", slot:"body", price:120, desc:"帽子一戴谁也不爱", sprite:"hoodie_grey", box:{x:50.4, y:75.4, w:62, h:29} },
-    { id:"hood_pink", name:"粉色连帽卫衣", cat:"top", slot:"body", price:120, desc:"故意的，就想看你穿", sprite:"hoodie_pink", box:{x:50.4, y:75.4, w:62, h:29} },
+    { id:"hood_pink", name:"粉色连帽卫衣", cat:"top", slot:"body", price:120, desc:"粉的也给他买了", sprite:"hoodie_pink", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"wind_khaki", name:"卡其风衣", cat:"outer", slot:"body", price:160, desc:"下雨也好看", sprite:"wind_beige", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"wind_black", name:"黑色风衣", cat:"outer", slot:"body", price:160, desc:"走路带风那种", sprite:"wind_black", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"down_white", name:"白色羽绒服", cat:"outer", slot:"body", price:220, desc:"裹成一团", sprite:"down_white", box:{x:50.4, y:75.4, w:62, h:29} },
@@ -968,10 +968,10 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
     { id:"glasses", name:"墨镜", cat:"acc", slot:"acc", price:100, desc:"装酷用", emoji:"🕶️", pos:{x:58, y:64, size:10, rot:0} },
     { id:"headset", name:"耳机", cat:"acc", slot:"acc", price:120, desc:"听歌的时候别叫我", emoji:"🎧", pos:{x:38, y:54, size:9, rot:0} },
     { id:"bow", name:"小蝴蝶结", cat:"acc", slot:"acc", price:70, desc:"…… 别笑", emoji:"🎀", pos:{x:72, y:22, size:7, rot:10} },
-    { id:"crown", name:"小皇冠", cat:"acc", slot:"acc", price:180, desc:"今天你最大", emoji:"👑", pos:{x:46, y:3, size:8, rot:-10} },
+    { id:"crown", name:"小皇冠", cat:"acc", slot:"acc", price:180, desc:"今天他最大", emoji:"👑", pos:{x:46, y:3, size:8, rot:-10} },
     { id:"vest_black", name:"黑色机能马甲", cat:"outer", slot:"body", price:130, desc:"里面塞什么都行", sprite:"vest_black", box:{x:50.4, y:75.4, w:50, h:29} },
     { id:"shirt_denim", name:"牛仔衬衫", cat:"top", slot:"body", price:140, desc:"挽起袖子更好看", sprite:"shirt_denim", box:{x:50.4, y:75.4, w:62, h:29} },
-    { id:"shirt_white", name:"白衬衫", cat:"top", slot:"body", price:150, desc:"你穿上会变乖", sprite:"shirt_white", box:{x:50.4, y:75.4, w:62, h:29} },
+    { id:"shirt_white", name:"白衬衫", cat:"top", slot:"body", price:150, desc:"他穿上会变乖", sprite:"shirt_white", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"sweater_beige", name:"米色毛衣", cat:"top", slot:"body", price:180, desc:"毛线是软的", sprite:"sweater_beige", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"sweater_green", name:"军绿毛衣", cat:"top", slot:"body", price:180, desc:"冬天在家穿", sprite:"sweater_green", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"shell_green", name:"军绿冲锋衣", cat:"outer", slot:"body", price:240, desc:"山里那趟穿的就是它", sprite:"shell_green", box:{x:50.4, y:75.4, w:62, h:29} },
@@ -1554,7 +1554,7 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
   function logFit(){
     if(S.fit.loggedDay === todayKey()) return;
     const tot = stepKcal() + actKcal();
-    if(tot <= 0){ toast("今天还没走没动，先动一点再记"); return; }
+    if(tot <= 0){ toast("他今天还没动，先记一点点"); return; }
     const goal = S.fit.goal || "cut";
     let msg = "";
     if(goal === "bulk"){
@@ -1617,13 +1617,13 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
     }
 
     const lb = $("btnFitLog");
-    if(lb){ lb.disabled = logged; lb.textContent = logged ? "✅ 今天已经记过了" : "📝 把今天记下来"; }
+    if(lb){ lb.disabled = logged; lb.textContent = logged ? "✅ 今天已经记过了" : "📝 记下他今天动的"; }
     const bt = $("fitBurnTxt");
     if(bt){
       if(goal === "bulk"){
         const bl = BULK_KCAL - ((S.fit.bulkBurned||0) % BULK_KCAL);
-        bt.innerHTML = "累计训练量 <b>"+(S.fit.bulkBurned||0)+"</b> kcal · 再 <b>"+Math.ceil(bl)
-          + "</b> kcal 肌肉 +1<br>体重先稳住，别掉。";
+        bt.innerHTML = "他累计训练量 <b>"+(S.fit.bulkBurned||0)+"</b> kcal · 再 <b>"+Math.ceil(bl)
+          + "</b> kcal 肌肉 +1<br>他体重先稳住，别掉。";
       }else{
         const left = KG_KCAL - (S.fit.burned % KG_KCAL);
         bt.innerHTML = "累计消耗 <b>"+S.fit.burned+"</b> kcal · 再 <b>"+Math.ceil(left)
@@ -1637,7 +1637,7 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
       const pro = Math.round((S.fit.startKg||70)*1.6) + "–" + Math.round((S.fit.startKg||70)*2.0) + " g";
       bi.innerHTML = "BMI <b>"+b.bmi.toFixed(1)+"</b>（"+b.tag+"）· "+hh+" cm / "+kk+" kg"
         + "<br>增肌期蛋白质建议 <b>"+pro+"</b>/天"
-        + "<br>你 185 的个子，减脂别过头，65 以下就没肉了。";
+        + "<br>他 185 的个子，减太快会掉肌肉，65 以下就瘦脱形了。";
     }
     $("fitStepsV").textContent = S.fit.steps + " 步";
     $("fitMinV").textContent = S.fit.mins + " 分";
@@ -1661,9 +1661,9 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
 
   function stepGoalText(){
     const st = S.fit.steps, mn = S.fit.mins;
-    if(st >= 6000 && mn >= 30) return "步数和运动都达标了，今天很可以 👏";
-    if(st >= 6000)             return "步数达标了，再动 30 分钟更好";
-    if(mn >= 30)               return "运动达标了，还差 "+(6000-st)+" 步";
+    if(st >= 6000 && mn >= 30) return "他今天步数和运动都达标了 👏";
+    if(st >= 6000)             return "步数够了，再动 30 分钟更好";
+    if(mn >= 30)               return "运动够了，还差 "+(6000-st)+" 步";
     return "还差 "+(6000-st)+" 步 / "+Math.max(0,30-mn)+" 分钟到今天的建议量";
   }
 
@@ -1974,7 +1974,7 @@ const GTHUMB = {"tee_white": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgA
     if(imgKey === "sneaky"){
       const probe = new Image();
       probe.onload  = ()=>{ img.src = probe.src; img.style.display="block"; };
-      probe.onerror = ()=>{ ph.style.display="block"; ph.textContent="偷拍照片待放入 · photo.jpg"; };
+      probe.onerror = ()=>{ ph.style.display="block"; ph.style.display="none"; };
       probe.src = "photo.jpg?"+Date.now();
     }
     if(imgKey === "postcard" && extra && typeof extra === "object"){
