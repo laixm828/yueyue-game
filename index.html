@@ -730,6 +730,8 @@ h1{ font-weight:800; letter-spacing:.06em;
   filter:saturate(1.05);pointer-events:none;z-index:0;transition:opacity .35s}
 #p-travel > *:not(#tripBg){position:relative;z-index:1}
 #tripBg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,252,247,.10),rgba(255,252,247,.58))}
+
+#bubble{pointer-events:auto;cursor:pointer}
 </style>
 </head>
 <body>
@@ -1475,6 +1477,7 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
     bubble.textContent = "";
     const cps = (opts && opts.speed) || 36;
     let i = 0;
+    say._full = t;
     if(!t.length){ bubble.textContent = "……"; }
     else {
       say._i = setInterval(()=>{
@@ -1489,6 +1492,11 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
     }
     say._t = setTimeout(()=>bubble.classList.remove("show"), Math.max(3200, 1800 + t.length*70));
   }
+  bubble.addEventListener("click", function(){
+    if(!say._full) return;
+    clearInterval(say._i);
+    bubble.textContent = say._full;
+  });
   function toast(msg){
     const t = $("toast");
     t.textContent = msg; t.classList.add("show");
@@ -1513,7 +1521,16 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
   function doAct(kind){
     if(S.trip){ say("…… 我出门了，回来再说。"); return; }
     const now = Date.now();
-    if((S.cd[kind]||0) > now){ say("…… 别急，等一下。"); return; }
+    if((S.cd[kind]||0) > now){
+      const left = Math.max(1, Math.ceil(((S.cd[kind]||0) - now)/1000));
+      const wait = {
+        pat:  "手拿开啦，再等我 " + left + " 秒。",
+        feed: "饭还没咽下去呢，" + left + " 秒后再说。",
+        talk: "让我缓一下，" + left + " 秒就好。"
+      };
+      say(wait[kind] || ("…… 再等我 " + left + " 秒。"));
+      return;
+    }
 
     const g = CFG[kind.toUpperCase()];
     const tier = moodTier();
@@ -2022,7 +2039,10 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
     if(imgKey === "sneaky"){
       const probe = new Image();
       probe.onload  = ()=>{ img.src = probe.src; img.style.display="block"; };
-      probe.onerror = ()=>{ ph.style.display="block"; ph.style.display="none"; };
+      probe.onerror = ()=>{
+        ph.innerHTML = '<div style="padding:26px 18px;text-align:center;line-height:1.9;color:#8a7466">这张照片还在他手机里<br><span style="font-size:13px;opacity:.75">回头让他补给你</span></div>';
+        ph.style.display="block"; img.style.display="none";
+      };
       probe.src = "photo.jpg?"+Date.now();
     }
     if(imgKey === "postcard" && extra && typeof extra === "object"){
