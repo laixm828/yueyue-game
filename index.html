@@ -1057,7 +1057,7 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
       lastMoodAt:Date.now(), cd:{pat:0,feed:0,talk:0},
       lastDay:todayKey(), streak:1, unlocked:{},
       owned:{ clothes:[], gear:[] },
-      wearing:[], postcards:[], trip:null,
+      wearing:[], postcards:[], trip:null, house:"forest",
       decayApplied:0, routeStep:0, whispers:[],
  garden:new Array(9).fill(null),
       fit:{ kg:70, startKg:70, height:185, goal:"cut", bulkBurned:0,
@@ -2181,6 +2181,13 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
     var o = read();
     o.house = id;
     try { localStorage.setItem(K, JSON.stringify(o)); } catch(e){}
+    // 同步到主状态，否则主循环一存盘就把 house 覆盖掉
+    if (window.__YS){
+      window.__YS.house = id;
+      if (window.__YSAVE) window.__YSAVE();
+      if (window.__GARDEN_RENDER) { try{ window.__GARDEN_RENDER(); }catch(e){} }
+      if (window.__FRENDER) { try{ window.__FRENDER(); }catch(e){} }
+    }
     document.getElementById("housePick").classList.remove("on");
     apply(id);
   }
@@ -2337,6 +2344,7 @@ const FURN_ART = {"rug":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAC
     closePick._slot = slot;
   }
 
+  window.__GARDEN_RENDER = renderGarden;
   window.__FURN = FURN; window.__SLOTS = SLOTS;
   window.__FPUT = put; window.__FTAKE = takeOut; window.__FART = FURN_ART; window.__FRENDER = renderRoom;
   window.__FBYID = byId;
