@@ -946,7 +946,13 @@ h1{ font-weight:800; letter-spacing:.06em;
     mile: {
       10:"有 10 点亲密度了，算你会养。",
       20:"20 点。…… 我开始有点习惯了。",
+      30:"30 点。你好像知道我在想什么。",
+      40:"40 点。习惯你在旁边了。",
       50:"50 点。笨蛋，我还挺喜欢你的。",
+      60:"60 点。…… 今天也没走，挺好。",
+      70:"70 点。有些话不用说了。",
+      80:"80 点。你在这儿的时候，屋子才像家。",
+      90:"90 点。再往上，就是一辈子那种了。",
       100:"100 点。这一百次，都记得。",
     }
   };
@@ -1052,10 +1058,31 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
   /* ================= 状态 ================= */
   const KEY = "yueyue-game-v2";
   const todayKey = () => { const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); };
+  /* 每天第一句话：按日期挑一句固定的，刷新也不会变 */
+  const DAILY_LINES = [
+    "今天醒得比我早，是不是没睡好？",
+    "外面降温了，出门记得多穿一件。",
+    "你昨天回来得好晚，我等了好久。",
+    "今天什么都不想做，就坐你旁边。",
+    "刚刚看你笑了一下，我记着了。",
+    "你身上有太阳的味道。",
+    "今天想吃你做的那个，你知道是哪个。",
+    "我把窗帘拉开了，光进来的时候想起你。",
+    "你今天怪好看的，别问为什么。",
+    "又过了一天，还在这儿，挺好。",
+    "你忙你的，我就在这儿坐着。",
+    "刚才打了个盹，梦见你了，醒得有点可惜。"
+  ];
+  function dailyLine(){
+    const k = todayKey();
+    let h = 0;
+    for(let i=0;i<k.length;i++) h = (h*31 + k.charCodeAt(i)) % 9973;
+    return DAILY_LINES[h % DAILY_LINES.length];
+  }
 
   function defaultState(){
     return {
-      mood:100, love:0, coins:CFG.START_COIN, happy:0,
+      mood:55, love:0, coins:CFG.START_COIN, happy:0,
       lastMoodAt:Date.now(), cd:{pat:0,feed:0,talk:0},
       lastDay:todayKey(), streak:1, unlocked:{},
       owned:{ clothes:[], gear:[] },
@@ -1474,6 +1501,7 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
     const t = (text === undefined || text === null) ? "……" : String(text);
     bubble.classList.add("show");
     clearTimeout(say._t); clearInterval(say._i);
+    say._said = (say._said || 0) + 1;
     bubble.textContent = "";
     const cps = (opts && opts.speed) || 36;
     let i = 0;
@@ -1535,7 +1563,9 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
     const g = CFG[kind.toUpperCase()];
     const tier = moodTier();
     const pool = LINES[kind] && LINES[kind][tier];
-    const line = pool ? pick(pool) : "……";
+    let line = pool ? pick(pool) : "……";
+    /* 每天第一次说话，说那句当天的 */
+    if(kind==="talk" && S.dailyLine !== todayKey()){ S.dailyLine = todayKey(); line = dailyLine(); }
 
     let moodGain = g.mood;
     if(kind==="pat" && ownedGear("mat")) moodGain += 6;
@@ -1557,16 +1587,43 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
     if(kind==="feed") burstHearts(8);
 
     say(line);
+    if(!S.guide){
+      S.guide = 1;
+      const stamp = say._said || 0;
+      setTimeout(()=>{ if((say._said || 0) <= stamp) say("…… 攒点 💗，去商店给我买件衣服吧。"); }, 4200);
+    }
 
     checkMilestone();
     save(); render();
   }
 
+  /* 关键档位送东西（一次性）：20 围巾 / 50 白T / 80 灰卫衣 / 100 一笔心意 */
+  const LOVE_GIFT = {
+    20:  { cloth:"scarf",       say:"这条围巾…… 你织的？戴上像被你圈住了。" },
+    50:  { cloth:"tee_white",   say:"白的，我穿。别笑，我知道你爱看。" },
+    80:  { cloth:"hoodie_grey", say:"灰色的，正好。以后你冷就穿这件。" },
+    100: { coins:200,           say:"一百点了。这钱你拿着，别都花我身上。" }
+  };
   function checkMilestone(){
     const lv = S.love;
     if(lv>0 && lv%10===0 && !S.unlocked["mile"+lv]){
       S.unlocked["mile"+lv] = true;
-      showSheet("亲密度 "+lv, LINES.mile[lv] || ("亲密度到 "+lv+" 了。"));
+      let body = LINES.mile[lv] || ("亲密度到 "+lv+" 了。");
+      const gift = LOVE_GIFT[lv];
+      if(gift){
+        if(gift.cloth){
+          S.owned.clothes = S.owned.clothes || [];
+          if(S.owned.clothes.indexOf(gift.cloth) < 0) S.owned.clothes.push(gift.cloth);
+          const cname = (CLOTHES.find(x=>x.id===gift.cloth) || {name:gift.cloth}).name;
+          body += "\n\n（他把「" + cname + "」塞给你：" + gift.say + "）";
+        }
+        if(gift.coins){
+          S.coins += gift.coins;
+          body += "\n\n（他塞给你 💗" + gift.coins + "：" + gift.say + "）";
+        }
+        save();
+      }
+      showSheet("亲密度 "+lv, body);
     }
   }
   function checkStreakUnlock(){
@@ -2134,6 +2191,11 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
   tickCooldowns();
   if(newDay) checkStreakUnlock();
   else setTimeout(checkStreakUnlock, 700);
+  if(!S.guide){
+    setTimeout(()=>{
+      if(!S.guide && !say._said) say("…… 你来了。先摸摸我的头吧，下面那三个按钮。", {speed:52});
+    }, 1200);
+  }
   save();
 
   document.addEventListener("visibilitychange", ()=>{
