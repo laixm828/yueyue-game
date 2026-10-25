@@ -1973,9 +1973,12 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const ds = it.desc || it.d || "";
     const pr = (it.price != null) ? it.price : (it.p != null ? it.p : 0);
     const em = it.emoji || it.e || "";
+    const fsrc = (kind==="furn" && window.__FART && window.__FART[it.id]) ? window.__FART[it.id] : null;
     const thumb = (it.sprite && GARMENTS[it.sprite])
       ? '<img src="'+(GTHUMB[it.sprite]||GARMENTS[it.sprite])+'" style="width:46px;height:46px;image-rendering:pixelated;object-fit:contain">'
-      : (em || "📦");
+      : (fsrc
+         ? '<img src="'+fsrc+'" style="width:46px;height:46px;image-rendering:pixelated;object-fit:contain">'
+         : (em || "📦"));
     const HN = {cottage:"小木屋", seaside:"海边小屋", city:"城市公寓", forest:"森林小屋"};
     const hb = (kind==="furn" && it.h && HN[it.h]) ? ' <span style="font-size:10px;color:#b07a3a">·仅'+HN[it.h]+'</span>' : '';
     return '<div class="item '+(own?"owned":"")+'">'
@@ -1997,10 +2000,6 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     if(!body) return;
     const out = [];
     const groups = cat==="all" ? ["top","outer","brand","acc"] : [cat];
-    if(cat === "furn"){
-      body.innerHTML = '<div class="empty">家具暂时还没上新<br>先给你自己买件衣服吧 🧥</div>';
-      return;
-    }
     groups.forEach(g=>{
       if(g==="gear" || g==="furn") return;
       const list = CLOTHES.filter(c=>c.cat===g);
@@ -2013,6 +2012,9 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       out.push('<div class="sec-title">🏋️ 健身器材 <span>('+S.owned.gear.length+"/"+GEAR.length+')</span></div>');
       out.push('<div class="grid2">'+ GEAR.map(g=>shopItem(g,"gear")).join("") +'</div>');
       out.push('<div style="height:12px"></div>');
+    }
+    if((cat==="all" || cat==="furn") && !window.__FURN){
+      setTimeout(renderShop, 80);   // 家具清单在另一个脚本里，等它挂上再画
     }
     if((cat==="all" || cat==="furn") && window.__FURN){
       const n = Object.keys(S.furn||{}).length;
@@ -2644,9 +2646,14 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const f = t.closest("[data-buy-furn]");
     if(f && window.__FBUY){ window.__FBUY(f.getAttribute("data-buy-furn")); return; }
   });
+  if(typeof renderGarden === "function") window.__GARDEN_RENDER = renderGarden;
+  if(typeof renderVase === "function") window.__VASE_RENDER = renderVase;
   window.__YS = S; window.__YSAVE = save; window.__YRENDER = render;
-  setInterval(renderGarden, 1000);
-  setInterval(renderVase, 1500);
+  window.__SRENDER = renderShop;
+  setInterval(function(){
+    if(window.__GARDEN_RENDER) window.__GARDEN_RENDER();
+    if(window.__VASE_RENDER) window.__VASE_RENDER();
+  }, 1000);
 })();
 </script>
 <div id="housePick">
@@ -2856,9 +2863,9 @@ const FURN_ART = {"rug":"art/g57.png","stool":"art/g58.png","lamp":"art/g59.png"
     closePick._slot = slot;
   }
 
-  window.__GARDEN_RENDER = renderGarden;
   window.__FURN = FURN; window.__SLOTS = SLOTS;
   window.__FPUT = put; window.__FTAKE = takeOut; window.__FART = FURN_ART; window.__FRENDER = renderRoom;
+  if(window.__SRENDER) window.__SRENDER();
   window.__FBYID = byId;
 
   function buy(id){
