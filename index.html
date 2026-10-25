@@ -1109,7 +1109,7 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
       cards:["大理的风真大，帽子差点飞走。","在洱海边上坐了一会儿，什么也没想。","这边天黑得晚。"],
       mem:"" },
     { id:"shanghai", name:"上海", emoji:"🌃",
-      bg:"linear-gradient(160deg,#3d4a6b,#6b5f86 55%,#c99a9a)",art:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAADICAYAAACZBDirAAADqElEQVR42u3dPUozURSA4TNmSKG4CW0Fq0haG/FnAansBNHC2h3YpBc3Iq7B2p0IdhJbC8GQZCb3znmeMnzxw9G8c+/MSWwm09kiABLacQgAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEECAbrQOAfDb+9vtv//m5PxlEN9r448iAcuGb2ghFEAQvrW/Rq0hFEAQvo2pLYRugoD4Ff91BRCoIlI1RVAAQfzSRlAAQfzSRlAAgfBOEMDqL9kqUAABK0DA6i/bKlAAAStAwOov2ypQAAErQAABBBBAAAEEEEAAAQQQQAABBApUykfUl/pR+QIIWAECVoGZVn8CCFgBAlaB2VZ/AghYAQJWgRn/SLoAggimjJ8AggimjZ8AggimjV9ERDOZzhZ+HSB8bH6i8AkgsHYIaw2fAAIrh7D28AkgEOYAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABNqDdG7eOAmAFCCCAAAIIIIAAAggggAACCCCAAFVpxyMNBKwAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAGW1DoELGO0u9/5//H99elAYwUIIIAAAggggAACCCCA9O71+ajTx6Evzdnp9cJhIIzBEOYAASekNCckW2Ag7wqwjzMJlLKqwc/DChBAAAEBBBBAIMxlCiB4wdXh8u6j08cFEKHwgmOAmoure+8EAcI1QAABBBBAAAEEEECAGMb0hACCYBQ1btXnmJUAkvYFN5Tvw1xmmAMsNRR//VJt6nFAAAHCTRCAoQTQm+sBW2AAW2AAAQTCmFUYhAbBMAgdBqHxgguD0Aahw00Qg9CAAALYAgMYhAawBQasAAEEECC2fWmqz/EkW2AwbhVZx62sAJ2hiz5DG4QOg9DhJogzs0FoEEAAW2CAPgK4rWslBqEBW2AAW2DCXW07AQSQPIxzGLMyCA2EcSsrQAxCG4Q2CB1ugjgzAwIIYAvsLiNgEDrcZQRsgaHua8PYAuMSxWAuUdhZCCC4ROGEZBAaMG4VrgEC2AIDCCCAAAIIIIAAAqytPT48cBQAK0AAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAgAID+HSz2hM9z/M8z/Nqf17z+DD3kfiALTCAAAIIIIAAAggggAACCCCAAAIIIIAAAhTsByds4DCjOqRVAAAAAElFTkSuQmCC",
+      bg:"linear-gradient(160deg,#3d4a6b,#6b5f86 55%,#c99a9a)",art:null,
       cards:["到上海了，人好多。","外滩的灯亮起来了。","最后一站了。想快点回去见你。"],
       mem:"这趟走完，就该回家了。" },
   ];
@@ -2120,7 +2120,7 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
         else if(dest.photos && dest.photos.length) src = dest.photos[0].src;
       }
       bgEl.style.backgroundImage = src ? "url(" + src + ")" : (dest ? dest.bg : "none");
-      bgEl.style.opacity = src ? ".86" : ".30";
+      bgEl.style.opacity = src ? ".86" : ".55";
     })();
     bar.innerHTML = ROUTE.map((r,i)=>{
       const done = i < S.routeStep, now = i === S.routeStep;
