@@ -1230,6 +1230,10 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
         bh += '<button class="seed' + (gSeedId===pl.id ? " on" : "") + '" data-seed="' + pl.id + '">'
             +  pl.e + " " + pl.n + " 💗" + pl.p + '</button>';
       });
+      const bloomN = S.garden.filter(function(g){ return g && gardenLeft(g) <= 0; }).length;
+      if(bloomN >= 2){
+        bh = '<button class="seed" id="gAll">🧺 全部摘了 · ' + bloomN + '</button>' + bh;
+      }
       bar.innerHTML = bh;
     }
     const tip = document.getElementById("gTip");
@@ -1271,7 +1275,7 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
   }
   function vaseWorth(fl){
     const p = (gardenFind(fl.id) || {}).p || 10;
-    return Math.max(3, Math.round(p * 0.4));
+    return Math.round(p * 0.9);
   }
   function renderVase(){
     const box = document.getElementById("gVase");
@@ -1290,6 +1294,16 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
       + '<button class="wbtn small" id="vTrade">全部换成 💗' + sum + '</button>';
   }
   document.addEventListener("click", function(e){
+    const all = e.target.closest && e.target.closest("#gAll");
+    if(all){
+      let cnt = 0;
+      for(let i=0;i<9;i++){
+        const g = S.garden[i];
+        if(g && gardenLeft(g) <= 0){ gPick(i); cnt++; }
+      }
+      if(cnt) toast("一次摘了 " + cnt + " 株 · 幸福 +" + cnt);
+      return;
+    }
     const b = e.target.closest && e.target.closest("#vTrade");
     if(!b) return;
     const v = S.vase || [];
@@ -2215,6 +2229,20 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
     const w = { id: String(Date.now()), text: text, at: at };
     S.whispers.unshift(w);
     ta.value = "";
+    const today = at.slice(0, at.indexOf(" "));
+    const got = S.wGet || { d: "", n: 0 };
+    if(got.d !== today){ got.d = today; got.n = 0; }
+    if(got.n < 3){
+      got.n += 1;
+      S.wGet = got;
+      S.love = Math.min(100, (S.love || 0) + 1);
+      S.coins += 5;
+      toast("他收到了 · 亲密度 +1 · 💗+5");
+      checkMilestone();
+    }else{
+      S.wGet = got;
+      toast("写好了，他待会儿看");
+    }
     save(); renderWhisper();
     shareWhisper(w.id);
   }
