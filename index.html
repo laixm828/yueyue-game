@@ -801,6 +801,30 @@ h1{ font-weight:800; letter-spacing:.06em;
   background:#ffe6ee; color:#a5435c; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
 #herChart{ width:100%; height:118px; display:block; margin:10px 0 4px; border-radius:10px; background:#fffaf6; }
 
+/* ===== 回信 / 红点 ===== */
+.wreply{ margin-top:8px; padding:8px 10px; border-radius:10px 10px 10px 2px;
+  background:#fff3f6; border:1.5px solid #ffd0dc; font-size:12.5px; color:#5c4a44; line-height:1.7; }
+.wreply .wr-h{ font-weight:800; color:#e5566f; }
+.wreply .wr-t{ display:block; margin-top:2px; font-size:10.5px; color:#a08a80; }
+.wpend{ margin-top:6px; font-size:11.5px; color:#b6a29a; }
+.wcard.unread{ box-shadow:0 0 0 2px #ffb3c6, 0 4px 12px rgba(230,160,170,.25); }
+#nav .tab.hasdot::after{ content:""; position:absolute; top:6px; right:14px; width:7px; height:7px;
+  border-radius:50%; background:#ff5b7f; box-shadow:0 0 0 2px #fffdf9; }
+#nav .tab{ position:relative; }
+
+/* ===== 签到 / 每日任务 ===== */
+#dailyBar{ display:flex; align-items:center; gap:8px; margin:2px 12px 0; }
+#dailyBar .wbtn{ margin:0; flex:1 1 auto; width:auto!important; min-width:0; }
+#dailyBar .dst{ flex:0 0 auto; white-space:nowrap; }
+#dailyBar .dst{ font-size:11.5px; color:#8a746c; }
+#dailyTasks{ margin:8px 12px 2px; padding:10px 12px; border-radius:14px; background:#fffdf9;
+  border:1.5px solid #f0d8d2; box-shadow:0 3px 10px rgba(150,120,100,.09); }
+#dailyTasks .dtt{ font-size:11.5px; color:#a08a80; margin-bottom:6px; font-weight:700; }
+#dailyTasks .dt{ display:flex; align-items:center; gap:6px; font-size:12px; color:#5c4a44;
+  padding:3px 0; }
+#dailyTasks .dt.done{ color:#c98fa0; text-decoration:line-through; }
+#dailyTasks .dt .dot{ margin-left:auto; font-size:11px; color:#8a746c; }
+
 /* ===== 底层面板：给底部导航让位 + 统一关闭键 ===== */
 #wallPick, #furnPick, #decoPick, #storePick{ bottom:68px !important; border-radius:14px !important; max-height:62vh; overflow-y:auto; }
 .pclose{ position:absolute; right:8px; top:6px; width:30px; height:30px; border-radius:9px;
@@ -980,6 +1004,8 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
         <button class="btn" data-act="talk"><span class="ico">💬</span><span>说说话</span><span class="cd" id="cd-talk"></span></button>
       </div>
 
+      <div id="dailyBar"></div>
+      <div id="dailyTasks"></div>
       <div id="explainRow"><button id="btnExplain">告诉他你刚刚干嘛去了</button></div>
     </section>
 
@@ -1104,6 +1130,11 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
     </section>
     <section class="page scroll" id="p-whisper">
       <div class="sec-title">🤫 悄悄话</div>
+      <div id="albumBar" style="display:flex;gap:8px;margin:0 12px 10px">
+        <button class="wbtn" id="btnAlbum" style="margin:0;flex:1 1 0">🖼 相册</button>
+        <button class="wbtn" id="btnAch" style="margin:0;flex:1 1 0">🏅 成就墙</button>
+        <button class="wbtn" id="btnLetter" style="margin:0;flex:1 1 0">💌 第一天的信</button>
+      </div>
       <button id="btnMakeUp" class="makeup">💬 吵架了？点我</button>
       <div class="know" style="margin-bottom:8px">
         <p><b>怎么涨</b><br>
@@ -1407,6 +1438,17 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     "晚上打算早点睡，明天想早点起来。",
     "今天听了一首歌，副歌那句像在说小越。"
   ];
+  function flashbackTick(){
+    if(!S.postcards || !S.postcards.length) return;
+    if(Date.now() - (S.flashAt || 0) < 3*3600*1000) return;
+    if(Math.random() > 0.5) return;
+    const ml = memoryLine();
+    if(!ml) return;
+    S.flashAt = Date.now(); save();
+    say(ml, { speed: 46 });
+  }
+  window.__FLASH = flashbackTick;
+
   function shareTick(){
     const t = todayKey();
     if(S.shareDay === t) return;
@@ -1434,6 +1476,9 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       photos:[], vase:[], gift:null, lastSeen:0,
       decayApplied:0, routeStep:0, whispers:[], place:{his:{name:"岳阳",lat:29.36778,lon:113.12019}, her:{name:"南京",lat:32.06167,lon:118.77778}}, wx:null,
  garden:new Array(9).fill(null),
+      furnOwned:["bed","sofa","table","rug"], furn:{3:"bed",5:"table",4:"rug",6:"sofa"},
+      daily:{ d:"", pat:0, water:0, whisper:0, got:{} },
+      signDay:"", signStreak:0, ach:{}, firstDayDone:0, firstOpen:todayKey(),
       her:{ day:"", c1:0, c2:0, c3:0, weight:[], periodStart:"", periodDays:5, cycle:28,
             height:160, baseKg:45 },
       fit:{ kg:70, startKg:70, height:185, goal:"cut", bulkBurned:0,
@@ -1450,6 +1495,11 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       s.cd = Object.assign({pat:0,feed:0,talk:0}, s.cd||{});
       s.unlocked = s.unlocked||{};
       if(!s.place || (!s.place.his && !s.place.her)) s.place = defaultState().place;
+      if((!s.furnOwned || !s.furnOwned.length) && !Object.keys(s.furn||{}).length){
+        s.furnOwned = ["bed","sofa","table","rug"];
+        s.furn = {3:"bed",5:"table",4:"rug",6:"sofa"};
+      }
+      if(!s.daily) s.daily = { d:"", pat:0, water:0, whisper:0, got:{} };
       s.fit = Object.assign({kg:70,startKg:70,height:185,goal:"cut",bulkBurned:0,
         steps:0,mins:0,act:"walk",day:"",burned:0,loggedDay:""}, s.fit||{});
       if(!s.fit.startKg) s.fit.startKg = s.fit.kg || 70;
@@ -1541,6 +1591,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const b = e.target.closest && e.target.closest("[data-tree]");
     if(!b) return;
     S.tree = S.tree || { w:0, blooms:0 };
+    setTimeout(function(){ try{ bumpTask("water"); }catch(e){} }, 0);
     if((S.tree.w||0) >= 10){
       S.tree.blooms = (S.tree.blooms||0) + 1;
       S.tree.w = 0;
@@ -2027,6 +2078,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     return pool[Math.floor(Math.random()*pool.length)];
   }
 
+  window.__WXL = wxLine;
   function wxLine(){
     const w = S.wx || {};
     const her = w.her;
@@ -2034,14 +2086,13 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const pl = S.place || {};
     const nm = "你那边";
     const H = new Date().getHours();
-    if(H >= 21) return "不早了，到家了跟我说一声。";
-    if((wxRainy(her) || her.t <= 12) && H >= 18) return "外面冷，早点回家。";
     if(wxSnowy(her)) return nm + "下雪了。别骑车，走路慢一点。";
     if(wxRainy(her)) return nm + "在下雨。伞我帮你记着了，出门别忘了拿。";
     if(her.t <= 5)  return nm + "才 " + her.t + " 度。手套围巾都戴上。";
     if(her.t <= 12) return nm + "降到 " + her.t + " 度了，出门多穿一件。";
     if(her.t >= 33) return nm + " " + her.t + " 度。别在外面待太久，多喝水。";
     if(her.t >= 25) return nm + "挺热的，穿少点没关系。";
+    if(H >= 21) return "不早了，到家了跟我说一声。";
     return null;
   }
 
@@ -2082,7 +2133,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     renderFit();
     if(typeof renderHer === "function") renderHer();
     renderWardrobe();
+    if(document.querySelector('#nav [data-page="whisper"]').classList.contains("on")) markWhisperRead();
+    setTimeout(function(){ try{ checkAch(); }catch(e){} }, 400);
     renderPostcards();
+    renderDaily();
     renderTripNow();
     renderWhisper();
   }
@@ -2162,6 +2216,141 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       "路上花掉的爱心不退，也拿不到这一站的照片。",
       function(){ finishTrip(true); });
   }
+
+  /* ================= 签到 / 每日任务 ================= */
+  function dailyRoll(){
+    const t = todayKey();
+    if(!S.daily || S.daily.d !== t){ S.daily = { d:t, pat:0, water:0, whisper:0, got:{} }; }
+    return S.daily;
+  }
+  function bumpTask(k){
+    const d = dailyRoll();
+    d[k] = (d[k]||0) + 1;
+    checkTasks(); save();
+    if(typeof renderDaily === "function") renderDaily();
+  }
+  function checkTasks(){
+    const d = dailyRoll();
+    const need = { pat:3, water:1, whisper:1 };
+    const name = { pat:"摸头 3 次", water:"给树浇水", whisper:"写一句悄悄话" };
+    Object.keys(need).forEach(function(k){
+      if((d[k]||0) >= need[k] && !d.got[k]){
+        d.got[k] = 1;
+        S.coins += 10; S.happy = (S.happy||0) + 1;
+        toast("今日任务完成 · " + name[k] + " · 爱心币 +10");
+      }
+    });
+  }
+  function doSign(){
+    const t = todayKey();
+    if(S.signDay === t){ toast("今天已经签过了"); return; }
+    const y = new Date(Date.now() - 86400000);
+    const yk = y.getFullYear() + "-" + (y.getMonth()+1) + "-" + y.getDate();
+    S.signStreak = (S.signDay === yk) ? ((S.signStreak||0) + 1) : 1;
+    S.signDay = t;
+    let add = 5;
+    const d7 = S.signStreak % 7 === 0;
+    if(d7) add += 20;
+    S.coins += add;
+    S.love = Math.min(100, (S.love||0) + 1);
+    S.happy = (S.happy||0) + 1;
+    save(); render();
+    if(d7) showSheet("连着第 " + S.signStreak + " 天",
+      "七天没断。<br>爱心 +" + add + "，我记着呢。");
+    else toast("签到成功 · 爱心 +" + add + " · 连签 " + S.signStreak + " 天");
+  }
+  function renderDaily(){
+    const bar = $("dailyBar"), tl = $("dailyTasks");
+    if(!bar || !tl) return;
+    const t = todayKey();
+    const signed = S.signDay === t;
+    bar.innerHTML = '<button class="wbtn" id="btnSign"' + (signed ? ' disabled' : '') + '>'
+      + (signed ? "✅ 今天签过了" : "📅 今日签到 · 💗+5") + '</button>'
+      + '<span class="dst">连签 ' + (S.signStreak||0) + ' 天'
+      + ((S.signStreak||0) > 0 && (S.signStreak||0) % 7 === 0 ? " · 明天再签还有额外 20" : "") + '</span>';
+    const d = dailyRoll();
+    const rows = [
+      ["pat", "🤚 摸头 3 次", d.pat||0, 3],
+      ["water", "💧 给树浇一次水", d.water||0, 1],
+      ["whisper", "✍️ 写一句悄悄话", d.whisper||0, 1]
+    ];
+    tl.innerHTML = '<div class="dtt">今天的三件小事</div>' + rows.map(function(r){
+      const done = (r[2] >= r[3]) || d.got[r[0]];
+      return '<div class="dt' + (done ? " done" : "") + '"><span>' + r[1]
+        + '</span><span class="dot">' + (done ? "✓ 已领 +10 币" : Math.min(r[2], r[3]) + "/" + r[3]) + '</span></div>';
+    }).join("");
+  }
+  window.__DAILY = renderDaily;
+
+  function firstLetter(){
+    const days = S.streak || 1;
+    const pcs = S.postcards.length, ws = S.whispers.length;
+    const st = Math.min(S.routeStep, ROUTE.length);
+    return '<div style="text-align:left;line-height:1.9;font-size:13px">'
+      + '你来第 ' + days + ' 天了。<br>'
+      + '这' + days + '天里，我们：<br>'
+      + '· 一起走过 <b>' + st + '</b> 站路<br>'
+      + '· 攒下 <b>' + pcs + '</b> 张照片<br>'
+      + '· 你写了 <b>' + ws + '</b> 句悄悄话<br>'
+      + '· 亲密度 <b>' + (S.love||0) + '</b><br><br>'
+      + '<span style="color:#8a746c">想把日子过得慢一点，好跟你多待几天。</span></div>';
+  }
+  function openLetter(){
+    showSheet("第一天的信", firstLetter(), null, null);
+    if(!S.firstDayDone){ S.firstDayDone = 1; save(); }
+  }
+  window.__LETTER = openLetter;
+
+  /* 回信 / 相册 / 成就 的入口在悄悄话页 */
+  function albumHtml(){
+    const pcs = S.postcards || [], ws = S.whispers || [];
+    return '<div style="text-align:left;line-height:1.9;font-size:13px">'
+      + '📅 第一次打开：<b>' + (S.firstOpen || S.lastDay || todayKey()) + '</b><br>'
+      + '🧳 走完：<b>' + Math.min(S.routeStep, ROUTE.length) + ' / ' + ROUTE.length + '</b> 站<br>'
+      + '🖼 旅行照片：<b>' + pcs.length + '</b> 张<br>'
+      + '✍️ 悄悄话：<b>' + ws.length + '</b> 句<br>'
+      + '💗 爱心：<b>' + (S.coins||0) + '</b> · 亲密度 <b>' + (S.love||0) + '</b><br>'
+      + '🏅 成就：<b>' + Object.keys(S.ach||{}).length + '</b> 个'
+      + '</div>';
+  }
+  function openAlbum(){ showSheet("我们的相册", albumHtml(), null, null); }
+
+  const ACH = [
+    ["sign7",  "连签 7 天",   function(){ return (S.signStreak||0) >= 7; }],
+    ["route5", "走完 5 站",   function(){ return (S.routeStep||0) >= ROUTE.length; }],
+    ["photo10","攒 10 张照片",function(){ return (S.postcards||[]).length >= 10; }],
+    ["love100","亲密度满级",  function(){ return (S.love||0) >= 100; }],
+    ["bloom",  "树开过花",    function(){ return ((S.tree||{}).blooms||0) > 0; }],
+    ["whisper10","写满 10 句",function(){ return (S.whispers||[]).length >= 10; }],
+    ["set",    "集齐一套上衣",function(){
+        const tops = CLOTHES.filter(function(c){ return c.cat === "top" && !c.limit; });
+        return tops.length > 0 && tops.every(function(c){ return has("clothes", c.id); });
+    }]
+  ];
+  window.__ACH_TEST = checkAch;
+  function checkAch(){
+    if(!S.ach) S.ach = {};
+    ACH.forEach(function(a){
+      if(S.ach[a[0]]) return;
+      let ok = false;
+      try{ ok = a[2](); }catch(e){}
+      if(!ok) return;
+      S.ach[a[0]] = 1;
+      S.coins += 30; S.happy = (S.happy||0) + 2;
+      save();
+      showSheet("🏅 达成 · " + a[1],
+        "做到了。<br>爱心 +30，幸福指数 +2。<br><span style=\"color:#8a746c;font-size:12px\">这件事我记在成就墙上了。</span>");
+    });
+  }
+  function achHtml(){
+    const got = S.ach || {};
+    return '<div style="text-align:left;line-height:2;font-size:13px">' + ACH.map(function(a){
+      const ok = !!got[a[0]];
+      return (ok ? "🏅 " : "⬜ ") + a[1] + (ok ? " <span style=\"color:#c88\">已达成</span>" : "");
+    }).join("<br>") + '<br><span style="color:#8a746c;font-size:12px">达成时会自动弹庆祝，奖励 30 爱心 + 2 幸福。</span></div>';
+  }
+  function openAch(){ showSheet("成就墙", achHtml(), null, null); }
+  window.__SIGN = doSign;
 
   function renderTripNow(){
     const el = $("tripNow"); if(!el) return;
@@ -2981,19 +3170,72 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     toast("心情 +" + back);
   }
 
+  const REPLY_POOL = [
+    "看到了。我刚训练完，坐下来慢慢回你。",
+    "嗯，我在。今天累不累？",
+    "你说的我都记着，别自己扛。",
+    "这话我看了两遍。",
+    "小越，明天记得吃早饭。",
+    "我这边也还好，就是想你。"
+  ];
+  function whisperReplyTick(){
+    if(!S.whispers || !S.whispers.length) return;
+    let changed = false;
+    S.whispers.forEach(function(w){
+      if(w.reply) return;
+      const at = w.at || "";
+      const t = new Date(at.replace(/-/g, "/")).getTime();
+      if(!t || Date.now() - t < 90 * 1000) return;   // 写完 90 秒后才"看到"
+      const hit = /想家|想回去|好累|难受|不开心|难过|委屈|想你/.test(w.text || "");
+      w.reply = hit ? "别一个人憋着，我在听。" : REPLY_POOL[Math.floor(Math.random()*REPLY_POOL.length)];
+      w.replyAt = nowStr();
+      w.unread = 1;
+      changed = true;
+    });
+    if(changed) save();
+  }
+  function nowStr(){
+    const d = new Date();
+    return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate() + " "
+      + String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+  }
+  function whisperUnread(){
+    return (S.whispers || []).filter(function(w){ return w.unread; }).length;
+  }
+  function markWhisperRead(){
+    let ch = false;
+    (S.whispers||[]).forEach(function(w){ if(w.unread){ w.unread = 0; ch = true; } });
+    if(ch) save();
+    paintNavDot();
+  }
+  function paintNavDot(){
+    const tab = document.querySelector('#nav [data-page="whisper"]');
+    if(!tab) return;
+    const n = whisperUnread();
+    tab.classList.toggle("hasdot", n > 0);
+  }
+  window.__REPLY_TICK = whisperReplyTick;
+
   function renderWhisper(){
     renderPhotos();
+    whisperReplyTick();
+    paintNavDot();
     const box = $("wList");
     if(!box) return;
     if(!S.whispers.length){
       box.innerHTML = '<div class="empty">还没有悄悄话<br>上面写一句试试</div>';
       return;
     }
-    box.innerHTML = S.whispers.map(w=>
-      '<div class="wcard"><div class="wt">'+w.text.replace(/</g,"&lt;")+'</div>'
-      + '<div class="wm">'+w.at+'</div>'
-      + '<button class="wbtn small" data-share-w="'+w.id+'">再发一次</button></div>'
-    ).join("");
+    box.innerHTML = S.whispers.map(function(w){
+      return '<div class="wcard' + (w.unread ? " unread" : "") + '">'
+        + '<div class="wt">' + w.text.replace(/</g,"&lt;") + '</div>'
+        + '<div class="wm">' + w.at + '</div>'
+        + (w.reply
+            ? '<div class="wreply"><span class="wr-h">他回你：</span>' + w.reply.replace(/</g,"&lt;")
+              + '<span class="wr-t">' + (w.replyAt||"") + '</span></div>'
+            : '<div class="wpend">还没回，他大概在忙。</div>')
+        + '<button class="wbtn small" data-share-w="' + w.id + '">再发一次</button></div>';
+    }).join("");
   }
 
   /* ====== 我们的照片（存在本机，不上传服务器）====== */
@@ -3093,6 +3335,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
              + String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
     const w = { id: String(Date.now()), text: text, at: at };
     S.whispers.unshift(w);
+    setTimeout(function(){ try{ bumpTask("whisper"); }catch(e){} }, 0);
     if(/想家|想回去|好累|难受|不开心|难过|委屈/.test(text)){
       S.missHome = todayKey();
       setTimeout(function(){
@@ -3207,7 +3450,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
 
   /* ================= 事件 ================= */
   document.querySelectorAll('.btn[data-act]').forEach(b=>{
-    b.addEventListener("click", ()=>doAct(b.dataset.act));
+    b.addEventListener("click", ()=>{
+      doAct(b.dataset.act);
+      if(b.dataset.act === "pat") bumpTask("pat");
+    });
   });
   $("btnTrip").addEventListener("click", openTrip);
   document.addEventListener("click", function(e){
@@ -3263,6 +3509,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
 
   document.addEventListener("click", function(e){
     if(e.target && e.target.id === "btnTripBack2"){ backHomeEarly(); return; }
+    if(e.target && e.target.id === "btnSign"){ doSign(); return; }
+    if(e.target && e.target.id === "btnAlbum"){ openAlbum(); return; }
+    if(e.target && e.target.id === "btnAch"){ openAch(); return; }
+    if(e.target && e.target.id === "btnLetter"){ openLetter(); return; }
     const hc = e.target.closest && e.target.closest("[data-hercheck]");
     if(hc){ herCheck(hc.dataset.hercheck); return; }
     if(e.target && e.target.id === "btnHerW"){ herWeightAdd(); return; }
@@ -3395,9 +3645,11 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   window.__WX_LOAD = wxLoad; window.__WX_RENDER = renderWx;
   specialTick();
   shareTick();
+  setTimeout(function(){ if(!S.firstDayDone){ try{ openLetter(); }catch(e){} } }, 9000);
   renderHomeExtra();
   setInterval(specialTick, 10*60*1000);
   setInterval(shareTick, 5*60*1000);
+  setInterval(flashbackTick, 22*60*1000);
   wxLoad();
   setInterval(()=>wxLoad(), 30*60*1000);
   if(!S.guide){
