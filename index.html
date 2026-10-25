@@ -716,7 +716,7 @@ h1{ font-weight:800; letter-spacing:.06em;
 #wallPick .fr2.wicons{grid-template-columns:repeat(3,1fr)!important}
 #wallPick .fr2.wnames{grid-template-columns:repeat(3,1fr)!important;margin-top:-2px!important}
 
-#p-garden{padding-bottom:88px!important}
+#p-garden{padding-bottom:150px!important}
 .seedbar{padding-bottom:4px}
 
 .ii{background:linear-gradient(160deg,#efe6da,#e3d8ca)!important}
@@ -739,6 +739,17 @@ h1{ font-weight:800; letter-spacing:.06em;
 .phitem .phx{position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;
   border:0;background:rgba(60,45,38,.72);color:#fff;font-size:13px;line-height:19px;padding:0}
 .phempty{grid-column:1/-1;padding:16px;text-align:center;color:#a99b8d;font-size:13px}
+
+.vasebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:2px 0 8px}
+.vlist{display:flex;flex-wrap:wrap;gap:6px}
+.vflow{font-size:22px;line-height:1;filter:drop-shadow(0 1px 1px rgba(120,90,70,.2))}
+.vempty{color:#a99b8d;font-size:13px}
+#giftBox{position:absolute;right:14px;bottom:16px;z-index:6;width:54px;height:54px;border-radius:16px;
+  background:linear-gradient(160deg,#fff8f0,#f7e7d6);border:2px solid #e2c9b6;display:none;
+  align-items:center;justify-content:center;font-size:26px;cursor:pointer;
+  box-shadow:0 6px 14px rgba(120,90,70,.20);animation:giftFloat 2.6s ease-in-out infinite}
+#giftBox.on{display:flex}
+@keyframes giftFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 </style>
 </head>
 <body>
@@ -890,6 +901,8 @@ h1{ font-weight:800; letter-spacing:.06em;
   <div id="gGrid" class="ggrid"></div>
   <div class="gttl">挑一包种子</div>
   <div id="gSeeds" class="seedbar"></div>
+  <div class="gttl">🧺 窗台上的花</div>
+  <div id="gVase" class="vasebar"></div>
   <div id="gTip" class="know"></div>
 </section>
 <nav id="nav">
@@ -1104,7 +1117,7 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
       lastDay:todayKey(), streak:1, unlocked:{},
       owned:{ clothes:[], gear:[] },
       wearing:[], postcards:[], trip:null, house:"forest",
-      photos:[],
+      photos:[], vase:[], gift:null, lastSeen:0,
       decayApplied:0, routeStep:0, whispers:[],
  garden:new Array(9).fill(null),
       fit:{ kg:70, startKg:70, height:185, goal:"cut", bulkBurned:0,
@@ -1256,6 +1269,39 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
       });
     }
   }
+  function vaseWorth(fl){
+    const p = (gardenFind(fl.id) || {}).p || 10;
+    return Math.max(3, Math.round(p * 0.4));
+  }
+  function renderVase(){
+    const box = document.getElementById("gVase");
+    if(!box) return;
+    const v = S.vase || [];
+    if(!v.length){
+      box.innerHTML = '<div class="vempty">还没有摘下来的花</div>';
+      return;
+    }
+    let sum = 0;
+    v.forEach(function(f){ sum += vaseWorth(f); });
+    box.innerHTML =
+      '<div class="vlist">' + v.map(function(f,i){
+        return '<span class="vflow" data-vflow="' + i + '" title="' + f.n + '">' + f.e + '</span>';
+      }).join("") + '</div>'
+      + '<button class="wbtn small" id="vTrade">全部换成 💗' + sum + '</button>';
+  }
+  document.addEventListener("click", function(e){
+    const b = e.target.closest && e.target.closest("#vTrade");
+    if(!b) return;
+    const v = S.vase || [];
+    if(!v.length) return;
+    let sum = 0;
+    v.forEach(function(f){ sum += vaseWorth(f); });
+    S.vase = [];
+    S.coins += sum;
+    save(); render();
+    toast("换了 💗" + sum + "，花我收起来了");
+  });
+
   function gPlant(i){
     const pl = gardenFind(gSeedId);
     if(!pl){ toast("先在上面挑一包种子"); return; }
@@ -1280,8 +1326,16 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
     const pl = gardenFind(g.id) || { e:"🌱", n:"花" };
     S.garden[i] = null;
     S.happy += 1;
+    S.vase = S.vase || [];
+    let put = "";
+    if(S.vase.length < 9){
+      S.vase.push({ id: pl.id, e: pl.e, n: pl.n });
+      put = " · 放窗台了";
+    } else {
+      put = " · 窗台满了";
+    }
     say("摘了一株" + pl.n + "，放窗台上了。");
-    toast("摘下了 " + pl.e + pl.n + " · 幸福 +1");
+    toast("摘下了 " + pl.e + pl.n + " · 幸福 +1" + put);
     save(); render();
   }
 
@@ -1415,6 +1469,8 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
   function render(){
   renderGarden();
     renderHud();
+    renderGift();
+    if(typeof renderVase === "function") renderVase();
     renderShop();
     renderFit();
     renderWardrobe();
@@ -2288,14 +2344,74 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
     tickCooldowns();
   }, 1000);
 
+  /* ================= 离线礼物 ================= */
+  const GIFT_GAP = 6 * 3600 * 1000;
+  const GIFT_NOTES = [
+    "你不在的时候，我把屋子收拾了一下。",
+    "今天路过那家店，想起你说想吃。",
+    "手机一直放在手边，没等到消息。",
+    "睡了会儿，梦见你回来了。",
+    "窗台的太阳挪过来了，我一个人晒了半天。",
+    "有些话等你回来再说。"
+  ];
+  function maybeOfflineGift(){
+    const now = Date.now();
+    const last = S.lastSeen || S.lastMoodAt || now;
+    const gap = now - last;
+    S.lastSeen = now;
+    if(gap < GIFT_GAP || S.gift) return;
+    const roll = Math.random();
+    if(roll < 0.45){
+      S.gift = { k:"note", text: pick(GIFT_NOTES) };
+    } else if(roll < 0.8){
+      S.gift = { k:"coins", n: 12 + Math.floor(Math.random()*17) };
+    } else {
+      S.gift = { k:"flower", id: null };
+    }
+    save();
+  }
+  function renderGift(){
+    let box = document.getElementById("giftBox");
+    if(!box){
+      box = document.createElement("div");
+      box.id = "giftBox";
+      box.textContent = "🎁";
+      const st = document.getElementById("stage");
+      if(st) st.appendChild(box);
+    }
+    const has = !!S.gift;
+    box.classList.toggle("on", has);
+  }
+  function claimGift(){
+    const g = S.gift;
+    if(!g){ renderGift(); return; }
+    S.gift = null;
+    if(g.k === "note"){
+      const d = new Date();
+      const at = d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()+" "
+               + String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+      S.whispers.unshift({ id: String(Date.now()), text: g.text, at: at, from: "him" });
+      showSheet("他留了句话", g.text + "\n\n（已放进悄悄话）");
+    } else if(g.k === "coins"){
+      S.coins += g.n;
+      showSheet("桌上有个纸包", "打开是 💗" + g.n + "。\n\n「路上想起来给你带的，别嫌少。」");
+    } else {
+      S.coins += 8;
+      showSheet("桌上多了点东西", "一小把野花，还有 💗8。\n\n「回来路上顺手摘的。」");
+    }
+    save(); render(); renderGift();
+  }
+
   /* ================= 启动 ================= */
   decayMood();
+  maybeOfflineGift();
   const newDay = checkStreak();
   if(S.trip && Date.now() >= S.trip.endAt) finishTrip();
   render();
   tickCooldowns();
   if(newDay) checkStreakUnlock();
   else setTimeout(checkStreakUnlock, 700);
+  renderGift();
   if(!S.guide){
     setTimeout(()=>{
       if(!S.guide && !say._said) say("…… 你来了。先摸摸我的头吧，下面那三个按钮。", {speed:52});
@@ -2303,9 +2419,17 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
   }
   save();
 
+  document.addEventListener("click", function(ev){
+    const t = ev.target;
+    if(t && t.id === "giftBox"){ claimGift(); return; }
+  }, true);
+
   document.addEventListener("visibilitychange", ()=>{
+    if(document.hidden){ S.lastSeen = Date.now(); save(); }
     if(!document.hidden){
       decayMood();
+      maybeOfflineGift();
+      renderGift();
       if(S.trip && Date.now() >= S.trip.endAt) finishTrip();
       render();
     }
@@ -2322,6 +2446,7 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
   });
   window.__YS = S; window.__YSAVE = save; window.__YRENDER = render;
   setInterval(renderGarden, 1000);
+  setInterval(renderVase, 1500);
 })();
 </script>
 <div id="housePick">
