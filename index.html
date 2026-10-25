@@ -3800,7 +3800,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   window.__WX_LOAD = wxLoad; window.__WX_RENDER = renderWx;
   specialTick();
   shareTick();
-  setTimeout(function(){ if(!S.firstDayDone){ try{ openLetter(); }catch(e){} } }, 9000);
+  setTimeout(function(){ if(!S.firstDayDone){ S.firstDayDone = 1; save(); toast("第一天有封信 · 悄悄话页里可以看"); } }, 12000);
   setTimeout(function(){
     const ml = missLine();
     if(ml && !S.trip) say(ml, { speed: 46 });
