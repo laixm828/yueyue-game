@@ -17,8 +17,11 @@
   html,body{margin:0;height:100%;overflow:hidden;background:var(--bg)}
   body{color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif}
 
+  body{background:#efe7e0}
   #app{
-    position:fixed; inset:0; display:flex; flex-direction:column;
+    position:fixed; inset:0 auto 0 50%; transform:translateX(-50%);
+    width:100%; max-width:480px; box-shadow:0 0 40px rgba(120,90,70,.16);
+    display:flex; flex-direction:column;
     padding:calc(env(safe-area-inset-top) + 8px) 14px calc(env(safe-area-inset-bottom) + 6px);
   }
 
@@ -104,6 +107,21 @@
   #tripEmoji{font-size:22px; animation:bob 2.4s ease-in-out infinite}
   #tripText{font-size:12px; line-height:1.5; color:#6b5650}
   #tripTime{font-size:15px; font-weight:600; color:var(--pink-d); font-variant-numeric:tabular-nums}
+  #tripBack{
+    border:none; background:#fde8ee; color:var(--pink-d); font:600 12px/1 inherit;
+    font-family:inherit; padding:7px 10px; border-radius:10px; cursor:pointer;
+  }
+  #tripBack:active{transform:scale(.95)}
+  .stepbtn{
+    flex:0 0 30px; height:30px; border:none; border-radius:9px; background:#fde8ee;
+    color:var(--pink-d); font:700 16px/1 inherit; font-family:inherit; cursor:pointer;
+  }
+  .stepbtn:active{transform:scale(.92)}
+  #routeProg{
+    font-size:12px; color:#5c4a44; font-weight:600;
+    margin:6px 14px 0; padding:7px 10px; border-radius:10px;
+    background:rgba(255,252,247,.92); box-shadow:0 2px 8px rgba(150,120,100,.14);
+  }
 
   .kgbar{flex:1 1 auto; height:10px; border-radius:6px; background:#ffe3e3; overflow:hidden; min-width:0}
   .kgfill{height:100%; width:0; border-radius:6px; background:linear-gradient(90deg,#ffc2d1,#ff8fab); transition:width .35s}
@@ -299,7 +317,7 @@
   display:flex; align-items:center; justify-content:center;
   background:var(--px_card); border:2px solid var(--px_line); border-radius:5px;
   box-shadow:0 3px 0 rgba(74,59,53,.18); cursor:pointer;
-}
+;right:max(12px, calc(50vw - 228px))}
 #btnHouse:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(74,59,53,.18) }
 
 /* 开局选屋子 */
@@ -788,6 +806,7 @@ h1{ font-weight:800; letter-spacing:.06em;
           <div id="tripEmoji">🎒</div>
           <div id="tripText">你们在外面</div>
           <div id="tripTime">--:--</div>
+          <button id="tripBack">提前回家</button>
         </div>
         <div id="stageMotes"><div class="mote" style="left:8%;animation-delay:0.0s;animation-duration:6.2s"></div><div class="mote" style="left:21%;animation-delay:1.1s;animation-duration:7.1s"></div><div class="mote" style="left:34%;animation-delay:2.3s;animation-duration:8.0s"></div><div class="mote" style="left:47%;animation-delay:3.4s;animation-duration:6.2s"></div><div class="mote" style="left:60%;animation-delay:4.6s;animation-duration:7.1s"></div><div class="mote" style="left:73%;animation-delay:5.8s;animation-duration:8.0s"></div></div>
     <div id="rug"></div>
@@ -825,10 +844,14 @@ h1{ font-weight:800; letter-spacing:.06em;
           <div class="kgbar"><div class="kgfill" id="fitKgFill"></div></div>
           <span class="val" id="fitKgV"></span></div>
         <div class="frow"><label>步数</label>
+          <button class="stepbtn" data-step="-500">−</button>
           <input type="range" id="fitSteps" min="0" max="30000" step="200">
+          <button class="stepbtn" data-step="500">+</button>
           <span class="val" id="fitStepsV"></span></div>
         <div class="frow"><label>运动</label>
+          <button class="stepbtn" data-stepmin="-5">−</button>
           <input type="range" id="fitMin" min="0" max="180" step="5">
+          <button class="stepbtn" data-stepmin="5">+</button>
           <span class="val" id="fitMinV"></span></div>
         <div class="chips" id="fitActs"></div>
         <div class="fit-res" id="fitRes"></div>
@@ -848,6 +871,14 @@ h1{ font-weight:800; letter-spacing:.06em;
 
       <div class="sec-title">🔥 常见运动消耗（按他的体重算 30 分钟）</div>
       <div class="metwrap" id="metList"></div>
+      <div class="sec-title">🧰 数据</div>
+      <div class="know">
+        <p>进度只存在这台手机的浏览器里，换手机、清缓存都会没。<br>想把东西留一份，点下面导出。</p>
+      </div>
+      <div class="row" style="padding:0 14px 14px">
+        <button class="wbtn" id="btnExport" style="margin:0">导出悄悄话和照片</button>
+        <button class="wbtn" id="btnReset" style="margin:10px 0 0;background:#f3e6e1;color:#a4553f">重新开始</button>
+      </div>
       <div style="height:14px"></div>
     </section>
 
@@ -865,6 +896,7 @@ h1{ font-weight:800; letter-spacing:.06em;
         走完一站解锁下一站，每站先挑一样路上吃的。</p>
       </div>
       <div id="routeBar"></div>
+      <div id="routeProg"></div>
       <div style="padding:10px 14px 2px">
         <button class="wbtn" id="btnTrip">🎒 一起去下一站</button>
       </div>
@@ -875,6 +907,13 @@ h1{ font-weight:800; letter-spacing:.06em;
     </section>
     <section class="page scroll" id="p-whisper">
       <div class="sec-title">🤫 悄悄话</div>
+      <div class="know" style="margin-bottom:8px">
+        <p><b>怎么涨</b><br>
+        爱心 💗：摸头 +3（30 秒一次）、喂饭 +6（2 分钟）、说话 +2（1 分钟）、旅行回来 +25~50<br>
+        亲密度：摸头 +1、喂饭 +2、说话按字数 +1~8、悄悄话每天前 3 条各 +1<br>
+        心情：互动会涨，连续 2 小时不理他会掉（每小时 5，最多掉 20）<br>
+        幸福指数：连续登录、运动达标、换季问候、旅行归来会涨</p>
+      </div>
       <div class="know">
         <p>她在这台手机上写的话，会存在这台手机的浏览器里。<br>
         点「发给他」会调起系统分享；调不起来就把文字复制出来，微信发给我，我就能看到。</p>
@@ -888,7 +927,7 @@ h1{ font-weight:800; letter-spacing:.06em;
       <div class="sec-title">📷 我们的照片 <span id="phCount"></span></div>
       <div class="know">
         <p>从手机里挑几张存进来，会一直留在这台手机上。<br>
-        攒够连续天数那天，他会从这儿挑一张给你看。</p>
+        连续来 7 天那天，他会从这儿挑一张给你看。</p>
       </div>
       <div style="margin:2px 0 10px">
         <label class="wbtn" for="phFile" style="display:inline-block">＋ 加一张照片</label>
@@ -943,7 +982,7 @@ h1{ font-weight:800; letter-spacing:.06em;
     TALK: { mood:  5, love:1, coin: 2 },
     DECAY_START: 2, DECAY_STEP: 5, DECAY_CAP: 20,
     STREAK_UNLOCK: 3,
-    START_COIN: 50,
+    START_COIN: 90,
   };
 
   const LINES = {
@@ -966,7 +1005,7 @@ h1{ font-weight:800; letter-spacing:.06em;
     },
     pat: {
       happy : ["再摸就秃了，笨蛋。","…… 好啦好啦，给你摸。"],
-      normal: ["嗯，摸吧。","…… 你手怎么这么凉。"],
+      normal: ["嗯，摸吧。","…… 你的手有点凉，我帮你暖暖。"],
       sad   : ["…… 哼。","手放下，我又没让你摸。"],
       cold  : ["……"],
     },
@@ -1016,19 +1055,19 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     { id:"sport_blue", name:"运动短袖 · 蓝", cat:"top", slot:"body", price:60, desc:"出汗了也不显", sprite:"sport_blue", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"polo_navy", name:"海军蓝 Polo", cat:"top", slot:"body", price:80, desc:"出门见人穿这个", sprite:"polo_navy", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"polo_cream", name:"米色 Polo", cat:"top", slot:"body", price:80, desc:"显得人很温柔", sprite:"polo_cream", box:{x:50.4, y:75.4, w:62, h:29} },
-    { id:"hood_grey", name:"灰色连帽卫衣", cat:"top", slot:"body", price:120, desc:"帽子一戴谁也不爱", sprite:"hoodie_grey", box:{x:50.4, y:75.4, w:62, h:29} },
-    { id:"hood_pink", name:"粉色连帽卫衣", cat:"top", slot:"body", price:120, desc:"粉的也给他买了", sprite:"hoodie_pink", box:{x:50.4, y:75.4, w:62, h:29} },
+    { id:"hood_grey", name:"灰色连帽卫衣", cat:"top", slot:"body", price:120, desc:"帽子一戴，就只顾着酷了。", sprite:"hoodie_grey", box:{x:50.4, y:75.4, w:62, h:29} },
+    { id:"hood_pink", name:"粉色连帽卫衣", cat:"top", slot:"body", price:120, desc:"粉色的也给他买了一件。", sprite:"hoodie_pink", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"wind_khaki", name:"卡其风衣", cat:"outer", slot:"body", price:160, desc:"下雨也好看", sprite:"wind_beige", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"wind_black", name:"黑色风衣", cat:"outer", slot:"body", price:160, desc:"走路带风那种", sprite:"wind_black", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"down_white", name:"白色羽绒服", cat:"outer", slot:"body", price:220, desc:"裹成一团", sprite:"down_white", box:{x:50.4, y:75.4, w:62, h:29} },
-    { id:"down_orange", name:"橘色羽绒服", cat:"outer", slot:"body", price:220, desc:"远远就能看见你", sprite:"down_orange", box:{x:50.4, y:75.4, w:62, h:29} },
+    { id:"down_orange", name:"橘色羽绒服", cat:"outer", slot:"body", price:220, desc:"远远就能看见他。", sprite:"down_orange", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"brand_tee", name:"北野 · 联名短袖", cat:"brand", slot:"body", price:260, desc:"北野 NORTHFIELD 联名，限量", sprite:"tee_black", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"brand_hood", name:"星野 · 城市限定卫衣", cat:"brand", slot:"body", price:380, desc:"星野 STARFIELD 城市限定", sprite:"hoodie_grey", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"brand_wind", name:"拾光 · 机能风衣", cat:"brand", slot:"body", price:520, desc:"拾光 LIGHTYEAR 机能线", sprite:"wind_black", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"cap", name:"棒球帽", cat:"acc", slot:"acc", price:60, desc:"头上一顶，显年轻", emoji:"🧢", pos:{x:50, y:2.5, size:20, rot:-9} },
     { id:"scarf", name:"围巾", cat:"acc", slot:"acc", price:80, desc:"冷了记得围上", emoji:"🧣", pos:{x:56, y:80, size:10, rot:2} },
     { id:"glasses", name:"墨镜", cat:"acc", slot:"acc", price:100, desc:"装酷用", emoji:"🕶️", pos:{x:58, y:64, size:10, rot:0} },
-    { id:"headset", name:"耳机", cat:"acc", slot:"acc", price:120, desc:"听歌的时候别叫我", emoji:"🎧", pos:{x:38, y:54, size:9, rot:0} },
+    { id:"headset", name:"耳机", cat:"acc", slot:"acc", price:120, desc:"听歌的时候，也想和你一起听。", emoji:"🎧", pos:{x:38, y:54, size:9, rot:0} },
     { id:"bow", name:"小蝴蝶结", cat:"acc", slot:"acc", price:70, desc:"…… 别笑", emoji:"🎀", pos:{x:72, y:22, size:7, rot:10} },
     { id:"crown", name:"小皇冠", cat:"acc", slot:"acc", price:180, desc:"今天他最大", emoji:"👑", pos:{x:46, y:3, size:8, rot:-10} },
     { id:"vest_black", name:"黑色机能马甲", cat:"outer", slot:"body", price:130, desc:"里面塞什么都行", sprite:"vest_black", box:{x:50.4, y:75.4, w:50, h:29} },
@@ -1277,7 +1316,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       const bloom = S.garden.filter(function(g){ return g && gardenLeft(g) <= 0; }).length;
       tip.innerHTML = "现在是 <b>" + GARDEN_NAME[gardenKind()] + "</b> 的花园 · 种了 " + alive + "/9"
         + (bloom ? " · 有 " + bloom + " 株能摘了" : "")
-        + "<br>心情 ≥70 时长得快 20%；浇水一次能少等三成时间。换屋子后这里的花草也会跟着换。";
+        + "<br>心情 ≥70 时长得快 20%；浇水一次能少等三成时间。已种的植物不会消失，只是能买的种子会随屋子换主题。";
     }
 
     grid.querySelectorAll("[data-g]").forEach(function(el){
@@ -1287,7 +1326,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
         if(!g){
           const was = gSel;
           gSel = (gSel===i ? -1 : i);
-          if(gSel >= 0 && was !== i) toast("选了第 " + (i+1) + " 块空地，下面挑一包种子");
+          if(gSel >= 0 && was !== i) toast("这块空地选好了，下面挑一包种子");
           renderGarden();
         }
         else if(gardenLeft(g) > 0) gWater(i);
@@ -1301,7 +1340,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
           if(gSel >= 0 && !S.garden[gSel]){ gSeedId = id; gPlant(gSel); }
           else {
             gSeedId = (gSeedId===id ? null : id);
-            if(gSeedId && gSel < 0) toast("先点上面一块空地");
+            if(gSeedId && gSel < 0) toast("种子选好了，再点上面一块空地就能种");
             renderGarden();
           }
         });
@@ -1415,6 +1454,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     S.streak = (S.lastDay === ys) ? (S.streak+1) : 1;
     S.lastDay = t;
     S.happy += 1;
+    S.coins += 15;
+    setTimeout(function(){ toast("今天也来了 · 签到 💗+15 · 连续 "+S.streak+" 天"); }, 1600);
     save(); return true;
   }
 
@@ -1578,14 +1619,28 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const on = !!S.trip;
     $("tripCard").classList.toggle("show", on);
     $("btnTrip").disabled = on;
+    paintRouteProgress();
     const cdt = $("cd-trip"); if(cdt) cdt.textContent = on ? "在路上" : "";
     if(on){
       const d = ROUTE.find(x=>x.id===S.trip.dest) || ROUTE[0];
       $("tripEmoji").textContent = d.emoji;
-      $("tripText").textContent  = "你们在" + d.name + "·待着";
+      $("tripText").textContent  = "你们正在" + d.name + "，回来还有";
       updateTripClock();
     }
   }
+  function backHomeEarly(){
+    if(!S.trip) return;
+    window.confirm("现在回家？<br>路上花掉的爱心不退，也拿不到这一站的照片。") && finishTrip(true);
+  }
+
+  function paintRouteProgress(){
+    const el = $("routeProg"); if(!el) return;
+    const st = Math.min(S.routeStep, ROUTE.length);
+    el.innerHTML = "进度：第 " + (st>=ROUTE.length ? ROUTE.length : st+1) + " / " + ROUTE.length + " 站"
+      + " · 连续来 " + (S.streak||1) + " 天"
+      + " · 已收 " + S.postcards.length + " 张照片";
+  }
+
   function updateTripClock(){
     if(!S.trip) return;
     const left = S.trip.endAt - Date.now();
@@ -1600,7 +1655,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       const btn = document.querySelector('.btn[data-act="'+k+'"]');
       const el = $("cd-"+k);
       if(!btn) return;
-      if(S.trip){ btn.disabled = true; el.textContent=""; return; }
+      if(S.trip){ btn.disabled = true; el.textContent="在路上"; return; }
       const left = (S.cd[k]||0) - now;
       if(left > 0){
         btn.disabled = true;
@@ -1800,8 +1855,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       msg = S.fit.kg < k0 ? ("今天 "+tot+" kcal —— 体重 "+k0.toFixed(1)+" → "+S.fit.kg.toFixed(1)+" kg 🎉")
                           : ("今天 "+tot+" kcal，记下了");
     }
-    S.fit.loggedDay = todayKey();
-    S.fit.steps = 0; S.fit.mins = 0;
+    S.fit.loggedDay = todayKey();   // 保留当日步数/分钟，小结才不会变回 0
     save(); renderFit(); renderHud();
     toast(msg);
   }   // 步数 kcal ≈ 步数 × 体重 × 0.000615（1 万步/65kg ≈ 400）
@@ -1866,7 +1920,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       const pro = Math.round((S.fit.startKg||70)*1.6) + "–" + Math.round((S.fit.startKg||70)*2.0) + " g";
       bi.innerHTML = "BMI <b>"+b.bmi.toFixed(1)+"</b>（"+b.tag+"）· "+hh+" cm / "+kk+" kg"
         + "<br>增肌期蛋白质建议 <b>"+pro+"</b>/天"
-        + "<br>他 185 的个子，减太快会掉肌肉，65 以下就瘦脱形了。";
+        + "<br>他 185 的个子，减太快会掉肌肉，65kg 以下就瘦得脱形了。";
     }
     $("fitStepsV").textContent = S.fit.steps + " 步";
     $("fitMinV").textContent = S.fit.mins + " 分";
@@ -1943,6 +1997,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     if(!body) return;
     const out = [];
     const groups = cat==="all" ? ["top","outer","brand","acc"] : [cat];
+    if(cat === "furn"){
+      body.innerHTML = '<div class="empty">家具暂时还没上新<br>先给你自己买件衣服吧 🧥</div>';
+      return;
+    }
     groups.forEach(g=>{
       if(g==="gear" || g==="furn") return;
       const list = CLOTHES.filter(c=>c.cat===g);
@@ -1966,13 +2024,25 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
 
   function renderWardrobe(){
     const wl = $("wardrobeList");
+    const worn = (S.wearing||[]).map(function(id){
+      const c = CLOTHES.find(function(x){ return x.id===id; });
+      return c ? c.name : "";
+    }).filter(Boolean);
+    const head = '<div class="sec-title" style="grid-column:1/-1">当前装扮</div>'
+      + '<div class="know" style="grid-column:1/-1"><p>'
+      + (worn.length ? "现在穿着：" + worn.join("、") : "现在只穿着背心（默认装扮）")
+      + '</p></div>'
+      + '<div style="grid-column:1/-1;padding:0 14px 10px">'
+      + '<button class="wbtn" id="btnUndress" style="margin:0">'
+      + (worn.length ? "全部脱下（回到默认装扮）" : "已经是默认装扮了")
+      + '</button></div>';
     const owned = CLOTHES.filter(c=>has("clothes", c.id));
     if(!owned.length){
       wl.innerHTML = '<div class="empty" style="grid-column:1/-1">衣柜空空的<br>先去商店买一件？</div>';
       return;
     }
     const order = ["top","outer","brand","acc"];
-    const out = [];
+    const out = [head];
     order.forEach(g=>{
       const list = owned.filter(c=>c.cat===g);
       if(!list.length) return;
@@ -2041,8 +2111,18 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       + '</button>').join("");
     showSheet("一起出发 · 第 "+(S.routeStep+1)+" 站 "+d.emoji+" "+d.name,
       "这趟是你们一起走的：<b>合肥 → 昆明 → 丽江 → 大理 → 上海</b>。<br>"
-      + "现在要去第 "+(S.routeStep+1)+" 站，路上带点什么吃的？<br>当前爱心：💗 "+S.coins,
+      + "现在要去第 "+(S.routeStep+1)+" 站，路上带点什么吃的？<br>当前爱心：💗 "+S.coins+"　（不够就先去摸摸头）",
       null, '<div class="row">'+tiers+'</div>');
+  }
+
+  function askBento(i){
+    const b = BENTO[i]; if(!b) return;
+    const d = ROUTE[S.routeStep]; if(!d) return;
+    const mins = b.minutes>=60 ? (b.minutes/60)+" 小时" : b.minutes+" 分钟";
+    showSheet("带「"+b.name+"」出发？",
+      "去 <b>"+d.name+"</b>，路上 "+mins+"。<br>要花 💗"+b.cost+"，回来带 💗"+b.coin+"。</b>",
+      null, '<div class="row"><button class="opt pri" data-bento-go="'+i+'"><b>确定出发</b></button>'
+          + '<button class="opt" data-close="1">再想想</button></div>');
   }
 
   function depart(i){
@@ -2057,9 +2137,13 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     toast("你们出发去"+d.name+"了");
   }
 
-  function finishTrip(){
+  function finishTrip(early){
     if(!S.trip) return;
     const t = S.trip;
+    if(early){
+      S.trip = null; S.routeStep = t.step; save(); render();
+      toast("你们提前回家了，这一站下次再走"); return;
+    }
     const dest = ROUTE.find(x=>x.id===t.dest) || ROUTE[0];
     let cap, photo = null;
     if(dest.photos && dest.photos.length){
@@ -2080,6 +2164,18 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     S.routeStep = Math.min(ROUTE.length, (typeof t.step === "number" ? t.step : S.routeStep) + 1);
     save(); render();
     const last = S.routeStep >= ROUTE.length;
+    if(!S.firstDone){
+      S.firstDone = 1; save();
+      setTimeout(function(){
+        showSheet("第一站，走完了",
+          "合肥 → "+dest.name+"。这是你们第一次一起出门。<br><br>"
+          + "写给你：<br>“我不太会说漂亮话。但你愿意陪我走这一段，我记着了。”<br><br>"
+          + "<span style=\"color:#8a746c;font-size:12px\">进度：旅行 " + S.routeStep + "/" + ROUTE.length
+          + " · 连续来 " + (S.streak||1) + " 天 · 照片 " + S.postcards.length + " 张</span>",
+          "postcard", pc);
+      }, 260);
+      return;
+    }
     showSheet(last ? "到家了 · 上海" : "一起从"+dest.name+"回来",
       last ? "这一趟走完了：合肥 → 昆明 → 丽江 → 大理 → 上海。<br>你们到家了，带回来 💗 "+t.coinBack+"。"
            : "带回来一张照片，还有 💗 "+t.coinBack+"。",
@@ -2090,7 +2186,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const box = $("pcList");
     $("pcCount").textContent = S.postcards.length ? "("+S.postcards.length+")" : "";
     if(!S.postcards.length){
-      box.innerHTML = '<div class="empty">还没有明信片<br>让他出门走走吧 🎒</div>';
+      box.innerHTML = '<div class="empty">还没有照片<br>让他出门走走吧 🎒</div>';
       return;
     }
     box.innerHTML = S.postcards.map(pcHtml).join("");
@@ -2275,6 +2371,25 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     shareWhisper(w.id);
   }
 
+  function exportAll(){
+    const data = { at: todayKey(), state: S };
+    try{
+      const blob = new Blob([JSON.stringify(data)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "yueyue-backup-" + todayKey() + ".json";
+      document.body.appendChild(a); a.click(); a.remove();
+      toast("导出好了，在手机的下载里");
+    }catch(err){ toast("这台手机不让下载，截图留一份吧"); }
+  }
+
+  function hardReset(){
+    if(!window.confirm("真的重新开始？所有亲密度、衣服、照片都会清空。")) return;
+    if(!window.confirm("最后确认一次：清空以后找不回来。")) return;
+    try{ localStorage.removeItem(KEY); }catch(err){}
+    location.reload();
+  }
+
   function shareWhisper(id){
     const w = S.whispers.find(x=>String(x.id)===String(id));
     if(!w) return;
@@ -2334,11 +2449,31 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     b.addEventListener("click", ()=>doAct(b.dataset.act));
   });
   $("btnTrip").addEventListener("click", openTrip);
+  document.addEventListener("click", function(e){
+    if(e.target && e.target.id === "btnUndress"){
+      S.wearing = []; save(); render(); toast("换回默认装扮了");
+    }
+  });
   $("btnExplain").addEventListener("click", openExplain);
   $("wSend").addEventListener("click", addWhisper);
+  const eb = $("btnExport"); if(eb) eb.addEventListener("click", exportAll);
+  const rb = $("btnReset");  if(rb) rb.addEventListener("click", hardReset);
 
   /* ---- 健身 ---- */
   $("btnFitLog").addEventListener("click", logFit);
+  $("p-fit").addEventListener("click", e=>{
+    const sb = e.target.closest("[data-step]");
+    if(sb){
+      S.fit.steps = Math.max(0, Math.min(30000, (S.fit.steps||0) + parseInt(sb.dataset.step,10)));
+      save(); renderFit(); checkFitReward(); return;
+    }
+    const sm = e.target.closest("[data-stepmin]");
+    if(sm){
+      S.fit.mins = Math.max(0, Math.min(180, (S.fit.mins||0) + parseInt(sm.dataset.stepmin,10)));
+      save(); renderFit(); checkFitReward(); return;
+    }
+  });
+
   $("fitSteps").addEventListener("input", e=>{
     S.fit.steps = parseInt(e.target.value,10) || 0; save(); renderFit(); checkFitReward();
   });
@@ -2351,7 +2486,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const c = e.target.closest("[data-fit-act]");
     if(!c) return;
     S.fit.act = c.dataset.fitAct; save(); renderFit();
-    if(S.fit.act === "jog") say("我一跑起来就想起训练的时候……好累。");
+    if(S.fit.act === "jog") say("跑起来有点累，不过有你在就还好。");
   });
 
   $("view").addEventListener("click", e=>{
@@ -2368,8 +2503,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     if(w){ shareWhisper(w.dataset.shareW); return; }
     const ag = e.target.closest("[data-again]");
     if(ag){ closeModal(); setTimeout(openTrip, 60); return; }
+    const go = e.target.closest("[data-bento-go]");
+    if(go){ depart(parseInt(go.dataset.bentoGo,10)); return; }
     const t = e.target.closest("[data-bento]");
-    if(t) depart(parseInt(t.dataset.bento,10));
+    if(t) askBento(parseInt(t.dataset.bento,10));
   });
 
   document.querySelectorAll(".tab").forEach(tab=>{
@@ -2381,6 +2518,9 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       if(tab.dataset.page === "fit") say("我一跑起来就想起训练的时候……好累。");
     });
   });
+
+  const tb = $("tripBack");
+  if(tb) tb.addEventListener("click", backHomeEarly);
 
   $("c").addEventListener("click", ()=>{
     if(S.trip) return;
@@ -2471,6 +2611,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   if(!S.guide){
     setTimeout(()=>{
       if(!S.guide && !say._said) say("…… 你来了。先摸摸我的头吧，下面那三个按钮。", {speed:52});
+      if(!S.tipHouse){
+        S.tipHouse = 1; save();
+        setTimeout(function(){ toast("右上角 🏠 可以换屋子，随时能改"); }, 6000);
+      }
     }, 1200);
   }
   save();
