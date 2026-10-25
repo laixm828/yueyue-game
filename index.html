@@ -771,6 +771,16 @@ h1{ font-weight:800; letter-spacing:.06em;
 
 #p-travel .empty{background:rgba(255,252,247,.9);border-radius:14px;padding:18px 12px;box-shadow:0 4px 12px rgba(150,120,100,.10)}
 #tripBg{opacity:.55!important}
+.wxbar{
+  margin:6px 14px 0; padding:7px 10px; border-radius:10px;
+  background:rgba(255,252,247,.92); box-shadow:0 2px 8px rgba(150,120,100,.14);
+  font-size:12px; color:#5c4a44; font-weight:600; display:flex; gap:6px; align-items:center;
+}
+.wxbar[hidden]{display:none!important}
+.wxbar .wt2{margin-left:auto;color:#a2837a;font-weight:500}
+.wxrow{display:flex;gap:8px;align-items:center;margin:6px 0}
+.wxrow input{flex:1 1 auto!important;width:auto!important;min-width:0;box-sizing:border-box;height:44px!important;min-height:0!important}
+.wxrow button{flex:0 0 auto!important;width:auto!important;min-width:64px;display:inline-block!important}
 </style>
 </head>
 <body>
@@ -784,6 +794,7 @@ h1{ font-weight:800; letter-spacing:.06em;
         <span class="bar-track"><span class="bar-fill" id="moodFill"></span></span>
         <span class="bar-val" id="moodVal">100</span>
       </div>
+      <div id="wxBar" class="wxbar" hidden></div>
       <div class="bar-row">
         <span class="bar-label">亲密度</span>
         <span class="bar-track"><span class="bar-fill" id="loveFill"></span></span>
@@ -924,6 +935,21 @@ h1{ font-weight:800; letter-spacing:.06em;
       </div>
       <div class="sec-title">已经写过的</div>
       <div id="wList"></div>
+      <div class="sec-title">📍 我们俩的天气</div>
+      <div class="know">
+        <p>填上城市，他就能照着你那边的天气说话：下雨提醒带伞、降温提醒加衣服。<br>
+        只存在这台手机上，不写进页面，别人看不到。</p>
+      </div>
+      <div class="wxrow">
+        <input id="wxHis" class="wta" style="height:38px;padding:6px 10px" placeholder="他在哪（例：昆明）">
+        <button class="wbtn" id="wxHisBtn" style="padding:0 14px;height:38px">存</button>
+      </div>
+      <div class="wxrow">
+        <input id="wxHer" class="wta" style="height:38px;padding:6px 10px" placeholder="你在哪（例：上海）">
+        <button class="wbtn" id="wxHerBtn" style="padding:0 14px;height:38px">存</button>
+      </div>
+      <div id="wxTip" class="know" style="display:none"><p></p></div>
+
       <div class="sec-title">📷 我们的照片 <span id="phCount"></span></div>
       <div class="know">
         <p>从手机里挑几张存进来，会一直留在这台手机上。<br>
@@ -1192,7 +1218,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       owned:{ clothes:[], gear:[] },
       wearing:[], postcards:[], trip:null, house:"forest",
       photos:[], vase:[], gift:null, lastSeen:0,
-      decayApplied:0, routeStep:0, whispers:[],
+      decayApplied:0, routeStep:0, whispers:[], place:{his:null,her:null}, wx:null,
  garden:new Array(9).fill(null),
       fit:{ kg:70, startKg:70, height:185, goal:"cut", bulkBurned:0,
             steps:0, mins:0, act:"walk", day:"", burned:0, loggedDay:"" },
@@ -1521,6 +1547,114 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
 
   let lastWearSig = null, lastGearSig = null;
 
+
+  /* ---------- 天气 ---------- */
+  const WX_TXT = {
+    0:"晴",1:"晴间多云",2:"多云",3:"阴",45:"雾",48:"雾凇",
+    51:"毛毛雨",53:"小雨",55:"中雨",56:"冻雨",57:"冻雨",
+    61:"小雨",63:"中雨",65:"大雨",66:"冻雨",67:"冻雨",
+    71:"小雪",73:"中雪",75:"大雪",77:"雪粒",
+    80:"阵雨",81:"强阵雨",82:"暴雨",85:"阵雪",86:"强阵雪",
+    95:"雷阵雨",96:"雷阵雨带冰雹",99:"雷暴冰雹"
+  };
+  const WX_ICON = (c)=>{
+    if(c==0) return "☀️"; if(c<=2) return "🌤"; if(c==3) return "☁️";
+    if(c>=45 && c<=48) return "🌫";
+    if(c>=71 && c<=77) return "🌨";
+    if(c>=85 && c<=86) return "🌨";
+    if(c>=95) return "⛈";
+    return "🌧";
+  };
+  function wxRainy(w){ return w && (w.precip > 0.05 || (w.code>=51 && w.code<=67) || (w.code>=80 && w.code<=82) || w.code>=95); }
+  function wxSnowy(w){ return w && ((w.code>=71 && w.code<=77) || (w.code>=85 && w.code<=86)); }
+
+  function wxAdvice(w){
+    if(!w) return "";
+    if(wxSnowy(w)) return "下雪了，路滑，慢点走";
+    if(wxRainy(w)) return "记得带伞";
+    if(w.t <= 5)   return "很冷，把外套穿上";
+    if(w.t <= 12)  return "有点凉，多穿一件";
+    if(w.t >= 33)  return "太热了，多喝水";
+    if(w.t <= 18 && w.rain6 >= 50) return "可能要下雨，塞把伞进包里";
+    return "";
+  }
+
+  async function wxGeo(name){
+    const u = "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(name)
+            + "&count=1&language=zh&format=json";
+    const r = await fetch(u);
+    const j = await r.json();
+    const it = j && j.results && j.results[0];
+    if(!it) return null;
+    return { name: it.name || name, lat: it.latitude, lon: it.longitude };
+  }
+
+  async function wxFetch(lat, lon){
+    const u = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon
+      + "&current=temperature_2m,precipitation,weather_code"
+      + "&hourly=precipitation_probability&forecast_days=1&timezone=auto";
+    const r = await fetch(u);
+    const j = await r.json();
+    if(!j || !j.current) return null;
+    const probs = (j.hourly && j.hourly.precipitation_probability) || [];
+    const h0 = new Date().getHours();
+    let rain6 = 0;
+    for(let i=h0;i<Math.min(h0+6, probs.length);i++) rain6 = Math.max(rain6, probs[i]||0);
+    return { t: Math.round(j.current.temperature_2m), code: j.current.weather_code,
+             precip: j.current.precipitation || 0, rain6: rain6, at: Date.now() };
+  }
+
+  async function wxLoad(force){
+    const pl = S.place || {};
+    if(!pl.his && !pl.her) { renderWx(); return; }
+    const now = Date.now();
+    if(!force && S.wx && S.wx.at && now - S.wx.at < 30*60*1000) { renderWx(); return; }
+    const out = { at: now, his:null, her:null };
+    try{
+      if(pl.his && pl.his.lat != null) out.his = await wxFetch(pl.his.lat, pl.his.lon);
+      if(pl.her && pl.her.lat != null) out.her = await wxFetch(pl.her.lat, pl.her.lon);
+    }catch(e){ /* 没网就算了，不打扰 */ }
+    S.wx = out; save(); renderWx();
+  }
+
+  function renderWx(){
+    const bar = $("wxBar");
+    if(!bar) return;
+    const w = S.wx || {};
+    const pl = S.place || {};
+    const her = w.her, his = w.his;
+    if(!her && !his){
+      bar.innerHTML = '<span>📍 点这里，填上我们俩的城市</span><span class="wt2">看天气说话</span>';
+      bar.hidden = false; return;
+    }
+    let h = "";
+    if(her){
+      const adv = wxAdvice(her);
+      h += '<span>' + WX_ICON(her.code) + ' 你那边 ' + her.t + '° ' + (WX_TXT[her.code]||"") + '</span>';
+      if(adv) h += '<span style="color:#c2566a">· ' + adv + '</span>';
+    }
+    if(his){
+      h += '<span class="wt2">他那边 ' + WX_ICON(his.code) + ' ' + his.t + '°</span>';
+    }
+    bar.innerHTML = h;
+    bar.hidden = false;
+  }
+
+  function wxLine(){
+    const w = S.wx || {};
+    const her = w.her;
+    if(!her) return null;
+    const pl = S.place || {};
+    const nm = (pl.her && pl.her.name) ? pl.her.name : "你那边";
+    if(wxSnowy(her)) return nm + "下雪了。别骑车，走路慢一点。";
+    if(wxRainy(her)) return nm + "在下雨。伞我帮你记着了，出门别忘了拿。";
+    if(her.t <= 5)  return nm + "才 " + her.t + " 度。手套围巾都戴上。";
+    if(her.t <= 12) return nm + "降到 " + her.t + " 度了，出门多穿一件。";
+    if(her.t >= 33) return nm + " " + her.t + " 度。别在外面待太久，多喝水。";
+    if(her.t >= 25) return nm + "挺热的，穿少点没关系。";
+    return null;
+  }
+
   /* 每秒只刷 HUD，列表按需刷，避免打断滚动与点击 */
   function renderHud(){
     applyExpr();
@@ -1736,6 +1870,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     let line = pool ? pick(pool) : "……";
     /* 每天第一次说话，说那句当天的 */
     if(kind==="talk" && S.dailyLine !== todayKey()){ S.dailyLine = todayKey(); line = dailyLine(); }
+    else if(kind==="talk"){
+      const wl = wxLine();
+      if(wl && Math.random() < 0.45) line = wl;
+    }
 
     let moodGain = g.mood;
     if(kind==="pat" && ownedGear("mat")) moodGain += 6;
@@ -2610,6 +2748,9 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   if(newDay) checkStreakUnlock();
   else setTimeout(checkStreakUnlock, 700);
   renderGift();
+  window.__WX_LOAD = wxLoad; window.__WX_RENDER = renderWx;
+  wxLoad();
+  setInterval(()=>wxLoad(), 30*60*1000);
   if(!S.guide){
     setTimeout(()=>{
       if(!S.guide && !say._said) say("…… 你来了。先摸摸我的头吧，下面那三个按钮。", {speed:52});
@@ -2636,8 +2777,32 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       render();
     }
   });
-  document.addEventListener("click", (ev)=>{
+  document.addEventListener("click", async (ev)=>{
     const t = ev.target;
+    if(t && t.closest && t.closest("#wxBar")){
+      const pg = document.querySelector('[data-page="whisper"]');
+      if(pg) pg.dispatchEvent(new MouseEvent("click",{bubbles:true}));
+      const el = document.getElementById("wxHis");
+      if(el) setTimeout(()=>{ el.scrollIntoView({behavior:"smooth", block:"center"}); el.focus(); }, 260);
+      return;
+    }
+    const isHis = t && t.id === "wxHisBtn", isHer = t && t.id === "wxHerBtn";
+    if(isHis || isHer){
+      const key = isHis ? "his" : "her";
+      const inp = $(isHis ? "wxHis" : "wxHer");
+      const tip = $("wxTip");
+      const name = (inp && inp.value || "").trim();
+      if(!name){ toast("先写个城市名"); return; }
+      toast("查一下……");
+      try{
+        const g = await wxGeo(name);
+        if(!g){ toast("没找到这个城市，换个写法试试"); return; }
+        S.place = S.place || {}; S.place[key] = g; save();
+        await wxLoad(true);
+        if(tip){ tip.style.display = ""; tip.innerHTML = "<p>记下了：" + (isHis?"他":"你") + "在 <b>" + g.name + "</b>。" + (S.wx && S.wx[key] ? "现在 " + WX_ICON(S.wx[key].code) + " " + S.wx[key].t + "° " + (WX_TXT[S.wx[key].code]||"") : "") + "</p>"; }
+      }catch(e){ toast("查不到，可能没网"); }
+      return;
+    }
     if(!t || !t.closest) return;
     const c = t.closest("[data-cat]");
     if(c && c.parentNode && c.parentNode.id === "shopCats"){
