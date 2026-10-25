@@ -788,6 +788,19 @@ h1{ font-weight:800; letter-spacing:.06em;
   border-radius:14px; box-shadow:0 4px 12px rgba(150,120,100,.14); overflow:hidden; }
 #wdPrev .wdp-inner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
 
+.her3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:10px 0 2px; }
+.her3 button{ padding:12px 4px; border-radius:12px; border:2px solid #f0d8d2; background:#fffdfa;
+  font:inherit; font-size:11.5px; color:#5c4a44; line-height:1.5; cursor:pointer; }
+.her3 button.done{ background:#ffe6ee; border-color:#ffb3c6; color:#a5435c; font-weight:700; }
+.her3 button .big{ display:block; font-size:19px; margin-bottom:3px; }
+.herw{ display:flex; align-items:center; gap:8px; margin-top:10px; }
+.herw label{ font-size:11.5px; color:#7a6a66; }
+.herw input{ flex:1 1 auto; min-width:0; height:38px; border-radius:10px; border:2px solid #f0d8d2;
+  background:#fffdfa; padding:0 10px; font:inherit; font-size:13px; color:#5c4a44; }
+.herw button{ flex:0 0 auto; height:38px; padding:0 14px; border-radius:10px; border:2px solid #ffb3c6;
+  background:#ffe6ee; color:#a5435c; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
+#herChart{ width:100%; height:118px; display:block; margin:10px 0 4px; border-radius:10px; background:#fffaf6; }
+
 /* ================= 视觉统一 v2（暖奶油 + 柔粉） ================= */
 :root{
   --ui-bg:#fbf4ec; --ui-card:#fffdf9; --ui-line:#efe2d6;
@@ -988,6 +1001,31 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
         <div id="fitBmi" style="margin:2px 0 10px;font-size:11.5px;color:#7a6a66;line-height:1.9;border-top:2px dashed #f0ddd6;padding-top:8px"></div>
         <button class="wbtn" id="btnFitLog" style="margin-top:8px">📝 记下他今天动的</button>
         <div id="fitBurnTxt" style="margin-top:6px;text-align:center;font-size:11px;color:#9a8280;line-height:1.6"></div>
+      </div>
+
+      <div class="sec-title">🌸 她的一天</div>
+      <div class="fit-card" id="herCard">
+        <div id="herBase" style="font-size:11.5px;color:#7a6a66;line-height:1.9"></div>
+        <div class="her3" id="herChecks"></div>
+        <div id="herTip" style="margin:8px 0 0;font-size:11.5px;color:#8a746c;line-height:1.85"></div>
+        <div class="herw">
+          <label>体重</label>
+          <input id="herWIn" type="number" inputmode="decimal" step="0.1" min="30" max="80" placeholder="如 45.2">
+          <button id="btnHerW">记一次</button>
+        </div>
+        <canvas id="herChart" width="620" height="240"></canvas>
+        <div id="herWNote" style="font-size:11px;color:#9a8280;text-align:center;line-height:1.7"></div>
+        <div style="padding:6px 0 0"><button class="wbtn" id="btnHerPeriod" style="margin:0">🩸 经期开始了</button></div>
+      </div>
+
+      <div class="sec-title">💡 她每天该动多少</div>
+      <div class="know">
+        <p>· 160cm / 45kg，BMI <b>17.6</b>，偏瘦。目标不是减，是<b>别掉秤</b>（47～50kg 是正常区间）。<br>
+        · 步数：每天 <b>7000 步</b>上下就够，不用凑一万。<br>
+        · 力量：每周 <b>2 次</b>（深蹲、臀桥、弹力带），每次 20 分钟，比跑步更能保住肌肉。<br>
+        · 有氧：每周 <b>2～3 次</b>快走或骑车 20～30 分钟；不用跑步，跳绳也算。<br>
+        · 吃：蛋白 <b>60～68g/天</b>（蛋、奶、瘦肉、豆制品），钙 <b>800mg</b>，铁 <b>18mg</b>。<br>
+        · 经期那几天：目标减半，只补铁和睡够，<b>不算失败</b>。</p>
       </div>
 
       <div class="sec-title">💡 他每天该动多少</div>
@@ -1371,6 +1409,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       photos:[], vase:[], gift:null, lastSeen:0,
       decayApplied:0, routeStep:0, whispers:[], place:{his:{name:"岳阳",lat:29.36778,lon:113.12019}, her:{name:"南京",lat:32.06167,lon:118.77778}}, wx:null,
  garden:new Array(9).fill(null),
+      her:{ day:"", c1:0, c2:0, c3:0, weight:[], periodStart:"", periodDays:5, cycle:28,
+            height:160, baseKg:45 },
       fit:{ kg:70, startKg:70, height:185, goal:"cut", bulkBurned:0,
             steps:0, mins:0, act:"walk", day:"", burned:0, loggedDay:"" },
     };
@@ -1380,6 +1420,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       const raw = localStorage.getItem(KEY);
       if(!raw) return defaultState();
       const s = Object.assign(defaultState(), JSON.parse(raw));
+      s.her = Object.assign({ day:"", c1:0, c2:0, c3:0, weight:[], periodStart:"", periodDays:5,
+                              cycle:28, height:160, baseKg:45 }, s.her || {});
       s.cd = Object.assign({pat:0,feed:0,talk:0}, s.cd||{});
       s.unlocked = s.unlocked||{};
       if(!s.place || (!s.place.his && !s.place.her)) s.place = defaultState().place;
@@ -1993,6 +2035,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     if(typeof renderVase === "function") renderVase();
     renderShop();
     renderFit();
+    if(typeof renderHer === "function") renderHer();
     renderWardrobe();
     renderPostcards();
     renderWhisper();
@@ -2325,6 +2368,125 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const a = ACTS.find(x=>x.id===S.fit.act) || ACTS[0];
     return Math.round(a.met * S.fit.kg * (S.fit.mins/60));
   };
+
+
+  /* ================= 她的一天 ================= */
+  function herResetDay(){
+    const t = todayKey();
+    if(S.her.day !== t){ S.her.day = t; S.her.c1 = 0; S.her.c2 = 0; S.her.c3 = 0; }
+  }
+  function herPeriod(){
+    if(!S.her.periodStart) return false;
+    const p = String(S.her.periodStart).split("-").map(Number);
+    const st = new Date(p[0], p[1]-1, p[2]);
+    const days = Math.floor((Date.now() - st.getTime())/86400000);
+    return days >= 0 && days < (S.her.periodDays || 5);
+  }
+  function herDaysSincePeriod(){
+    if(!S.her.periodStart) return -1;
+    const p = String(S.her.periodStart).split("-").map(Number);
+    const st = new Date(p[0], p[1]-1, p[2]);
+    return Math.floor((Date.now() - st.getTime())/86400000);
+  }
+  function herCheck(k){
+    herResetDay();
+    if(S.her[k]){ toast("今天这项已经记过了"); return; }
+    S.her[k] = 1; S.love += 5;
+    const all = S.her.c1 && S.her.c2 && S.her.c3;
+    if(all){ S.happy += 3; say("三样都做到了，今天很好。"); }
+    save(); renderHer(); renderHud();
+  }
+  function herWeightAdd(){
+    const v = parseFloat(($("herWIn")||{}).value);
+    if(!v || v < 30 || v > 80){ toast("体重填 30～80 之间"); return; }
+    const t = todayKey();
+    S.her.weight = (S.her.weight||[]).filter(function(x){ return x.d !== t; });
+    S.her.weight.push({ d:t, w:Math.round(v*10)/10 });
+    S.her.weight.sort(function(a,b){ return a.d < b.d ? -1 : 1; });
+    if(S.her.weight.length > 40) S.her.weight = S.her.weight.slice(-40);
+    $("herWIn").value = "";
+    let msg = "记下了 " + v.toFixed(1) + " kg";
+    if(v < 44.5) msg += " —— 别再掉了，先加一顿饭";
+    else if(v < 47.4) msg += " —— 还在偏瘦区间，往上走一点";
+    else if(v <= 50) msg += " —— 正合适";
+    toast(msg);
+    save(); renderHer();
+  }
+  function drawHerChart(){
+    const cv = $("herChart"); if(!cv || !cv.getContext) return;
+    const g = cv.getContext("2d");
+    const W = cv.width, H = cv.height;
+    g.clearRect(0,0,W,H);
+    const data = (S.her.weight||[]).slice(-14);
+    let lo = 47, hi = 50;
+    data.forEach(function(pt){ if(pt.w < lo) lo = pt.w; if(pt.w > hi) hi = pt.w; });
+    const y0 = Math.min(44, lo - 0.8), y1 = Math.max(51, hi + 0.8);
+    const padL = 6, padR = 6, padT = 10, padB = 8;
+    const yPix = function(w){ return padT + (y1 - w) / (y1 - y0) * (H - padT - padB); };
+    /* 正常区间 47–50 */
+    g.fillStyle = "rgba(255,157,176,.14)";
+    g.fillRect(padL, yPix(50), W-padL-padR, yPix(47)-yPix(50));
+    g.strokeStyle = "rgba(255,157,176,.5)"; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(padL, yPix(47)); g.lineTo(W-padR, yPix(47)); g.stroke();
+    g.fillStyle = "rgba(196,120,140,.72)"; g.font = "16px sans-serif"; g.textAlign = "left";
+    g.fillText("正常 47～50kg", padL + 6, yPix(50) + 18);
+    if(data.length < 2){
+      g.fillStyle = "#bda8a0"; g.font = "18px sans-serif"; g.textAlign = "center";
+      g.fillText("记两次就能看到线了", W/2, H/2);
+      return;
+    }
+    const xPix = function(i){ return padL + i * (W-padL-padR) / (data.length-1); };
+    g.beginPath();
+    data.forEach(function(pt,i){ const x = xPix(i), y = yPix(pt.w); i ? g.lineTo(x,y) : g.moveTo(x,y); });
+    g.strokeStyle = "#ff8fa8"; g.lineWidth = 4; g.lineJoin = "round"; g.stroke();
+    g.fillStyle = "#ff8fa8";
+    data.forEach(function(pt,i){ g.beginPath(); g.arc(xPix(i), yPix(pt.w), 6, 0, 7); g.fill(); });
+    const last = data[data.length-1];
+    g.fillStyle = "#8a746c"; g.font = "17px sans-serif"; g.textAlign = "right";
+    g.fillText(last.w.toFixed(1) + "kg", W-8, Math.max(20, yPix(last.w)-12));
+  }
+  function renderHer(){
+    if(!$("herBase")) return;
+    herResetDay();
+    const per = herPeriod();
+    const kg = (S.her.weight && S.her.weight.length) ? S.her.weight[S.her.weight.length-1].w : S.her.baseKg;
+    const h = (S.her.height || 160) / 100;
+    const bmi = kg / (h*h);
+    const bmiTag = bmi < 18.5 ? "偏瘦" : bmi < 24 ? "正常" : "偏高";
+    $("herBase").innerHTML = "身高 <b>" + (S.her.height||160) + " cm</b> · 体重 <b>" + kg.toFixed(1) + " kg</b> · BMI <b>"
+      + bmi.toFixed(1) + "</b>（" + bmiTag + "）"
+      + "<br>目标区间 <b>47～50 kg</b> · 蛋白 <b>60～68 g</b>/天 · 钙 800mg · 铁 18mg";
+    const goalStep = per ? 3500 : 7000;
+    const items = [
+      ["c1", "🚶", "走 " + goalStep + " 步"],
+      ["c2", "🥚", "蛋白三份"],
+      ["c3", "💪", per ? "动 10 分钟" : "动 10 分钟"]
+    ];
+    $("herChecks").innerHTML = items.map(function(it){
+      return '<button data-hercheck="' + it[0] + '" class="' + (S.her[it[0]] ? "done" : "") + '">'
+        + '<span class="big">' + it[1] + "</span>" + it[2] + (S.her[it[0]] ? " ✓" : "") + "</button>";
+    }).join("");
+    let tip = "";
+    if(per) tip += "🩸 经期模式：目标减半，只补铁和睡够，<b>不算失败</b>。铁优先：红肉、动物肝、菠菜，配维 C 吸收更好。";
+    else {
+      const d = herDaysSincePeriod();
+      if(d >= 0 && d >= 21 && d <= 30) tip += "🩸 大概这几天了？到了点下面按钮，目标会自动减半。";
+    }
+    const doneAll = S.her.c1 && S.her.c2 && S.her.c3;
+    const done2 = (S.her.c1?1:0) + (S.her.c2?1:0) + (S.her.c3?1:0) >= 2;
+    $("herTip").innerHTML = tip
+      || (doneAll ? "三样都做到了。今天很好。" : (done2 ? "两样了，够本。" : "今天三样里做到两样就够了，剩下的不用补。"));
+    $("btnHerPeriod").textContent = per ? "🩸 经期中（点我结束）" : "🩸 经期开始了";
+    const ws = S.her.weight || [];
+    let note = "";
+    if(ws.length >= 2){
+      const diff = ws[ws.length-1].w - ws[ws.length-2].w;
+      note = Math.abs(diff) <= 0.5 ? "比上次 " + (diff>=0?"+":"") + diff.toFixed(1) + " kg，算稳"
+                                   : "比上次 " + (diff>=0?"+":"") + diff.toFixed(1) + " kg";
+    } else note = "一周记一次就够，±0.5kg 算稳";
+    $("herWNote").textContent = note;
+    drawHerChart();
+  }
 
   function renderFit(){
     resetFitDay();
@@ -2983,6 +3145,17 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     if(!c) return;
     S.fit.act = c.dataset.fitAct; save(); renderFit();
     if(S.fit.act === "jog") say("跑起来有点累，不过有你在就还好。");
+  });
+
+  document.addEventListener("click", function(e){
+    const hc = e.target.closest && e.target.closest("[data-hercheck]");
+    if(hc){ herCheck(hc.dataset.hercheck); return; }
+    if(e.target && e.target.id === "btnHerW"){ herWeightAdd(); return; }
+    if(e.target && e.target.id === "btnHerPeriod"){
+      if(herPeriod()){ S.her.periodStart = ""; toast("经期结束，目标恢复"); }
+      else { S.her.periodStart = todayKey(); S.her.periodDays = 5; toast("这五天目标减半，先照顾好自己"); }
+      save(); renderHer(); return;
+    }
   });
 
   $("view").addEventListener("click", e=>{
