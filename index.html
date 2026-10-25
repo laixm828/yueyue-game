@@ -1820,7 +1820,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       mood:55, love:0, coins:CFG.START_COIN, happy:0,
       lastMoodAt:Date.now(), cd:{pat:0,feed:0,talk:0},
       lastDay:todayKey(), streak:1, unlocked:{},
-      owned:{ clothes:[], gear:[] },
+      owned:{ clothes:["pajama"], gear:[] },
       wearing:[], postcards:[], trip:null, house:"forest",
       photos:[], vase:[], gift:null, lastSeen:0,
       decayApplied:0, routeStep:0, whispers:[], place:{his:{name:"岳阳",lat:29.36778,lon:113.12019}, her:{name:"南京",lat:32.06167,lon:118.77778}}, wx:null,
@@ -1848,6 +1848,9 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
         s.furnOwned = ["bed","sofa","table","rug"];
         s.furn = {3:"bed",5:"table",4:"rug",6:"sofa"};
       }
+      s.owned = s.owned || {};
+      s.owned.clothes = s.owned.clothes || [];
+      if(s.owned.clothes.indexOf("pajama") < 0) s.owned.clothes.push("pajama");
       if(!s.daily) s.daily = { d:"", pat:0, water:0, whisper:0, got:{} };
       s.fit = Object.assign({kg:70,startKg:70,height:185,goal:"cut",bulkBurned:0,
         steps:0,mins:0,act:"walk",day:"",burned:0,loggedDay:""}, s.fit||{});
@@ -3291,7 +3294,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   }
 
   /* ================= 商店 / 衣柜 ================= */
-  const CATNAME = { top:"👕 上装", outer:"🧥 外套", brand:"🏷️ 牌子货", acc:"🧢 配饰" };
+  const CATNAME = { top:"👕 上装", outer:"🧥 外套", brand:"🏷️ 牌子货", acc:"🧢 配饰", sleep:"🛏️ 睡衣" };
   function shopItem(it, kind){
     const own = kind==="cloth" ? has("clothes", it.id)
               : kind==="gear"  ? has("gear", it.id)
@@ -3386,7 +3389,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       wl.innerHTML = '<div class="empty" style="grid-column:1/-1">衣柜空空的<br>先去商店买一件？</div>';
       return;
     }
-    const order = ["top","outer","brand","acc"];
+    const order = ["sleep","top","outer","brand","acc"];
     const out = [head];
     order.forEach(g=>{
       const list = owned.filter(c=>c.cat===g);
@@ -4203,6 +4206,19 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   if(typeof renderGarden === "function") window.__GARDEN_RENDER = renderGarden;
   if(typeof renderVase === "function") window.__VASE_RENDER = renderVase;
   window.__YS = S; window.__YSAVE = save; window.__YRENDER = render;
+  try{
+    var _st = (typeof S === "function") ? S() : S;
+    if(_st){
+      _st.owned = _st.owned || {};
+      _st.owned.clothes = _st.owned.clothes || [];
+      if(_st.owned.clothes.indexOf("pajama") < 0){
+        _st.owned.clothes.push("pajama");
+        if(typeof save === "function") save();
+        if(typeof render === "function") render();
+        if(typeof renderWardrobe === "function") renderWardrobe();
+      }
+    }
+  }catch(e){}
   window.__ARENDER = (typeof renderAccessories === "function") ? renderAccessories : null;
   window.__CLOTHES = CLOTHES; window.__GARMENTS = GARMENTS;
   window.__SRENDER = renderShop;
@@ -5207,6 +5223,7 @@ body.night #nightVeil{opacity:1;}
     CL.push({id:'pajama', name:'睡衣', cat:'sleep', slot:'body', price:0, desc:'晚上换上它', sprite:'pajama'});
   }
   if(GA) GA['pajama'] = 'art/pajama.png';
+
   var stage = document.getElementById('stage');
   var zzz = document.createElement('div');
   zzz.id = 'pjZzz'; zzz.textContent = '\uD83D\uDCA4';
@@ -5223,31 +5240,18 @@ body.night #nightVeil{opacity:1;}
   function isPajamaTime(){ var h = new Date().getHours(); return h >= 22 || h < 6; }
   function pajamaTick(){
     var st = S(); if(!st || st.trip) return;
-    if(!Array.isArray(st.wearing)) st.wearing = [];
-    var cur = bodyItemOf(st.wearing);
     var night = isPajamaTime();
     if(zzz) zzz.style.display = night ? 'block' : 'none';
-    if(night){
-      if(cur && cur.id === 'pajama') return;
-      if(cur && st._dayOutfit && cur.id !== st._dayOutfit) return; /* 她半夜自己换了衣服，别抢 */
-      if(cur) st._dayOutfit = cur.id;
-      st.wearing = st.wearing.filter(function(id){
-        var it = null, list = window.__CLOTHES || [];
-        for(var k=0;k<list.length;k++){ if(list[k].id === id) it = list[k]; }
-        return !(it && it.slot === 'body');
-      });
-      st.wearing.push('pajama');
-      save(); render();
-      var b = document.getElementById('bubble');
-      if(b) b.textContent = '\u6362\u4E0A\u7761\u8863\u4E86\uFF0C\u5C0F\u8D8A\uFF0C\u4ECA\u665A\u65E9\u70B9\u7761\u3002';
-    } else {
-      if(cur && cur.id === 'pajama'){
-        st.wearing = st.wearing.filter(function(id){ return id !== 'pajama'; });
-        if(st._dayOutfit) st.wearing.push(st._dayOutfit);
-        save(); render();
-      }
-    }
+    if(!night) return;
+    /* 不再替她换衣服，只提一句；换不换她自己决定 */
+    if(st._pjHintDay === todayKey()) return;
+    var cur = bodyItemOf(Array.isArray(st.wearing) ? st.wearing : []);
+    if(cur && cur.id === 'pajama') return;
+    st._pjHintDay = todayKey();
+    save();
+    say("快睡了吧。衣柜里有睡衣，想换就换，不换也行。");
   }
+
 
   /* ---------- 时间胶囊：写信 + 选日子，到日子自动弹，不显示倒数 ---------- */
   /* 预置第一封信：用户亲笔，日期就是今天，发版后她一点开游戏就会弹出来 */
