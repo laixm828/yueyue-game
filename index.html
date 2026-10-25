@@ -937,8 +937,8 @@ h1{ font-weight:800; letter-spacing:.06em;
       <div id="wList"></div>
       <div class="sec-title">📍 我们俩的天气</div>
       <div class="know">
-        <p>填上城市，他就能照着你那边的天气说话：下雨提醒带伞、降温提醒加衣服。<br>
-        只存在这台手机上，不写进页面，别人看不到。</p>
+        <p>默认是<b>你：南京</b>、<b>他：岳阳</b>。改了就存这台手机上。<br>
+        他照着你那边的天气说话：下雨提醒带伞、降温提醒加衣服。</p>
       </div>
       <div class="wxrow">
         <input id="wxHis" class="wta" style="height:38px;padding:6px 10px" placeholder="他在哪（例：昆明）">
@@ -1218,7 +1218,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       owned:{ clothes:[], gear:[] },
       wearing:[], postcards:[], trip:null, house:"forest",
       photos:[], vase:[], gift:null, lastSeen:0,
-      decayApplied:0, routeStep:0, whispers:[], place:{his:null,her:null}, wx:null,
+      decayApplied:0, routeStep:0, whispers:[], place:{his:{name:"岳阳",lat:29.36778,lon:113.12019}, her:{name:"南京",lat:32.06167,lon:118.77778}}, wx:null,
  garden:new Array(9).fill(null),
       fit:{ kg:70, startKg:70, height:185, goal:"cut", bulkBurned:0,
             steps:0, mins:0, act:"walk", day:"", burned:0, loggedDay:"" },
@@ -1231,6 +1231,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       const s = Object.assign(defaultState(), JSON.parse(raw));
       s.cd = Object.assign({pat:0,feed:0,talk:0}, s.cd||{});
       s.unlocked = s.unlocked||{};
+      if(!s.place || (!s.place.his && !s.place.her)) s.place = defaultState().place;
       s.fit = Object.assign({kg:70,startKg:70,height:185,goal:"cut",bulkBurned:0,
         steps:0,mins:0,act:"walk",day:"",burned:0,loggedDay:""}, s.fit||{});
       if(!s.fit.startKg) s.fit.startKg = s.fit.kg || 70;
@@ -1645,7 +1646,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const her = w.her;
     if(!her) return null;
     const pl = S.place || {};
-    const nm = (pl.her && pl.her.name) ? pl.her.name : "你那边";
+    const nm = "你那边";
     if(wxSnowy(her)) return nm + "下雪了。别骑车，走路慢一点。";
     if(wxRainy(her)) return nm + "在下雨。伞我帮你记着了，出门别忘了拿。";
     if(her.t <= 5)  return nm + "才 " + her.t + " 度。手套围巾都戴上。";
