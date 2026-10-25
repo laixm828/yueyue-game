@@ -5179,6 +5179,15 @@ body.night #nightVeil{opacity:1;}
 /* ===== Muse 第二波：睡衣 Zzz / 时间胶囊 ===== */
 #pjZzz{position:absolute;right:22%;top:30%;z-index:3;font-size:26px;pointer-events:none;display:none;animation:pjFloat 2.6s ease-in-out infinite;}
 @keyframes pjFloat{0%,100%{transform:translateY(0);opacity:.9}50%{transform:translateY(-8px);opacity:.4}}
+#letterHint{position:absolute;right:16px;bottom:104px;z-index:9;width:30px;height:38px;
+  display:none;align-items:center;justify-content:center;padding:0;font-size:15px;line-height:1;
+  font-weight:700;color:#8A6A58;letter-spacing:0;
+  background:linear-gradient(#FFFDF8,#FBF1E6);border:2px solid #D8C3B4;border-radius:4px;
+  box-shadow:0 3px 0 rgba(74,59,53,.14), inset 0 -8px 0 rgba(232,214,200,.55);
+  cursor:pointer;transform:rotate(-6deg);
+  animation:lettAx 2.6s ease-in-out infinite;}
+#letterHint.on{display:flex;}
+@keyframes lettAx{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-4px) rotate(3deg)}}
 #capModal{position:fixed;left:0;right:0;top:0;bottom:0;z-index:200;background:rgba(52,40,36,.55);display:none;align-items:center;justify-content:center;padding:20px;}
 #capModal.on{display:flex;}
 #capCard{background:#FFF8F0;border-radius:18px;padding:20px;width:100%;max-width:420px;box-shadow:0 8px 30px rgba(0,0,0,.25);}
@@ -5244,10 +5253,10 @@ body.night #nightVeil{opacity:1;}
     if(zzz) zzz.style.display = night ? 'block' : 'none';
     if(!night) return;
     /* 不再替她换衣服，只提一句；换不换她自己决定 */
-    if(st._pjHintDay === todayKey()) return;
+    if(st._pjHintDay === todayStr()) return;
     var cur = bodyItemOf(Array.isArray(st.wearing) ? st.wearing : []);
     if(cur && cur.id === 'pajama') return;
-    st._pjHintDay = todayKey();
+    st._pjHintDay = todayStr();
     save();
     say("快睡了吧。衣柜里有睡衣，想换就换，不换也行。");
   }
@@ -5273,13 +5282,31 @@ body.night #nightVeil{opacity:1;}
   modal.innerHTML = '<div id="capCard"></div>';
   document.body.appendChild(modal);
   var card = modal.querySelector('#capCard');
+  (function(){
+    var st = document.getElementById('stage');
+    if(!st) return;
+    var lh = document.createElement('button');
+    lh.id = 'letterHint';
+    lh.type = 'button';
+    lh.textContent = '\u4FE1';
+    lh.addEventListener('click', openReadyLetter);
+    st.appendChild(lh);
+  })();
   function closeCap(){ modal.classList.remove('on'); }
   modal.addEventListener('click', function(e){ if(e.target === modal) closeCap(); });
   function paintCapLine(){
     var line = document.getElementById('capLine');
     if(!line) return;
+    var ready = readyCaps().length;
     var n = getCaps().filter(function(c){ return !c.opened; }).length;
-    line.innerHTML = '<p>\u23F3 \u5728\u8DEF\u4E0A\u7684\u4FE1\uFF1A' + n + ' \u5C01' + (n ? '\uFF08\u5230\u65E5\u5B50\u90A3\u5929\uFF0C\u5C0F\u4EBA\u4F1A\u4EB2\u624B\u4EA4\u7ED9\u4F60\uFF0C\u4E0D\u63D0\u524D\u544A\u8BC9\u4F60\u8FD8\u5269\u51E0\u5929\uFF09' : '') + '</p>';
+    var h = '';
+    if(ready > 0){
+      h += '<p><button id="capOpenBtn" class="wbtn" style="width:auto;padding:8px 14px">\u2709\uFE0F \u684C\u4E0A\u6709\u4E00\u5C01\u4FE1\uFF0C\u62C6\u5F00\u770B\u770B</button></p>';
+    }
+    h += '<p>\u23F3 \u5728\u8DEF\u4E0A\u7684\u4FE1\uFF1A' + n + ' \u5C01' + (n ? '\uFF08\u5230\u65E5\u5B50\u90A3\u5929\u4F1A\u653E\u5728\u684C\u4E0A\uFF0C\u81EA\u5DF1\u53BB\u62C6\uFF09' : '') + '</p>';
+    line.innerHTML = h;
+    var btn = document.getElementById('capOpenBtn');
+    if(btn) btn.addEventListener('click', openReadyLetter);
   }
   function openWrite(){
     card.innerHTML = '<h3>\u23F3 \u5199\u4E00\u5C01\u65F6\u95F4\u80F6\u56CA</h3>'
@@ -5320,15 +5347,34 @@ body.night #nightVeil{opacity:1;}
     modal.classList.add('on');
   }
   function capsuleTick(){
+    /* 到日子的信不再自动弹出来，先放在桌上，让她自己发现 */
     var caps = getCaps(), today = todayStr(), changed = false;
     for(var i=0;i<caps.length;i++){
-      if(!caps[i].opened && caps[i].date <= today){
-        caps[i].opened = 1; changed = true;
-        openLetter(caps[i]);
-        break;
+      if(!caps[i].opened && !caps[i].ready && caps[i].date <= today){
+        caps[i].ready = 1; changed = true;
       }
     }
-    if(changed){ save(); paintCapLine(); }
+    if(changed){ save(); }
+    paintLetterHint();
+    paintCapLine();
+  }
+  function readyCaps(){
+    return getCaps().filter(function(c){ return !c.opened && c.ready; });
+  }
+  function paintLetterHint(){
+    var el = document.getElementById('letterHint');
+    if(!el) return;
+    var list = readyCaps();
+    el.classList.toggle('on', list.length > 0);
+    el.title = list.length ? '\u684C\u4E0A\u6709\u4E00\u5C01\u4FE1' : '';
+  }
+  function openReadyLetter(){
+    var list = readyCaps();
+    if(!list.length){ toast('\u73B0\u5728\u6CA1\u6709\u8981\u62C6\u7684\u4FE1\u3002'); return; }
+    var cap = list[0];
+    cap.opened = 1; cap.ready = 0;
+    save(); paintLetterHint(); paintCapLine();
+    openLetter(cap);
   }
   var wSend = document.getElementById('wSend');
   if(wSend && wSend.parentNode){
@@ -5344,9 +5390,12 @@ body.night #nightVeil{opacity:1;}
     wList.parentNode.insertBefore(line, wList.nextSibling);
   }
   paintCapLine();
-  pajamaTick();
-  capsuleTick();
-  setInterval(function(){ pajamaTick(); capsuleTick(); }, 10*60*1000);
+  try{ pajamaTick(); }catch(e){}
+  try{ capsuleTick(); }catch(e){}
+  setInterval(function(){
+    try{ pajamaTick(); }catch(e){}
+    try{ capsuleTick(); }catch(e){}
+  }, 10*60*1000);
 })();
 </script>
 </body>
