@@ -781,6 +781,84 @@ h1{ font-weight:800; letter-spacing:.06em;
 .wxrow{display:flex;gap:8px;align-items:center;margin:6px 0}
 .wxrow input{flex:1 1 auto!important;width:auto!important;min-width:0;box-sizing:border-box;height:44px!important;min-height:0!important}
 .wxrow button{flex:0 0 auto!important;width:auto!important;min-width:64px;display:inline-block!important}
+
+/* ================= 视觉统一 v2（暖奶油 + 柔粉） ================= */
+:root{
+  --ui-bg:#fbf4ec; --ui-card:#fffdf9; --ui-line:#efe2d6;
+  --ui-ink:#5b4a42; --ui-sub:#a48d80; --ui-pink:#f8a8b8; --ui-pink-d:#ef8fa4;
+  --ui-radius:16px; --ui-shadow:0 6px 18px rgba(160,120,100,.10);
+}
+body{ background:var(--ui-bg); color:var(--ui-ink); }
+#app{ background:var(--ui-bg); }
+.page{ animation:pgIn .26s ease both; }
+@keyframes pgIn{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+
+/* 顶栏 */
+header{ background:linear-gradient(180deg,#fff8f1,#fdf3ea); border-bottom:1px solid var(--ui-line); }
+#hudTitle, header h1{ letter-spacing:.5px; }
+.bar{ background:#f3e6da !important; border-radius:99px; }
+.bar > i, .bar .fill{ background:linear-gradient(90deg,#ffc3cf,#f8a8b8) !important; border-radius:99px; }
+
+/* 卡片 / 面板 */
+.panel, .card, .item, .sec, .sheet, .box{
+  background:var(--ui-card) !important;
+  border:1px solid var(--ui-line) !important;
+  border-radius:var(--ui-radius) !important;
+  box-shadow:var(--ui-shadow) !important;
+}
+
+/* 按钮 */
+button{ border-radius:12px !important; transition:transform .12s ease, box-shadow .12s ease, filter .12s ease; }
+button:active{ transform:scale(.97); }
+.btn, .pink, .act, #btnPat, #btnFeed, #btnTalk{
+  background:linear-gradient(180deg,#ffc6d2,#f9a8b9) !important;
+  border:none !important; color:#5b3a41 !important; font-weight:600;
+  box-shadow:0 4px 12px rgba(240,150,170,.35) !important;
+}
+.btn.ghost, button.ghost{ background:#fff !important; border:1px solid var(--ui-line) !important; color:var(--ui-sub) !important; box-shadow:none !important; }
+
+/* 小节标题 */
+.sec-title, .ttl{ display:flex; align-items:center; gap:6px; color:#7d6357; font-weight:700; }
+.sec-title::before, .ttl::before{ content:"◆"; color:var(--ui-pink); font-size:9px; }
+
+/* 商店分类 chip */
+.chip{ border-radius:99px !important; border:1px solid var(--ui-line) !important; background:#fff !important; }
+.chip.on{ background:linear-gradient(180deg,#ffd0da,#f9b0bf) !important; border-color:transparent !important; }
+
+/* 底部导航 */
+nav{ background:rgba(255,252,247,.96) !important; border-top:1px solid var(--ui-line) !important; }
+nav .tab{ border-radius:14px; transition:background .15s ease, transform .15s ease; }
+nav .tab.on{ background:#ffe9ee; }
+nav .tab:active{ transform:scale(.94); }
+
+/* 房间地板：木地板暖色 */
+#stage{ background:linear-gradient(180deg,#f6dfd2 0%,#f3d3c2 52%,#e6c3ac 54%,#dcb69c 100%) !important; }
+#stage::before{
+  background:
+    repeating-linear-gradient(180deg, rgba(150,110,80,.16) 0 3px, rgba(255,255,255,.10) 3px 5px, rgba(0,0,0,0) 5px 34px),
+    repeating-linear-gradient(90deg, rgba(150,110,80,.10) 0 2px, rgba(0,0,0,0) 2px 74px) !important;
+}
+
+/* 花瓣点缀（首页容器） */
+#p-home::after{
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:1;
+  background-image:
+    radial-gradient(circle at 12% 22%, rgba(255,190,205,.55) 0 3px, transparent 4px),
+    radial-gradient(circle at 86% 16%, rgba(255,214,180,.55) 0 2.5px, transparent 4px),
+    radial-gradient(circle at 72% 68%, rgba(255,190,205,.42) 0 2.5px, transparent 4px),
+    radial-gradient(circle at 22% 78%, rgba(255,214,180,.42) 0 2px, transparent 3.5px);
+}
+
+/* 状态条 & 空槽位 */
+.bar-track{ background:#f1e3d7 !important; border:none !important; border-radius:99px !important; overflow:hidden; height:9px !important; }
+.bar-fill{ background:linear-gradient(90deg,#ffc9d4,#f79fb2) !important; border-radius:99px !important; }
+.bar-label{ color:#8a6f61 !important; font-weight:600; }
+.bar-val{ color:#8a6f61 !important; font-weight:600; }
+#roomGrid{ z-index:1 !important; }
+#stageInner{ z-index:3 !important; }
+#roomGrid .slot{ border:1.5px dashed rgba(150,110,80,.28) !important; background:rgba(255,255,255,.18) !important; border-radius:12px !important; }
+#roomGrid .slot.has{ border:none !important; background:transparent !important; }
+.acc{ filter:drop-shadow(0 2px 3px rgba(120,90,70,.25)); }
 </style>
 </head>
 <body>
@@ -1057,8 +1135,8 @@ h1{ font-weight:800; letter-spacing:.06em;
 
   /* 衣服：emoji 叠在立绘上。left/top/size 都是相对立绘框的百分比
      （left/top 相对宽/高，size 相对高，按像素算），位置可以自己微调 */
-  const GARMENTS = {"tee_white": "art/g01.png", "tee_black": "art/g02.png", "tee_grey": "art/g03.png", "sport_red": "art/g04.png", "sport_blue": "art/g05.png", "polo_navy": "art/g06.png", "polo_cream": "art/g07.png", "hoodie_grey": "art/g08.png", "hoodie_pink": "art/g09.png", "wind_beige": "art/g10.png", "wind_black": "art/g11.png", "down_white": "art/g12.png", "down_orange": "art/g13.png", "vest_black": "art/g14.png", "shirt_blue": "art/g15.png", "sweater_green": "art/g16.png", "shell_navy": "art/g17.png", "jacket_denim": "art/g18.png", "jacket_olive": "art/g19.png","shirt_white":"art/g20.png","shirt_denim":"art/g21.png","sweater_beige":"art/g22.png","shell_green":"art/g23.png","shell_black":"art/g24.png"}
-const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"art/g27.png","sport_red":"art/g28.png","sport_blue":"art/g29.png","polo_navy":"art/g30.png","polo_cream":"art/g31.png","hoodie_grey":"art/g32.png","hoodie_pink":"art/g33.png","wind_beige":"art/g34.png","wind_black":"art/g35.png","down_white":"art/g36.png","down_orange":"art/g37.png","vest_black":"art/g38.png","shirt_blue":"art/g39.png","sweater_green":"art/g40.png","shell_navy":"art/g41.png","jacket_denim":"art/g42.png","jacket_olive":"art/g43.png","shirt_white":"art/g44.png","shirt_denim":"art/g45.png","sweater_beige":"art/g46.png","shell_green":"art/g47.png","shell_black":"art/g48.png"}
+  const GARMENTS = {"tee_white": "art/g01.png", "tee_black": "art/g02.png", "tee_grey": "art/g03.png", "sport_red": "art/g04.png", "sport_blue": "art/g05.png", "polo_navy": "art/g06.png", "polo_cream": "art/g07.png", "hoodie_grey": "art/g08.png", "hoodie_pink": "art/g09.png", "wind_beige": "art/g10.png", "wind_black": "art/g11.png", "down_white": "art/g12.png", "down_orange": "art/g13.png", "vest_black": "art/g14.png", "shirt_blue": "art/g15.png", "sweater_green": "art/g16.png", "shell_navy": "art/g17.png", "jacket_denim": "art/g18.png", "jacket_olive": "art/g19.png","shirt_white":"art/g20.png","shirt_denim":"art/g21.png","sweater_beige":"art/g22.png","shell_green":"art/g23.png","shell_black":"art/g24.png","sweater_anni":"art/sweater_anni.png"}
+const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"art/g27.png","sport_red":"art/g28.png","sport_blue":"art/g29.png","polo_navy":"art/g30.png","polo_cream":"art/g31.png","hoodie_grey":"art/g32.png","hoodie_pink":"art/g33.png","wind_beige":"art/g34.png","wind_black":"art/g35.png","down_white":"art/g36.png","down_orange":"art/g37.png","vest_black":"art/g38.png","shirt_blue":"art/g39.png","sweater_green":"art/g40.png","shell_navy":"art/g41.png","jacket_denim":"art/g42.png","jacket_olive":"art/g43.png","shirt_white":"art/g44.png","shirt_denim":"art/g45.png","sweater_beige":"art/g46.png","shell_green":"art/g47.png","shell_black":"art/g48.png","sweater_anni":"art/sweater_anni.png"}
 ;
   const EXPR = {"open":"art/g49.png", "sad": "art/g50.png", "cold": "art/g51.png"};
   let ART_BASE = null;
@@ -1075,6 +1153,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
 
 
   const CLOTHES = [
+    { id:"sweater_anni", name:"纪念日毛衣", cat:"top", slot:"body", price:0, limit:true, desc:"绿色的，上面缀着不同颜色的灯芯绒小球", sprite:"sweater_anni", box:{x:0, y:0, w:100, h:100} },
     { id:"tee_white", name:"纯白短袖", cat:"top", slot:"body", price:40, desc:"最普通的白 T，穿什么都搭", sprite:"tee_white", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"tee_black", name:"黑色短袖", cat:"top", slot:"body", price:40, desc:"显瘦，也显干净", sprite:"tee_black", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"sport_red", name:"运动短袖 · 红", cat:"top", slot:"body", price:60, desc:"训练穿这件的次数最多", sprite:"sport_red", box:{x:50.4, y:75.4, w:62, h:29} },
@@ -1486,6 +1565,78 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     save(); return true;
   }
 
+
+  /* ================= 特殊日期 ================= */
+  const SPECIAL = [
+    { m:12, d:22, id:"anniv",   name:"在一起的日子", kind:"cloth" },
+    { m:5,  d:14, id:"herbday", name:"你的生日",     kind:"gift",  who:"你" },
+    { m:9,  d:4,  id:"hisbday", name:"我的生日",     kind:"gift",  who:"我" }
+  ];
+
+  function fireSpecial(t){
+    if(t.kind === "cloth"){
+      if(!has("clothes", "sweater_anni")){
+        S.owned.clothes.push("sweater_anni");
+        if(S.wearing.indexOf("sweater_anni") < 0){
+          S.wearing = S.wearing.filter(function(w){
+            var c = CLOTHES.find(function(x){ return x.id === w; });
+            return !c || c.slot !== "body";
+          });
+          S.wearing.push("sweater_anni");
+        }
+      }
+      S.happy += 6; S.love += 3;
+      save(); render();
+      say("今天是个特别的日子。");
+      showSheet("在一起的日子 · 12 月 22 日",
+        "这件毛衣我织了很久。<br>绿色是你喜欢的那个绿，"
+        + "上面那些灯芯绒小球是一个一个缝上去的，颜色都不一样，"
+        + "就像这一年里那些说不清的日子。<br><br>"
+        + "<span style=\"color:#8a746c;font-size:12px\">已放进衣柜，现在就穿着。</span>",
+        null, null);
+      return;
+    }
+    S.happy += 5; S.love += 2; S.coins += 30; save(); render();
+    if(t.id === "herbday"){
+      say("生日快乐。");
+      showSheet("你的生日 · 5 月 14 日",
+        "<div style=\"font-size:44px;text-align:center;margin:6px 0 10px\">🎂</div>"
+        + "蛋糕藏在游戏里了，礼物盒也在这儿。<br>"
+        + "不许一口气吃完，也不许只吃一口。<br><br>"
+        + "<span style=\"color:#8a746c;font-size:12px\">🎁 礼物盒已放进房间，爱心 +30</span>",
+        null, null);
+    }else{
+      say("今天是我生日。");
+      showSheet("我的生日 · 9 月 4 日",
+        "<div style=\"font-size:44px;text-align:center;margin:6px 0 10px\">🎁</div>"
+        + "礼物盒是空的——因为我想要的东西不在盒子里。"
+        + "你今天来了，那就已经在了。<br><br>"
+        + "<span style=\"color:#8a746c;font-size:12px\">爱心 +30</span>",
+        null, null);
+    }
+  }
+
+  function specialTick(){
+    const now = new Date(), key = todayKey();
+    S.specialDone = S.specialDone || {};
+    const t = SPECIAL.find(function(x){ return x.m === now.getMonth()+1 && x.d === now.getDate(); });
+    if(t && !S.specialDone[key+":"+t.id]){
+      S.specialDone[key+":"+t.id] = 1; save();
+      setTimeout(function(){ fireSpecial(t); }, 1200);
+      return;
+    }
+    const tm = new Date(now.getTime() + 86400000);
+    const nx = SPECIAL.find(function(x){ return x.m === tm.getMonth()+1 && x.d === tm.getDate(); });
+    if(nx && S.specialNotice !== key){
+      S.specialNotice = key; save();
+      setTimeout(function(){
+        showSheet("明天是特别的日子", "明天是 <b>" + nx.name + "</b>。<br>记得回来看看我。", null, null);
+      }, 2600);
+    }
+  }
+  window.__SPECIAL = SPECIAL;
+  window.__SPECIAL_FIRE = fireSpecial;
+
   /* ================= DOM ================= */
   const $ = id => document.getElementById(id);
   const stage = $("stage");
@@ -1685,6 +1836,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
 
   function render(){
   renderGarden();
+  if(typeof renderAccessories === "function") renderAccessories();
     renderHud();
     renderGift();
     if(typeof renderVase === "function") renderVase();
@@ -1710,10 +1862,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
           var ch = C.offsetHeight || C.getBoundingClientRect().height;
           var ox = C.offsetLeft, oy = C.offsetTop;
           lay.style.transform = "none";
-          lay.style.left   = "0px";
-          lay.style.top    = "0px";
-          lay.style.width  = "100%";
-          lay.style.height = "100%";
+          lay.style.left   = ox + "px";
+          lay.style.top    = oy + "px";
+          lay.style.width  = cw + "px";
+          lay.style.height = ch + "px";
           lay.style.objectFit = "fill";
         }
       }else{
@@ -2750,6 +2902,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   else setTimeout(checkStreakUnlock, 700);
   renderGift();
   window.__WX_LOAD = wxLoad; window.__WX_RENDER = renderWx;
+  specialTick();
+  setInterval(specialTick, 10*60*1000);
   wxLoad();
   setInterval(()=>wxLoad(), 30*60*1000);
   if(!S.guide){
@@ -2815,6 +2969,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   if(typeof renderGarden === "function") window.__GARDEN_RENDER = renderGarden;
   if(typeof renderVase === "function") window.__VASE_RENDER = renderVase;
   window.__YS = S; window.__YSAVE = save; window.__YRENDER = render;
+  window.__ARENDER = (typeof renderAccessories === "function") ? renderAccessories : null;
+  window.__CLOTHES = CLOTHES; window.__GARMENTS = GARMENTS;
   window.__SRENDER = renderShop;
   setInterval(function(){
     if(window.__GARDEN_RENDER) window.__GARDEN_RENDER();
@@ -2926,7 +3082,9 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     {id:"sofa",   e:"🛋", n:"沙发",   p:120},
     {id:"fish",h:"seaside",   e:"🐟", n:"鱼缸",   p:130},
     {id:"tv",h:"city",     e:"📺", n:"电视",   p:150},
-    {id:"bed",    e:"🛏", n:"床",     p:200}
+    {id:"bed",    e:"🛏", n:"床",     p:200},
+    {id:"table",  e:"🫖", n:"茶几",   p:110},
+    {id:"curtain",e:"🪟", n:"窗帘",   p:140}
   ,{id:"rug",e:"🧶",n:"地毯",p:90},{id:"stool",e:"🪑",n:"小圆凳",p:55},{id:"lamp",e:"💡",n:"落地灯",p:160},{id:"shelf",h:"forest",e:"📚",n:"书架",p:180},{id:"desk",h:"cottage",e:"🗄️",n:"书桌",p:220}];
   var SLOTS = 8;
   function byId(id){ for(var i=0;i<FURN.length;i++){ if(FURN[i].id===id) return FURN[i]; } return null; }
@@ -2951,7 +3109,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   var lastSig = "";
   const WALL_ART = window.__WALL_ART = {"win":"art/g52.png","art1":"art/g53.png","art2":"art/g54.png","clock":"art/g55.png","photo":"art/g56.png",};
 const WALL_ITEMS = window.__WALL_ITEMS = [{id:"snap",n:"小屋照片",p:0,req:6},{id:"win",n:"木窗",p:0},{id:"art1",n:"风景画",p:120},{id:"art2",n:"抽象画",p:140},{id:"clock",n:"挂钟",p:100},{id:"photo",n:"合照",p:60}];
-const FURN_ART = {"rug":"art/g57.png","stool":"art/g58.png","lamp":"art/g59.png","shelf":"art/g60.png","desk":"art/g61.png","plant": "art/g62.png", "chair": "art/g63.png", "gift": "art/g64.png", "paint": "art/g65.png", "guitar": "art/g66.png", "sofa": "art/g67.png", "fish": "art/g68.png", "tv": "art/g69.png", "bed": "art/g70.png"};
+const FURN_ART = {"rug":"art/fn_rug.png","lamp":"art/fn_lamp.png","shelf":"art/fn_shelf.png","plant":"art/fn_plant.png","sofa":"art/fn_sofa.png","bed":"art/fn_bed.png","table":"art/fn_table.png","curtain":"art/fn_curtain.png", "stool":"art/g58.png", "desk":"art/g61.png", "chair": "art/g63.png", "gift": "art/g64.png", "paint": "art/g65.png", "guitar": "art/g66.png", "fish": "art/g68.png", "tv": "art/g69.png"};
   function furnIcon(it){
     if(!it) return '<em>❓</em>';
     if(FURN_ART[it.id]) return '<span class="fx" data-id="'+it.id+'"><img class="fi" alt="" src="'+FURN_ART[it.id]+'">'+(it.id==="fish"?'<i></i><i class="b2"></i><i class="b3"></i>':'')+'</span>';
