@@ -801,6 +801,24 @@ h1{ font-weight:800; letter-spacing:.06em;
   background:#ffe6ee; color:#a5435c; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
 #herChart{ width:100%; height:118px; display:block; margin:10px 0 4px; border-radius:10px; background:#fffaf6; }
 
+/* ===== 底层面板：给底部导航让位 + 统一关闭键 ===== */
+#wallPick, #furnPick, #decoPick, #storePick{ bottom:68px !important; border-radius:14px !important; max-height:62vh; overflow-y:auto; }
+.pclose{ position:absolute; right:8px; top:6px; width:30px; height:30px; border-radius:9px;
+  border:2px solid #33251f; background:#fffdfa; color:#5c4a44; font-size:14px; line-height:1;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:5; }
+.pclose:active{ transform:translateY(1px); }
+#housePick h2, #housePick p, #hpList{ max-width:420px; margin-left:auto; margin-right:auto; }
+.item .ii{ display:flex; align-items:center; justify-content:center; min-height:78px; }
+.priceBadge{ position:absolute; right:8px; top:8px; background:#fff; border:2px solid #ffb3c6;
+  border-radius:999px; padding:1px 8px; font-size:11px; font-weight:800; color:#c0553f; }
+.gs{ position:relative; }
+.gidx{ position:absolute; left:5px; top:3px; font-size:9px; color:#c8b3aa; pointer-events:none; }
+.fnum{ width:66px; flex:0 0 auto; height:32px; border-radius:8px; border:2px solid #f0d8d2;
+  background:#fffdfa; text-align:center; font:inherit; font-size:12.5px; color:#5c4a44; }
+#tripNow{ margin:8px 12px 0; padding:10px 12px; border-radius:14px; background:#fffdf9;
+  border:1.5px solid #f0d8d2; box-shadow:0 3px 10px rgba(150,120,100,.10); font-size:12.5px; color:#5c4a44; }
+#tripNow .tn-b{ margin-top:8px; }
+
 /* ================= 视觉统一 v2（暖奶油 + 柔粉） ================= */
 :root{
   --ui-bg:#fbf4ec; --ui-card:#fffdf9; --ui-line:#efe2d6;
@@ -988,11 +1006,13 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
           <span class="val" id="fitKgV"></span></div>
         <div class="frow"><label>步数</label>
           <button class="stepbtn" data-step="-500">−</button>
+          <input class="fnum" id="fitStepsN" type="number" inputmode="numeric" min="0" max="30000" step="100">
           <input type="range" id="fitSteps" min="0" max="30000" step="200">
           <button class="stepbtn" data-step="500">+</button>
           <span class="val" id="fitStepsV"></span></div>
         <div class="frow"><label>运动</label>
           <button class="stepbtn" data-stepmin="-5">−</button>
+          <input class="fnum" id="fitMinN" type="number" inputmode="numeric" min="0" max="180" step="5">
           <input type="range" id="fitMin" min="0" max="180" step="5">
           <button class="stepbtn" data-stepmin="5">+</button>
           <span class="val" id="fitMinV"></span></div>
@@ -1066,9 +1086,14 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
       <div class="know">
         <p>你们一起去过的地方：<b>合肥 → 昆明 → 丽江 → 大理 → 上海</b>。<br>
         走完一站解锁下一站，每站先挑一样路上吃的。</p>
+        <p style="margin-top:8px;color:#8a746c;font-size:12px">
+        在路上的时候：<b>摸头 / 喂饭 / 说话</b> 会被锁住，等他回来再点；<br>
+        <b>商店、花园、健身、衣柜</b> 照常能用，可以趁这段时间挑家具、种花。<br>
+        到了时间会自己走完这一站，带回来一张照片；想提前结束就点「提前回家」（不退爱心、不给照片）。</p>
       </div>
       <div id="routeBar"></div>
       <div id="routeProg"></div>
+      <div id="tripNow"></div>
       <div style="padding:10px 14px 2px">
         <button class="wbtn" id="btnTrip">🎒 一起去下一站</button>
       </div>
@@ -1193,8 +1218,8 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
       cold  : ["…… 嗯。", "…… 你继续。", "…… 我在。"],
     },
     pat: {
-      happy : ["再摸就秃了，笨蛋。","…… 好啦好啦，给你摸。"],
-      normal: ["嗯，摸吧。","…… 你的手有点凉，我帮你暖暖。"],
+      happy : ["再摸就秃了，笨蛋。","…… 好啦好啦，给你摸。","小越这样摸，我不讨厌。"],
+      normal: ["嗯，摸吧。","…… 你的手有点凉，我帮你暖暖。","小越，怎么摸这么久。","行了小越，头发要乱了。"],
       sad   : ["…… 哼。","手放下，我又没让你摸。"],
       cold  : ["……"],
     },
@@ -1548,16 +1573,16 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     for(let i=0;i<9;i++){
       const g = S.garden[i];
       if(!g){
-        html += '<div class="gs empty' + (gSel===i ? " sel" : "") + '" data-g="' + i + '"><span class="gi">＋</span></div>';
+        html += '<div class="gs empty' + (gSel===i ? " sel" : "") + '" data-g="' + i + '"><span class="gidx">' + (i+1) + '</span><span class="gi">＋</span></div>';
       }else{
         const pl = gardenFind(g.id) || { e:"🌱", n:"花" };
         const left = gardenLeft(g);
         if(left > 0){
-          html += '<div class="gs grow" data-g="' + i + '"><span class="gi">' + pl.e + '</span>'
+          html += '<div class="gs grow" data-g="' + i + '"><span class="gidx">' + (i+1) + '</span><span class="gi">' + pl.e + '</span>'
                +  '<span class="gtm">' + gardenFmt(left) + '</span>'
                +  (g.w ? '' : '<span class="gw">💧</span>') + '</div>';
         }else{
-          html += '<div class="gs bloom" data-g="' + i + '"><span class="gi">' + pl.e + '</span><span class="gtm">摘</span></div>';
+          html += '<div class="gs bloom" data-g="' + i + '"><span class="gidx">' + (i+1) + '</span><span class="gi">' + pl.e + '</span><span class="gtm">摘</span></div>';
         }
       }
     }
@@ -1726,6 +1751,26 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     save(); return true;
   }
 
+
+  /* ================= 底层面板关闭键 ================= */
+  (function(){
+    var ids = ["wallPick","furnPick","decoPick","storePick"];
+    function inject(){
+      ids.forEach(function(id){
+        var p = document.getElementById(id);
+        if(!p || p.querySelector(".pclose")) return;
+        var b = document.createElement("button");
+        b.className = "pclose"; b.type = "button"; b.textContent = "✕";
+        b.setAttribute("aria-label", "收起");
+        b.addEventListener("click", function(e){
+          e.preventDefault(); e.stopPropagation(); p.classList.remove("on");
+        }, true);
+        p.appendChild(b);
+      });
+    }
+    inject();
+    setInterval(inject, 900);
+  })();
 
   /* ================= 特殊日期 ================= */
   const SPECIAL = [
@@ -2038,6 +2083,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     if(typeof renderHer === "function") renderHer();
     renderWardrobe();
     renderPostcards();
+    renderTripNow();
     renderWhisper();
   }
 
@@ -2112,7 +2158,31 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   }
   function backHomeEarly(){
     if(!S.trip) return;
-    window.confirm("现在回家？<br>路上花掉的爱心不退，也拿不到这一站的照片。") && finishTrip(true);
+    askConfirm("现在回家？",
+      "路上花掉的爱心不退，也拿不到这一站的照片。",
+      function(){ finishTrip(true); });
+  }
+
+  function renderTripNow(){
+    const el = $("tripNow"); if(!el) return;
+    if(!S.trip){
+      el.innerHTML = '🧳 现在在家。点上面的「一起去下一站」出发。';
+      return;
+    }
+    const d = ROUTE.find(x=>x.id===S.trip.dest) || ROUTE[0];
+    const left = Math.max(0, S.trip.endAt - Date.now());
+    const mm = String(Math.floor(left/60000)).padStart(2,"0");
+    const ss = String(Math.floor(left%60000/1000)).padStart(2,"0");
+    el.innerHTML = '🧳 目前在 <b>' + d.name + '</b> · 剩余 <b>' + mm + ':' + ss + '</b>'
+      + '<div class="tn-b"><button class="wbtn" id="btnTripBack2" style="margin:0">🚪 提前回家</button></div>';
+  }
+
+  function routeActiveIdx(){
+    if(S.trip){
+      const k = ROUTE.findIndex(x=>x.id===S.trip.dest);
+      if(k >= 0) return k;
+    }
+    return Math.min(S.routeStep, ROUTE.length - 1);
   }
 
   function paintRouteProgress(){
@@ -2133,6 +2203,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       clock = String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
     }
     $("tripText").textContent = "你们正在" + d.name + "，剩余 " + clock + "。";
+    const tn = $("tripNow"); if(tn && S.trip){
+      tn.innerHTML = '🧳 目前在 <b>' + d.name + '</b> · 剩余 <b>' + clock + '</b>'
+        + '<div class="tn-b"><button class="wbtn" id="btnTripBack2" style="margin:0">🚪 提前回家</button></div>';
+    }
     const tt = $("tripTime"); if(tt) tt.style.display = "none";
     const dot = document.querySelector(".trip-dot"); if(dot) dot.style.display = "none";
   }
@@ -2332,7 +2406,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     return { bmi:bmi, tag:tag };
   }
   function logFit(){
-    if(S.fit.loggedDay === todayKey()) return;
+    if(S.fit.loggedDay === todayKey() && ((S.fit.steps||0) + (S.fit.mins||0)) > 0) return;
     const tot = stepKcal() + actKcal();
     if(tot <= 0){ toast("他今天还没动，先记一点点"); return; }
     const goal = S.fit.goal || "cut";
@@ -2492,11 +2566,18 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     resetFitDay();
     const goal = S.fit.goal || "cut";
     S.fit.kg = kgFromBurned();
-    const logged = S.fit.loggedDay === todayKey();
+    let logged = S.fit.loggedDay === todayKey();
+    if(logged && !(S.fit.steps||0) && !(S.fit.mins||0)){ S.fit.loggedDay = ""; logged = false; }
     const st = $("fitSteps"), mn = $("fitMin");
     if(document.activeElement !== st) st.value = Math.min(S.fit.steps, 30000);
     if(document.activeElement !== mn) mn.value = Math.min(S.fit.mins, 180);
     st.disabled = logged; mn.disabled = logged;
+    const sN = $("fitStepsN"), mN = $("fitMinN");
+    if(sN && document.activeElement !== sN) sN.value = S.fit.steps || 0;
+    if(mN && document.activeElement !== mN) mN.value = S.fit.mins || 0;
+    if(sN) sN.disabled = logged;
+    if(mN) mN.disabled = logged;
+    document.querySelectorAll('#p-fit .stepbtn').forEach(function(b){ b.disabled = logged; });
 
     const gs = $("fitGoals");
     if(gs) gs.innerHTML = [["cut","减脂"],["bulk","增肌"]].map(
@@ -2515,7 +2596,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     }
 
     const lb = $("btnFitLog");
-    if(lb){ lb.disabled = logged; lb.textContent = logged ? "✅ 今天已经记过了" : "📝 记下他今天动的"; }
+    if(lb){ lb.disabled = logged; lb.textContent = logged ? "✅ 今天已提交（明天再来）" : "📝 记下他今天动的"; }
     const bt = $("fitBurnTxt");
     if(bt){
       if(goal === "bulk"){
@@ -2590,9 +2671,9 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const em = it.emoji || it.e || "";
     const fsrc = (kind==="furn" && window.__FART && window.__FART[it.id]) ? window.__FART[it.id] : null;
     const thumb = (it.sprite && GARMENTS[it.sprite])
-      ? '<img src="'+(GTHUMB[it.sprite]||GARMENTS[it.sprite])+'" style="width:46px;height:46px;image-rendering:pixelated;object-fit:contain">'
+      ? '<img src="'+(GTHUMB[it.sprite]||GARMENTS[it.sprite])+'" style="width:78px;height:78px;image-rendering:pixelated;object-fit:contain">'
       : (fsrc
-         ? '<img src="'+fsrc+'" style="width:46px;height:46px;image-rendering:pixelated;object-fit:contain">'
+         ? '<img src="'+fsrc+'" style="width:78px;height:78px;image-rendering:pixelated;object-fit:contain">'
          : (em || "📦"));
     const HN = {cottage:"小木屋", seaside:"海边小屋", city:"城市公寓", forest:"森林小屋"};
     const hb = (kind==="furn" && it.h && HN[it.h]) ? ' <span style="font-size:10px;color:#b07a3a">·仅'+HN[it.h]+'</span>' : '';
@@ -2601,7 +2682,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       + '<div class="ii">'+thumb+'</div>'
       + '<div class="in">'+nm+hb+'</div>'
       + '<div class="id">'+ds+'</div>'
-      + '<div class="ip">'+(own?"—":"💗 "+pr)+'</div>'
+      + (own ? '' : '<span class="priceBadge">💗 '+pr+'</span>') + '<div class="ip">'+(own?"—":"")+'</div>'
       + (own?"":'<button '+attr+'="'+it.id+'">买</button>')
       + '</div>';
   }
@@ -2617,7 +2698,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const groups = cat==="all" ? ["top","outer","brand","acc"] : [cat];
     groups.forEach(g=>{
       if(g==="gear" || g==="furn") return;
-      const list = CLOTHES.filter(c=>c.cat===g);
+      const list = CLOTHES.filter(c=>c.cat===g && !c.limit);
       if(!list.length) return;
       out.push('<div class="sec-title">'+ (CATNAME[g]||"衣服") +'</div>');
       out.push('<div class="grid2">'+ list.map(c=>shopItem(c,"cloth")).join("") +'</div>');
@@ -2678,7 +2759,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       out.push('<div class="sec-title" style="grid-column:1/-1">'+(CATNAME[g]||"衣服")+"</div>");
       list.forEach(c=>{
         const on = S.wearing.indexOf(c.id) >= 0;
-        const thumb = c.emoji || (c.sprite && GARMENTS[c.sprite] ? '<img src="'+GARMENTS[c.sprite]+'" style="width:46px;height:46px;image-rendering:pixelated;object-fit:contain">' : "👕");
+        const thumb = c.emoji || (c.sprite && GARMENTS[c.sprite] ? '<img src="'+GARMENTS[c.sprite]+'" style="width:78px;height:78px;image-rendering:pixelated;object-fit:contain">' : "👕");
         out.push('<div class="item '+(on?"on":"")+'">'
           + '<div class="ii">'+thumb+'</div>'
           + '<div class="in">'+c.name+'</div>'
@@ -2770,8 +2851,16 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     if(!S.trip) return;
     const t = S.trip;
     if(early){
-      S.trip = null; S.routeStep = t.step; save(); render();
-      toast("你们提前回家了，这一站下次再走"); return;
+      S.trip = null; S.routeStep = t.step;
+      document.body.classList.remove("is-trip");
+      save(); render();
+      setTimeout(function(){
+        showSheet("欢迎回家",
+          "…… 提前回来了。<br>这趟没走完，下次再走。<br>"
+          + "<span style=\"color:#8a746c;font-size:12px\">路上花掉的爱心不退，照片也没有。</span>", null, null);
+      }, 260);
+      say("回来了就好。");
+      return;
     }
     const dest = ROUTE.find(x=>x.id===t.dest) || ROUTE[0];
     let cap, photo = null;
@@ -2849,8 +2938,9 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       bgEl.style.backgroundImage = src ? "url(" + src + ")" : (dest ? dest.bg : "none");
       bgEl.style.opacity = src ? ".86" : ".55";
     })();
+    const act = routeActiveIdx();
     bar.innerHTML = ROUTE.map((r,i)=>{
-      const done = i < S.routeStep, now = i === S.routeStep;
+      const done = i < act, now = i === act;
       return '<div class="rd'+(done?" done":"")+(now?" now":"")+'">'
         + '<i></i>' + (done?"✓":"") + r.name + '</div>';
     }).join("");
@@ -3019,6 +3109,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       S.wGet = got;
       S.love = Math.min(100, (S.love || 0) + 1);
       S.coins += 5;
+      setTimeout(function(){ renderHud(); }, 0);
       toast("他收到了 · 亲密度 +1 · 💗+5");
       checkMilestone();
     }else{
@@ -3042,10 +3133,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   }
 
   function hardReset(){
-    if(!window.confirm("真的重新开始？所有亲密度、衣服、照片都会清空。")) return;
-    if(!window.confirm("最后确认一次：清空以后找不回来。")) return;
-    try{ localStorage.removeItem(KEY); }catch(err){}
-    location.reload();
+    askConfirm("重新开始？",
+      "所有亲密度、衣服、照片、悄悄话都会清空。<br><b>清空以后找不回来。</b>",
+      function(){ try{ localStorage.removeItem(KEY); }catch(err){} location.reload(); });
+    return;
   }
 
   function shareWhisper(id){
@@ -3099,8 +3190,20 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     modal.classList.add("show");
   }
   function closeModal(){ modal.classList.remove("show"); }
-  $("mOk").onclick = closeModal;
-  modal.onclick = e=>{ if(e.target===modal) closeModal(); };
+  let __askYes = null;
+  function askConfirm(title, body, onYes){
+    __askYes = onYes || null;
+    showSheet(title, body, null, '<div style="font-size:11.5px;color:#a08a80;line-height:1.6;text-align:center">点「确定」才执行 · 点空白处取消</div>');
+    $("mOk").textContent = "确定";
+  }
+  window.__ASK = askConfirm;
+  $("mOk").onclick = function(){
+    const f = __askYes; __askYes = null;
+    $("mOk").textContent = "好耶";
+    closeModal();
+    if(f) try{ f(); }catch(err){}
+  };
+  modal.onclick = e=>{ if(e.target===modal){ __askYes=null; $("mOk").textContent="好耶"; closeModal(); } };
 
   /* ================= 事件 ================= */
   document.querySelectorAll('.btn[data-act]').forEach(b=>{
@@ -3132,6 +3235,17 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     }
   });
 
+  const fsn = $("fitStepsN");
+  if(fsn) fsn.addEventListener("input", e=>{
+    const v = Math.max(0, Math.min(30000, parseInt(e.target.value,10) || 0));
+    S.fit.steps = v; save(); renderFit(); checkFitReward();
+  });
+  const fmn = $("fitMinN");
+  if(fmn) fmn.addEventListener("input", e=>{
+    const v = Math.max(0, Math.min(180, parseInt(e.target.value,10) || 0));
+    S.fit.mins = v; save(); renderFit(); checkFitReward();
+  });
+
   $("fitSteps").addEventListener("input", e=>{
     S.fit.steps = parseInt(e.target.value,10) || 0; save(); renderFit(); checkFitReward();
   });
@@ -3148,6 +3262,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   });
 
   document.addEventListener("click", function(e){
+    if(e.target && e.target.id === "btnTripBack2"){ backHomeEarly(); return; }
     const hc = e.target.closest && e.target.closest("[data-hercheck]");
     if(hc){ herCheck(hc.dataset.hercheck); return; }
     if(e.target && e.target.id === "btnHerW"){ herWeightAdd(); return; }
@@ -3854,8 +3969,8 @@ const FURN_ART = {"rug":"art/fn_rug.png","lamp":"art/fn_lamp.png","shelf":"art/f
     var used = {}; for(var k in S.furn){ used[S.furn[k]] = 1; }
     var store = (S.furnOwned||[]).filter(function(id){ return !used[id]; });
     var nPlaced = 0; for(var kk in S.furn){ if(S.furn[kk]) nPlaced++; }
-    var h = '<div class="fpt">仓库 · 已摆 '+nPlaced+' / '+(window.__SLOTS||8)+'，点家具自动摆进空位</div>';
-    if(!store.length){ h += '<div class="wmsg">仓库是空的（买过的都摆出来啦）</div>'; }
+    var h = '<div class="fpt">仓库 · 已摆 '+nPlaced+' / '+(window.__SLOTS||8)+' 个槽位，点家具自动摆进空位</div>';
+    if(!store.length){ h += '<div class="wmsg">仓库是空的 —— 先去商店买家具</div>'; }
     else{
       h += '<div class="stlist">';
       store.forEach(function(id){
