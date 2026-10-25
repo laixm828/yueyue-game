@@ -782,6 +782,12 @@ h1{ font-weight:800; letter-spacing:.06em;
 .wxrow input{flex:1 1 auto!important;width:auto!important;min-width:0;box-sizing:border-box;height:44px!important;min-height:0!important}
 .wxrow button{flex:0 0 auto!important;width:auto!important;min-width:64px;display:inline-block!important}
 
+#wdPrev{ display:flex; justify-content:center; padding:10px 0 2px; }
+#wdPrev .wdp-inner{ width:130px; height:150px; position:relative;
+  background:linear-gradient(#eaf4fb,#f7efe4); border:2px solid var(--px_line);
+  border-radius:14px; box-shadow:0 4px 12px rgba(150,120,100,.14); overflow:hidden; }
+#wdPrev .wdp-inner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
+
 /* ================= 视觉统一 v2（暖奶油 + 柔粉） ================= */
 :root{
   --ui-bg:#fbf4ec; --ui-card:#fffdf9; --ui-line:#efe2d6;
@@ -1007,6 +1013,10 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
     </section>
 
     <section class="page scroll" id="p-wardrobe">
+      <div id="wdPrev"><div class="wdp-inner">
+        <img id="wdPrevBase" alt="">
+        <img id="wdPrevLay" alt="">
+      </div></div>
       <div class="sec-title">👗 衣柜（点一下换上）</div>
       <div class="grid2" id="wardrobeList"></div>
       <div style="height:6px"></div>
@@ -2469,6 +2479,18 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
 
   function renderWardrobe(){
     const wl = $("wardrobeList");
+    (function(){
+      const base = $("wdPrevBase"), lay = $("wdPrevLay");
+      if(!base || !lay) return;
+      const bodyItem = (S.wearing||[]).map(function(id){ return CLOTHES.find(function(c){ return c.id===id; }); })
+        .filter(function(c){ return c && c.slot==="body"; })[0];
+      base.src = "art/g49.png";
+      if(bodyItem && GARMENTS[bodyItem.sprite]){
+        lay.src = GARMENTS[bodyItem.sprite]; lay.style.display = "block";
+      }else{
+        lay.removeAttribute("src"); lay.style.display = "none";
+      }
+    })();
     const worn = (S.wearing||[]).map(function(id){
       const c = CLOTHES.find(function(x){ return x.id===id; });
       return c ? c.name : "";
