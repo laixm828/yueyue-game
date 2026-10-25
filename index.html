@@ -142,6 +142,7 @@
   #nav{
     flex:0 0 auto; display:grid; grid-template-columns:repeat(7,1fr);
     margin-top:7px; padding-top:6px; border-top:1px solid var(--line);
+    position:relative; z-index:90; background:var(--px_bg, #fff8f3);
   }
   .tab{
     border:0; background:transparent; font-family:inherit;
@@ -163,7 +164,10 @@
     box-shadow:var(--shadow); display:flex; flex-direction:column; gap:3px;
     border:1.5px solid transparent; position:relative;
   }
-  .item .ii{font-size:22px; line-height:1.1}
+  .item .ii{ font-size:22px; line-height:1.1; width:100%; height:118px; display:flex;
+  align-items:center; justify-content:center; background:#fdf6ef; border-radius:10px; overflow:hidden; }
+.item .ii img{ width:auto !important; height:auto !important; max-width:100%; max-height:112px;
+  object-fit:contain; image-rendering:pixelated; }
   .item .in{font-size:12.5px; font-weight:500}
   .item .id{font-size:10.5px; color:var(--sub); line-height:1.45; min-height:30px}
   .item .ip{font-size:11px; color:var(--pink-d); font-weight:600}
@@ -328,6 +332,8 @@
   overflow-y:auto;
 }
 #housePick.on{ display:flex }
+#hpBack{ position:absolute; left:14px; top:18px; z-index:5; border:2px solid #33251f; background:#fffdfa;
+  border-radius:9px; padding:6px 10px; font:inherit; font-size:12px; color:#5c4a44; cursor:pointer; }
 #housePick h2{ margin:0 0 4px; text-align:center; font-size:19px; color:#6b5650 }
 #housePick p{ margin:0 0 18px; text-align:center; font-size:12.5px; color:#a08e88; line-height:1.6 }
 #hpList{ display:grid; grid-template-columns:1fr 1fr; gap:11px }
@@ -801,6 +807,22 @@ h1{ font-weight:800; letter-spacing:.06em;
   background:#ffe6ee; color:#a5435c; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
 #herChart{ width:100%; height:118px; display:block; margin:10px 0 4px; border-radius:10px; background:#fffaf6; }
 
+/* ===== 喝水 / 生病 / 心情 ===== */
+#herExtra .hx{ margin-top:10px; padding-top:10px; border-top:1px dashed #f0d8d2; }
+#herExtra .hx-h{ font-size:11.5px; color:#8a746c; margin-bottom:6px; }
+#herExtra .drops{ display:flex; gap:5px; flex-wrap:wrap; }
+#herExtra .drop{ width:26px; height:30px; border-radius:7px; border:1.5px solid #f0d8d2;
+  background:#fffdfa; display:flex; align-items:center; justify-content:center; font-size:14px;
+  cursor:pointer; }
+#herExtra .drop.on{ background:#dff0fb; border-color:#9fcbe8; }
+#herExtra .moods{ display:flex; gap:6px; }
+#herExtra .mood{ flex:1 1 0; height:34px; border-radius:9px; border:1.5px solid #f0d8d2;
+  background:#fffdfa; font-size:16px; cursor:pointer; }
+#herExtra .mood.on{ background:#ffe6ee; border-color:#ffb3c6; }
+#herExtra .hxbtn{ margin-top:8px; width:100%; border:1.5px solid #f0d8d2; background:#fffdfa;
+  border-radius:10px; padding:7px; font:inherit; font-size:12px; color:#5c4a44; cursor:pointer; }
+#herExtra .hxbtn.sick{ background:#ffe9df; border-color:#f3b699; }
+
 /* ===== 回信 / 红点 ===== */
 .wreply{ margin-top:8px; padding:8px 10px; border-radius:10px 10px 10px 2px;
   background:#fff3f6; border:1.5px solid #ffd0dc; font-size:12.5px; color:#5c4a44; line-height:1.7; }
@@ -832,7 +854,14 @@ h1{ font-weight:800; letter-spacing:.06em;
   display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:5; }
 .pclose:active{ transform:translateY(1px); }
 #housePick h2, #housePick p, #hpList{ max-width:420px; margin-left:auto; margin-right:auto; }
-.item .ii{ display:flex; align-items:center; justify-content:center; min-height:78px; }
+.item .ii{ display:flex; align-items:center; justify-content:center; height:150px !important; min-height:150px; }
+.item .ii{ position:relative; overflow:hidden; }
+.item .ii img.big{ width:auto !important; height:auto !important; max-width:96%; max-height:146px;
+  object-fit:contain; image-rendering:pixelated; filter:drop-shadow(0 3px 4px rgba(120,95,85,.14)); }
+/* 衣服：把整身立绘放大，只露躯干那一块，做成真正的大图 */
+.item .ii img.big.clo{ width:100% !important; height:100% !important; max-width:none !important;
+  max-height:none !important; object-fit:cover; object-position:50% 92%;
+  image-rendering:pixelated; }
 .priceBadge{ position:absolute; right:8px; top:8px; background:#fff; border:2px solid #ffb3c6;
   border-radius:999px; padding:1px 8px; font-size:11px; font-weight:800; color:#c0553f; }
 .gs{ position:relative; }
@@ -1053,6 +1082,7 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
       <div class="fit-card" id="herCard">
         <div id="herBase" style="font-size:11.5px;color:#7a6a66;line-height:1.9"></div>
         <div class="her3" id="herChecks"></div>
+        <div id="herExtra"></div>
         <div id="herTip" style="margin:8px 0 0;font-size:11.5px;color:#8a746c;line-height:1.85"></div>
         <div class="herw">
           <label>体重</label>
@@ -1136,11 +1166,12 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
         <button class="wbtn" id="btnLetter" style="margin:0;flex:1 1 0">💌 第一天的信</button>
       </div>
       <button id="btnMakeUp" class="makeup">💬 吵架了？点我</button>
+      <div id="specialHint" class="know" style="margin-bottom:8px"></div>
       <div class="know" style="margin-bottom:8px">
         <p><b>怎么涨</b><br>
         爱心 💗：摸头 +3（30 秒一次）、喂饭 +6（2 分钟）、说话 +2（1 分钟）、旅行回来 +25~50<br>
         亲密度：摸头 +1、喂饭 +2、说话按字数 +1~8、悄悄话每天前 3 条各 +1<br>
-        心情：互动会涨，连续 2 小时不理他会掉（每小时 5，最多掉 20）<br>
+        心情：只有互动才涨，<b>久没来不会掉</b>；他会说「小越，两天没见了，有点想你」<br>
         幸福指数：连续登录、运动达标、换季问候、旅行归来会涨</p>
       </div>
       <div class="know">
@@ -1414,13 +1445,13 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     "外面降温了，出门记得多穿一件。",
     "你昨天回来得好晚，我等了好久。",
     "今天什么都不想做，就坐你旁边。",
-    "刚刚看你笑了一下，我记着了。",
+    "小越，刚刚看你笑了一下，我记着了。",
     "你身上有太阳的味道。",
     "今天想吃你做的那个，你知道是哪个。",
     "我把窗帘拉开了，光进来的时候想起你。",
-    "你今天怪好看的，别问为什么。",
+    "小越，你今天怪好看的，别问为什么。",
     "又过了一天，还在这儿，挺好。",
-    "你忙你的，我就在这儿坐着。",
+    "小越你忙你的，我就在这儿坐着。",
     "刚才打了个盹，梦见你了，醒得有点可惜。"
   ];
   const NAME = "小越";
@@ -1439,9 +1470,9 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     "今天听了一首歌，副歌那句像在说小越。"
   ];
   function flashbackTick(){
-    if(!S.postcards || !S.postcards.length) return;
-    if(Date.now() - (S.flashAt || 0) < 3*3600*1000) return;
-    if(Math.random() > 0.5) return;
+    if(!S.postcards.length && !S.whispers.length && !S.firstOpen) return;
+    if(Date.now() - (S.flashAt || 0) < 45*60*1000) return;
+    if(Math.random() > 0.65) return;
     const ml = memoryLine();
     if(!ml) return;
     S.flashAt = Date.now(); save();
@@ -1779,16 +1810,20 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const n = Math.floor(hours - (CFG.DECAY_START - 1));
     return Math.min(CFG.DECAY_CAP, n * CFG.DECAY_STEP);
   }
+  /* 不扣心情了：只记「多久没见」，用来讲想念的话 */
   function decayMood(){
-    const hours = (Date.now() - S.lastMoodAt)/3600000;
-    let target = decayPenalty(hours);
-    if(ownedGear("dumbbell")) target = Math.round(target * 0.75);
-    const delta = target - (S.decayApplied || 0);
-    if(delta > 0){
-      S.mood = Math.max(0, S.mood - delta);
-      S.decayApplied = target;
-    }
+    const hours = (Date.now() - S.lastMoodAt) / 3600000;
+    S.missed = Math.max(S.missed || 0, Math.floor(hours));
+    S.decayApplied = 0;
   }
+  function missLine(){
+    const h = S.missed || 0;
+    if(h < 6) return null;
+    if(h < 24) return "今天还没说上话。";
+    if(h < 72) return "小越，两天没见了，有点想你。";
+    return "小越，好几天了。我一直在。";
+  }
+  window.__MISS = missLine;
   function checkStreak(){
     const t = todayKey();
     if(t === S.lastDay) return false;
@@ -1819,8 +1854,18 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
         p.appendChild(b);
       });
     }
-    inject();
-    setInterval(inject, 900);
+    function exclusive(){
+      var opened = [];
+      ids.forEach(function(id){
+        var p = document.getElementById(id);
+        if(p && p.classList.contains("on")) opened.push(p);
+      });
+      if(opened.length > 1){
+        for(var i = 0; i < opened.length - 1; i++) opened[i].classList.remove("on");
+      }
+    }
+    inject(); exclusive();
+    setInterval(function(){ inject(); exclusive(); }, 500);
   })();
 
   /* ================= 特殊日期 ================= */
@@ -2137,7 +2182,9 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     setTimeout(function(){ try{ checkAch(); }catch(e){} }, 400);
     renderPostcards();
     renderDaily();
+    renderSpecialHint();
     renderTripNow();
+    try{ sleepCheck(); }catch(e){}
     renderWhisper();
   }
 
@@ -2259,6 +2306,44 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       "七天没断。<br>爱心 +" + add + "，我记着呢。");
     else toast("签到成功 · 爱心 +" + add + " · 连签 " + S.signStreak + " 天");
   }
+  function daysTo(m, d){
+    const now = new Date();
+    let y = now.getFullYear();
+    let t = new Date(y, m-1, d);
+    const today = new Date(y, now.getMonth(), now.getDate());
+    if(t < today) t = new Date(y+1, m-1, d);
+    return Math.round((t - today) / 86400000);
+  }
+  function renderSpecialHint(){
+    const el = $("specialHint"); if(!el) return;
+    const anniv = daysTo(12, 22), hb = daysTo(5, 14), mb = daysTo(9, 4);
+    el.innerHTML = '<p><b>特别的日子</b><br>'
+      + '🧶 周年毛衣：只有 <b>12 月 22 日</b>那天会解锁，平时商店买不到（还有 <b>' + anniv + '</b> 天）<br>'
+      + '🎁 你生日 <b>5 月 14 日</b>：那天有礼物和蛋糕（还有 <b>' + hb + '</b> 天）<br>'
+      + '🎂 我生日 <b>9 月 4 日</b>：那天我也想要一句生日快乐（还有 <b>' + mb + '</b> 天）<br>'
+      + '<span style="color:#a08a80;font-size:11.5px">到头一天晚上会提醒你。</span></p>';
+  }
+  window.__SPECIAL_HINT = renderSpecialHint;
+
+  function yKey(offset){
+    const d = new Date(); d.setDate(d.getDate() + (offset||0));
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function sleepCheck(){
+    const now = new Date(), h = now.getHours(), t = todayKey();
+    if(h >= 22 && h <= 23 && S.sleepTip !== t){
+      S.sleepTip = t; save();
+      say("该睡了。明天还要早起，晚安。", { speed: 46, keep: 1 });
+      return;
+    }
+    if(h >= 0 && h < 5 && S.lateNight !== t){ S.lateNight = t; save(); }
+    if(h >= 8 && S.lateNight === yKey(-1) && S.lateNote !== t){
+      S.lateNote = t; save();
+      say("昨天睡太晚了。今天早点睡，别硬撑。", { speed: 46, keep: 1 });
+    }
+  }
+  window.__SLEEP_CHECK = sleepCheck;
+
   function renderDaily(){
     const bar = $("dailyBar"), tl = $("dailyTasks");
     if(!bar || !tl) return;
@@ -2287,7 +2372,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const pcs = S.postcards.length, ws = S.whispers.length;
     const st = Math.min(S.routeStep, ROUTE.length);
     return '<div style="text-align:left;line-height:1.9;font-size:13px">'
-      + '你来第 ' + days + ' 天了。<br>'
+      + '小越，你来第 ' + days + ' 天了。<br>'
       + '这' + days + '天里，我们：<br>'
       + '· 一起走过 <b>' + st + '</b> 站路<br>'
       + '· 攒下 <b>' + pcs + '</b> 张照片<br>'
@@ -2305,6 +2390,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   function albumHtml(){
     const pcs = S.postcards || [], ws = S.whispers || [];
     return '<div style="text-align:left;line-height:1.9;font-size:13px">'
+      + '小越，这是我们攒下的：<br>'
       + '📅 第一次打开：<b>' + (S.firstOpen || S.lastDay || todayKey()) + '</b><br>'
       + '🧳 走完：<b>' + Math.min(S.routeStep, ROUTE.length) + ' / ' + ROUTE.length + '</b> 站<br>'
       + '🖼 旅行照片：<b>' + pcs.length + '</b> 张<br>'
@@ -2344,7 +2430,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   }
   function achHtml(){
     const got = S.ach || {};
-    return '<div style="text-align:left;line-height:2;font-size:13px">' + ACH.map(function(a){
+    return '<div style="text-align:left;line-height:2;font-size:13px">小越，你做到这些了：<br>' + ACH.map(function(a){
       const ok = !!got[a[0]];
       return (ok ? "🏅 " : "⬜ ") + a[1] + (ok ? " <span style=\"color:#c88\">已达成</span>" : "");
     }).join("<br>") + '<br><span style="color:#8a746c;font-size:12px">达成时会自动弹庆祝，奖励 30 爱心 + 2 幸福。</span></div>';
@@ -2708,6 +2794,39 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     g.fillStyle = "#8a746c"; g.font = "17px sans-serif"; g.textAlign = "right";
     g.fillText(last.w.toFixed(1) + "kg", W-8, Math.max(20, yPix(last.w)-12));
   }
+  function herToday(){ return todayKey(); }
+  function herExtraRoll(){
+    const t = herToday();
+    if(!S.her.xday || S.her.xday !== t){
+      S.her.xday = t; S.her.water = 0; S.her.moodT = 0; S.her.sick = "";
+    }
+  }
+  function renderHerExtra(){
+    const box = $("herExtra"); if(!box) return;
+    herExtraRoll();
+    const h = S.her;
+    let html = '<div class="hx"><div class="hx-h">💧 今天喝水 <b>' + (h.water||0) + '</b> / 8 杯</div><div class="drops">';
+    for(let i = 0; i < 8; i++){
+      html += '<div class="drop' + ((i < (h.water||0)) ? " on" : "") + '" data-drop="' + (i+1) + '">' + (i < (h.water||0) ? "💧" : "·") + '</div>';
+    }
+    html += '</div><div style="font-size:11px;color:#a08a80;margin-top:5px">点一下算一杯。喝够 8 杯他就不念了。</div></div>';
+
+    const MO = ["😞","😐","🙂","😊","😄"];
+    html += '<div class="hx"><div class="hx-h">今天心情怎么样</div><div class="moods">'
+      + MO.map(function(e, i){
+          return '<button class="mood' + ((h.moodT === i+1) ? " on" : "") + '" data-mood="' + (i+1) + '">' + e + '</button>';
+        }).join("")
+      + '</div></div>';
+
+    const sick = h.sick === herToday();
+    html += '<div class="hx"><button class="hxbtn' + (sick ? " sick" : "") + '" id="btnHerSick">'
+      + (sick ? "✅ 今天在休息（点我恢复）" : "🤒 今天不舒服，想休息")
+      + '</button><div style="font-size:11px;color:#a08a80;margin-top:5px">休息日目标全免，不算失败。</div></div>';
+
+    box.innerHTML = html;
+  }
+  window.__HER_EXTRA = renderHerExtra;
+
   function renderHer(){
     if(!$("herBase")) return;
     herResetDay();
@@ -2719,7 +2838,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     $("herBase").innerHTML = "身高 <b>" + (S.her.height||160) + " cm</b> · 体重 <b>" + kg.toFixed(1) + " kg</b> · BMI <b>"
       + bmi.toFixed(1) + "</b>（" + bmiTag + "）"
       + "<br>目标区间 <b>47～50 kg</b> · 蛋白 <b>60～68 g</b>/天 · 钙 800mg · 铁 18mg";
-    const goalStep = per ? 3500 : 7000;
+    const rest = (S.her.sick === herToday());
+    const goalStep = rest ? 0 : (per ? 3500 : 7000);
     const items = [
       ["c1", "🚶", "走 " + goalStep + " 步"],
       ["c2", "🥚", "蛋白三份"],
@@ -2737,9 +2857,12 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     }
     const doneAll = S.her.c1 && S.her.c2 && S.her.c3;
     const done2 = (S.her.c1?1:0) + (S.her.c2?1:0) + (S.her.c3?1:0) >= 2;
+    if(rest) tip = "🤒 今天在休息。什么都别补，躺着就好。";
+    else if(per) tip = tip || "经期模式：目标减半，只补铁和睡够，<b>不算失败</b>。";
     $("herTip").innerHTML = tip
       || (doneAll ? "三样都做到了。今天很好。" : (done2 ? "两样了，够本。" : "今天三样里做到两样就够了，剩下的不用补。"));
     $("btnHerPeriod").textContent = per ? "🩸 经期中（点我结束）" : "🩸 经期开始了";
+    try{ renderHerExtra(); }catch(e){}
     const ws = S.her.weight || [];
     let note = "";
     if(ws.length >= 2){
@@ -2859,11 +2982,14 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const pr = (it.price != null) ? it.price : (it.p != null ? it.p : 0);
     const em = it.emoji || it.e || "";
     const fsrc = (kind==="furn" && window.__FART && window.__FART[it.id]) ? window.__FART[it.id] : null;
-    const thumb = (it.sprite && GARMENTS[it.sprite])
-      ? '<img src="'+(GTHUMB[it.sprite]||GARMENTS[it.sprite])+'" style="width:78px;height:78px;image-rendering:pixelated;object-fit:contain">'
-      : (fsrc
-         ? '<img src="'+fsrc+'" style="width:78px;height:78px;image-rendering:pixelated;object-fit:contain">'
-         : (em || "📦"));
+    let thumb;
+    if(it.sprite && GARMENTS[it.sprite]){
+      thumb = `<img class="big clo" src="${GARMENTS[it.sprite]}" alt="">`;
+    } else if(fsrc){
+      thumb = `<img class="big" src="${fsrc}" alt="">`;
+    } else {
+      thumb = em || "📦";
+    }
     const HN = {cottage:"小木屋", seaside:"海边小屋", city:"城市公寓", forest:"森林小屋"};
     const hb = (kind==="furn" && it.h && HN[it.h]) ? ' <span style="font-size:10px;color:#b07a3a">·仅'+HN[it.h]+'</span>' : '';
     return '<div class="item '+(own?"owned":"")+'">'
@@ -3137,12 +3263,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
 
   function renderExplain(){
     const row = $("explainRow");
-    if(!row) return;
-    const ded = Math.round(S.decayApplied || 0);
-    const show = !S.trip && ded >= 3;
-    row.classList.toggle("show", show);
-    if(show) $("btnExplain").textContent =
-      "告诉他你刚刚干嘛去了 · 退一半（已扣 " + ded + "）";
+    if(row) row.classList.remove("show");   /* 「退一半」入口已去掉，不再扣心情 */
   }
 
   function openExplain(){
@@ -3233,7 +3354,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
         + (w.reply
             ? '<div class="wreply"><span class="wr-h">他回你：</span>' + w.reply.replace(/</g,"&lt;")
               + '<span class="wr-t">' + (w.replyAt||"") + '</span></div>'
-            : '<div class="wpend">还没回，他大概在忙。</div>')
+            : '<div class="wpend">他还没回你 —— 一般几分钟内会看到（最多 2 分钟）。</div>')
         + '<button class="wbtn small" data-share-w="' + w.id + '">再发一次</button></div>';
     }).join("");
   }
@@ -3510,9 +3631,43 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   document.addEventListener("click", function(e){
     if(e.target && e.target.id === "btnTripBack2"){ backHomeEarly(); return; }
     if(e.target && e.target.id === "btnSign"){ doSign(); return; }
+    if(e.target && e.target.getAttribute && e.target.getAttribute("data-pclose")){
+      var pn = e.target.parentNode; if(pn) pn.classList.remove("on");
+      return;
+    }
+    if(e.target && e.target.id === "hpBack"){ document.getElementById("housePick").classList.remove("on"); return; }
     if(e.target && e.target.id === "btnAlbum"){ openAlbum(); return; }
     if(e.target && e.target.id === "btnAch"){ openAch(); return; }
     if(e.target && e.target.id === "btnLetter"){ openLetter(); return; }
+
+    const dp = e.target.closest && e.target.closest("[data-drop]");
+    if(dp){
+      herExtraRoll();
+      const dnum = parseInt(dp.getAttribute("data-drop"), 10) || 0;
+      S.her.water = (S.her.water === dnum) ? dnum - 1 : dnum;
+      if(S.her.water < 0) S.her.water = 0;
+      if(S.her.water >= 8 && !S.her.waterDone){ S.her.waterDone = 1; S.happy += 1; toast("八杯够了 · 幸福 +1"); }
+      if(S.her.water < 8) S.her.waterDone = 0;
+      save(); renderHerExtra(); return;
+    }
+    const md = e.target.closest && e.target.closest("[data-mood]");
+    if(md){
+      herExtraRoll();
+      const mv = parseInt(md.getAttribute("data-mood"), 10) || 0;
+      S.her.moodT = mv;
+      save(); renderHerExtra();
+      const lines = ["…… 怎么了？跟我说说。", "嗯，普通的一天也行。", "还行就好。", "看你笑我就放心了。", "这么开心，发生什么了？"];
+      say(lines[Math.max(0, Math.min(4, mv - 1))], { speed: 44 });
+      return;
+    }
+    if(e.target && e.target.id === "btnHerSick"){
+      herExtraRoll();
+      S.her.sick = (S.her.sick === todayKey()) ? "" : todayKey();
+      save(); render();
+      say(S.her.sick ? "那就休息。今天什么都不用做。" : "缓过来了就好。");
+      return;
+    }
+
     const hc = e.target.closest && e.target.closest("[data-hercheck]");
     if(hc){ herCheck(hc.dataset.hercheck); return; }
     if(e.target && e.target.id === "btnHerW"){ herWeightAdd(); return; }
@@ -3646,10 +3801,19 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   specialTick();
   shareTick();
   setTimeout(function(){ if(!S.firstDayDone){ try{ openLetter(); }catch(e){} } }, 9000);
+  setTimeout(function(){
+    const ml = missLine();
+    if(ml && !S.trip) say(ml, { speed: 46 });
+  }, 4200);
+  setInterval(function(){
+    const ml = missLine();
+    if(ml && !S.trip && Math.random() < 0.6) say(ml, { speed: 46 });
+  }, 30*60*1000);
   renderHomeExtra();
   setInterval(specialTick, 10*60*1000);
   setInterval(shareTick, 5*60*1000);
-  setInterval(flashbackTick, 22*60*1000);
+  setInterval(flashbackTick, 9*60*1000);
+  setTimeout(function(){ try{ flashbackTick(); }catch(e){} }, 110000);
   wxLoad();
   setInterval(()=>wxLoad(), 30*60*1000);
   if(!S.guide){
@@ -3725,6 +3889,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
 })();
 </script>
 <div id="housePick">
+  <button id="hpBack" type="button">✕ 返回</button>
   <h2>你想住在哪？</h2>
   <p>选一个你们一起住的地方<br>以后想换也随时能换</p>
   <div id="hpList"></div>
@@ -4174,11 +4339,27 @@ const FURN_ART = {"rug":"art/fn_rug.png","lamp":"art/fn_lamp.png","shelf":"art/f
       var e = document.getElementById(id); if(e) e.classList.remove("on");
     });
   }
+  const PANEL_IDS = ["wallPick", "furnPick", "decoPick", "storePick"];
+  function closePanels(exceptId){
+    PANEL_IDS.forEach(function(id){
+      if(id === exceptId) return;
+      var e = document.getElementById(id);
+      if(e) e.classList.remove("on");
+    });
+  }
   function panel(id){
     var e = document.getElementById(id);
     if(!e){ e = document.createElement("div"); e.id = id; e.className = "roomPanel"; document.body.appendChild(e); }
+    closePanels(id);
+    if(!e.querySelector(".pclose")){
+      var b = document.createElement("button");
+      b.className = "pclose"; b.type = "button"; b.textContent = "✕";
+      b.setAttribute("data-pclose", "1");
+      e.appendChild(b);
+    }
     return e;
   }
+  window.__CLOSE_PANELS = closePanels;
 
   /* ---- 墙纸 / 地板 ---- */
   function openDeco(){
