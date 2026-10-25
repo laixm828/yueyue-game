@@ -732,6 +732,13 @@ h1{ font-weight:800; letter-spacing:.06em;
 #tripBg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,252,247,.10),rgba(255,252,247,.58))}
 
 #bubble{pointer-events:auto;cursor:pointer}
+
+.phgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 4px}
+.phitem{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;border:2px solid #e5d9cc;background:#f3ece2}
+.phitem img{width:100%;height:100%;object-fit:cover;display:block}
+.phitem .phx{position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;
+  border:0;background:rgba(60,45,38,.72);color:#fff;font-size:13px;line-height:19px;padding:0}
+.phempty{grid-column:1/-1;padding:16px;text-align:center;color:#a99b8d;font-size:13px}
 </style>
 </head>
 <body>
@@ -864,6 +871,16 @@ h1{ font-weight:800; letter-spacing:.06em;
       </div>
       <div class="sec-title">已经写过的</div>
       <div id="wList"></div>
+      <div class="sec-title">📷 我们的照片 <span id="phCount"></span></div>
+      <div class="know">
+        <p>从手机里挑几张存进来，会一直留在这台手机上。<br>
+        攒够连续天数那天，他会从这儿挑一张给你看。</p>
+      </div>
+      <div style="margin:2px 0 10px">
+        <label class="wbtn" for="phFile" style="display:inline-block">＋ 加一张照片</label>
+        <input id="phFile" type="file" accept="image/*" multiple style="display:none">
+      </div>
+      <div id="phList" class="phgrid"></div>
       <div style="height:14px"></div>
     </section>
   </div>
@@ -1087,6 +1104,7 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
       lastDay:todayKey(), streak:1, unlocked:{},
       owned:{ clothes:[], gear:[] },
       wearing:[], postcards:[], trip:null, house:"forest",
+      photos:[],
       decayApplied:0, routeStep:0, whispers:[],
  garden:new Array(9).fill(null),
       fit:{ kg:70, startKg:70, height:185, goal:"cut", bulkBurned:0,
@@ -1629,7 +1647,12 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
   function checkStreakUnlock(){
     if(S.streak >= CFG.STREAK_UNLOCK && !S.unlocked.sneaky){
       S.unlocked.sneaky = true; save();
-      showSheet("解锁：一张偷拍", "连续来了 "+S.streak+" 天，偷偷给你看一张。", "sneaky");
+      const own = (S.photos || [])[0];
+      if(own){
+        showSheet("偷偷给你看一张", "连续来了 " + S.streak + " 天，这张我一直留着。", "myphoto");
+      } else {
+        showSheet("解锁：一张偷拍", "连续来了 " + S.streak + " 天，偷偷给你看一张。\n\n（去「悄悄话」页加一张照片，这里就有东西看了）", "sneaky");
+      }
     }
   }
 
@@ -2035,6 +2058,7 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
   }
 
   function renderWhisper(){
+    renderPhotos();
     const box = $("wList");
     if(!box) return;
     if(!S.whispers.length){
@@ -2047,6 +2071,83 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
       + '<button class="wbtn small" data-share-w="'+w.id+'">再发一次</button></div>'
     ).join("");
   }
+
+  /* ====== 我们的照片（存在本机，不上传服务器）====== */
+  const PH_MAX_SIDE = 900, PH_QUALITY = 0.82, PH_MAX_COUNT = 12;
+  function renderPhotos(){
+    const box = $("phList");
+    if(!box) return;
+    const n = (S.photos || []).length;
+    const c = $("phCount");
+    if(c) c.textContent = n ? "（" + n + "/" + PH_MAX_COUNT + "）" : "";
+    if(!n){
+      box.innerHTML = '<div class="phempty">还没有照片，点上面加一张</div>';
+      return;
+    }
+    box.innerHTML = S.photos.map(function(ph){
+      return '<div class="phitem"><img alt="" src="' + ph.src + '">'
+           + '<button class="phx" data-phdel="' + ph.id + '">×</button></div>';
+    }).join("");
+  }
+  function shrinkPhoto(file){
+    return new Promise(function(resolve){
+      const url = URL.createObjectURL(file);
+      const im = new Image();
+      im.onload = function(){
+        const k = Math.min(1, PH_MAX_SIDE / Math.max(im.width, im.height));
+        const cv = document.createElement("canvas");
+        cv.width = Math.round(im.width * k);
+        cv.height = Math.round(im.height * k);
+        const cx = cv.getContext("2d");
+        cx.drawImage(im, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        resolve(cv.toDataURL("image/jpeg", PH_QUALITY));
+      };
+      im.onerror = function(){ URL.revokeObjectURL(url); resolve(null); };
+      im.src = url;
+    });
+  }
+  async function addPhotos(files){
+    const list = Array.prototype.slice.call(files || []);
+    if(!list.length) return;
+    S.photos = S.photos || [];
+    let added = 0;
+    for(const f of list){
+      if(S.photos.length >= PH_MAX_COUNT){ toast("最多存 " + PH_MAX_COUNT + " 张，先删几张"); break; }
+      const src = await shrinkPhoto(f);
+      if(!src) continue;
+      S.photos.push({ id: String(Date.now()) + "_" + added, src: src });
+      added++;
+    }
+    /* 存不下就把最早的挤掉，再试一次 */
+    function trySave(){
+      try{ localStorage.setItem(KEY, JSON.stringify(S)); return true; }
+      catch(e){ return false; }
+    }
+    if(!trySave()){
+      while(S.photos.length > 1 && !trySave()){ S.photos.shift(); }
+      if(!trySave()){ toast("手机空间不够了，删几张再加"); renderPhotos(); return; }
+      toast("空间有点紧，先挤掉了最旧的那几张");
+    }
+    renderPhotos();
+    if(added) toast("加进来了 " + added + " 张");
+  }
+  window.__ADDPHOTO = addPhotos;
+  const phFile = $("phFile");
+  if(phFile){
+    phFile.addEventListener("change", function(){
+      addPhotos(phFile.files);
+      phFile.value = "";
+    });
+  }
+  document.addEventListener("click", function(e){
+    const b = e.target.closest && e.target.closest("[data-phdel]");
+    if(!b) return;
+    const id = b.getAttribute("data-phdel");
+    S.photos = (S.photos || []).filter(function(x){ return x.id !== id; });
+    save(); renderPhotos();
+    toast("删掉了一张");
+  });
 
   function addWhisper(){
     const ta = $("wInput");
@@ -2093,6 +2194,10 @@ const GTHUMB = {"tee_white":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAA
 
     if(extra && typeof extra === "string") ex.innerHTML = extra;
 
+    if(imgKey === "myphoto"){
+      const own = (S.photos || [])[0];
+      if(own){ img.src = own.src; img.style.display = "block"; }
+    }
     if(imgKey === "sneaky"){
       const probe = new Image();
       probe.onload  = ()=>{ img.src = probe.src; img.style.display="block"; };
