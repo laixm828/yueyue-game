@@ -1178,32 +1178,6 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
     </section>
 
     <section class="page scroll" id="p-fit">
-      <div class="sec-title">📊 他今天动了多少</div>
-      <div class="fit-card">
-        <div class="frow"><label>目标</label>
-          <div class="chips" id="fitGoals" style="padding-left:0;margin:0"></div></div>
-        <div class="frow"><label id="fitKgLabel">体重</label>
-          <div class="kgbar"><div class="kgfill" id="fitKgFill"></div></div>
-          <span class="val" id="fitKgV"></span></div>
-        <div class="frow"><label>步数</label>
-          <button class="stepbtn" data-step="-500">−</button>
-          <input class="fnum" id="fitStepsN" type="number" inputmode="numeric" min="0" max="30000" step="100">
-          <input type="range" id="fitSteps" min="0" max="30000" step="200">
-          <button class="stepbtn" data-step="500">+</button>
-          <span class="val" id="fitStepsV"></span></div>
-        <div class="frow"><label>运动</label>
-          <button class="stepbtn" data-stepmin="-5">−</button>
-          <input class="fnum" id="fitMinN" type="number" inputmode="numeric" min="0" max="180" step="5">
-          <input type="range" id="fitMin" min="0" max="180" step="5">
-          <button class="stepbtn" data-stepmin="5">+</button>
-          <span class="val" id="fitMinV"></span></div>
-        <div class="chips" id="fitActs"></div>
-        <div class="fit-res" id="fitRes"></div>
-        <div id="fitBmi" style="margin:2px 0 10px;font-size:11.5px;color:#7a6a66;line-height:1.9;border-top:2px dashed #f0ddd6;padding-top:8px"></div>
-        <button class="wbtn" id="btnFitLog" style="margin-top:8px">📝 记下他今天动的</button>
-        <div id="fitBurnTxt" style="margin-top:6px;text-align:center;font-size:11px;color:#9a8280;line-height:1.6"></div>
-      </div>
-
       <div class="sec-title">🌸 她的一天</div>
       <div class="fit-card" id="herCard">
         <div id="herBase" style="font-size:11.5px;color:#7a6a66;line-height:1.9"></div>
@@ -1230,17 +1204,6 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
         · 经期那几天：目标减半，只补铁和睡够，<b>不算失败</b>。</p>
       </div>
 
-      <div class="sec-title">💡 他每天该动多少</div>
-      <div class="know">
-        <p>· 步数：建议每天 <b>6000～8000 步</b> 主动走动；不到 5000 步基本算久坐。<br>
-        · 有氧：每周 <b>150 分钟</b> 中等强度（快走、骑车、游泳）就够了；忙的话拆成每天 20～30 分钟。<br>
-        · 力量：每周 <b>2 次</b> 大肌群训练（深蹲、俯卧撑、哑铃），比单纯走路更保肌肉。<br>
-        · 久坐：连续坐 <b>45～60 分钟</b> 就起身走 2～3 分钟，比一次性猛练更有效。<br>
-        · 强度判断：运动时还能说话、但没法唱歌，就是中等强度。</p>
-      </div>
-
-      <div class="sec-title">🔥 常见运动消耗（按他的体重算 30 分钟）</div>
-      <div class="metwrap" id="metList"></div>
       <div class="sec-title">🧰 数据</div>
       <div class="know">
         <p>进度只存在这台手机的浏览器里，换手机、清缓存都会没。<br>想把东西留一份，点下面导出。</p>
@@ -3253,6 +3216,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   }
 
   function renderFit(){
+    if(!$("fitGoals")) return;      /* 他的健身板块已移除，只留她的一天 */
     resetFitDay();
     const goal = S.fit.goal || "cut";
     S.fit.kg = kgFromBurned();
@@ -4250,7 +4214,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   const rb = $("btnReset");  if(rb) rb.addEventListener("click", hardReset);
 
   /* ---- 健身 ---- */
-  $("btnFitLog").addEventListener("click", logFit);
+  const bfl = $("btnFitLog"); if(bfl) bfl.addEventListener("click", logFit);
   $("p-fit").addEventListener("click", e=>{
     const sb = e.target.closest("[data-step]");
     if(sb){
@@ -4275,10 +4239,12 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     S.fit.mins = v; save(); renderFit(); checkFitReward();
   });
 
-  $("fitSteps").addEventListener("input", e=>{
+  const fs1 = $("fitSteps");
+  if(fs1) fs1.addEventListener("input", e=>{
     S.fit.steps = parseInt(e.target.value,10) || 0; save(); renderFit(); checkFitReward();
   });
-  $("fitMin").addEventListener("input", e=>{
+  const fm1 = $("fitMin");
+  if(fm1) fm1.addEventListener("input", e=>{
     S.fit.mins = parseInt(e.target.value,10) || 0; save(); renderFit(); checkFitReward();
   });
   $("p-fit").addEventListener("click", e=>{
