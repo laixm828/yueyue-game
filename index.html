@@ -2622,6 +2622,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       }
     });
   }
+  const SIGN_BASE = 15;
   function doSign(){
     const t = todayKey();
     if(S.signDay === t){ toast("今天已经签过了"); return; }
@@ -2629,7 +2630,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const yk = y.getFullYear() + "-" + (y.getMonth()+1) + "-" + y.getDate();
     S.signStreak = (S.signDay === yk) ? ((S.signStreak||0) + 1) : 1;
     S.signDay = t;
-    let add = 5;
+    let add = SIGN_BASE;
     const d7 = S.signStreak % 7 === 0;
     if(d7) add += 20;
     S.coins += add;
@@ -2684,7 +2685,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const t = todayKey();
     const signed = S.signDay === t;
     bar.innerHTML = '<button class="wbtn" id="btnSign"' + (signed ? ' disabled' : '') + '>'
-      + (signed ? "✅ 今天签过了" : "📅 今日签到 · 💗+5") + '</button>'
+      + (signed ? "✅ 今天签过了" : "📅 今日签到 · 💗+" + SIGN_BASE) + '</button>'
       + '<span class="dst">连签 ' + (S.signStreak||0) + ' 天'
       + ((S.signStreak||0) > 0 && (S.signStreak||0) % 7 === 0 ? " · 明天再签还有额外 20" : "") + '</span>';
     const d = dailyRoll();
