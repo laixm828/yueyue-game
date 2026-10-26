@@ -5786,7 +5786,7 @@ body.night #nightVeil{opacity:1;}
 </script>
 
 <style>
-/* ===== 旅行心愿单 ===== */
+/* ===== 旅行心愿单 + 爱心存钱罐 ===== */
 #wishSay{margin:8px 14px 0;font-size:12.5px;line-height:1.7;color:#7d6459;
   background:#fff7f1;border-radius:12px;padding:8px 11px;display:none;
   border:1px dashed #f0d8cc;}
@@ -5794,18 +5794,32 @@ body.night #nightVeil{opacity:1;}
 @keyframes wsIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .wcard{margin:8px 12px 0;padding:11px 13px;border-radius:14px;background:#fffdf9;
   box-shadow:0 4px 12px rgba(150,120,100,.10);position:relative;}
-.wcard.done{background:#fbf8f4;opacity:.85}
+.wcard.done{background:#fbf8f4;opacity:.88}
+.wcard.full{border:1.5px solid #F2C14E;box-shadow:0 5px 16px rgba(242,193,78,.30)}
 .wc-city{font-size:14.5px;font-weight:700;color:#4a3b35;padding-right:26px;}
 .wc-why{margin-top:3px;font-size:12px;line-height:1.6;color:#8a746c;padding-right:26px;}
-.wc-row{margin-top:9px;display:flex;gap:8px;}
-.wc-go{border:0;border-radius:18px;padding:7px 14px;font-size:12.5px;cursor:pointer;
-  background:#ffe3ea;color:#c2607a;}
-.wc-go:active{transform:scale(.96)}
+.wc-jar{margin-top:9px;padding-top:8px;border-top:1px dashed #f0e2d8;}
+.wc-jarrow{display:flex;align-items:baseline;justify-content:space-between;
+  font-size:11.5px;color:#8a746c;}
+.wc-jarrow b{color:#c2607a;font-size:13px;}
+.wc-state{font-size:11px;color:#a08a80;}
+.wcard.full .wc-state{color:#c8971f;font-weight:700;}
+.wc-bar{margin-top:5px;height:6px;border-radius:3px;background:#f3e6dd;overflow:hidden;}
+.wc-bar i{display:block;height:100%;border-radius:3px;
+  background:linear-gradient(90deg,#FFC2CE,#FF8FA3);transition:width .25s ease;}
+.wcard.full .wc-bar i{background:linear-gradient(90deg,#FFD98A,#F2C14E);}
+.wc-row{margin-top:9px;display:flex;gap:7px;flex-wrap:wrap;}
+.wc-row button{border:0;border-radius:18px;padding:7px 13px;font-size:12.5px;cursor:pointer;}
+.wc-row button:active{transform:scale(.96)}
+.wc-in{background:#FFE3E9;color:#c2607a;}
+.wc-out{background:#f2ece7;color:#7d6459;}
+.wc-go{background:#f7edff;color:#8a6ba8;}
 .wc-del{position:absolute;right:9px;top:9px;width:22px;height:22px;border:0;border-radius:50%;
   background:#f4ece6;color:#a08a80;font-size:12px;line-height:22px;text-align:center;cursor:pointer;padding:0;}
 .wstamp{position:absolute;right:12px;bottom:10px;transform:rotate(-7deg);
   border:2px solid #eaa0ad;color:#e0889a;font-size:10px;padding:0 6px;border-radius:4px;
   background:rgba(255,255,255,.7);letter-spacing:1px;}
+.wc-star{position:absolute;right:12px;top:34px;font-size:15px;}
 #wishModal{position:fixed;left:0;right:0;top:0;bottom:0;z-index:200;background:rgba(52,40,36,.55);
   display:none;align-items:center;justify-content:center;padding:20px;}
 #wishModal.on{display:flex}
@@ -5820,16 +5834,19 @@ body.night #nightVeil{opacity:1;}
 #wishCard .wishOk{background:#FF8FA3;color:#fff}
 #wishHint{margin:2px 0 0;font-size:11px;color:#a08a80;text-align:right;min-height:15px}
 </style>
-
 <script>
-/* ===== 旅行心愿单：她自己记下想去的地方（卫星脚本，不改主脚本） ===== */
+/* ===== 旅行心愿单 + 爱心存钱罐（卫星脚本，不改主脚本） ===== */
 (function(){
   "use strict";
   var MAX = 20;
+  var STEP = 10;
+  var GOAL_DEFAULT = 100;
 
   function SS(){ return window.__YS || {}; }
   function save(){ if(window.__YSAVE) window.__YSAVE(); }
+  function rerender(){ if(window.__YRENDER) window.__YRENDER(); }
   function el(id){ return document.getElementById(id); }
+  function wallet(){ var S = SS(); return Math.max(0, parseInt(S.love, 10) || 0); }
   function toast(msg){
     var t = el('toast');
     if(t){ t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t);
@@ -5844,7 +5861,15 @@ body.night #nightVeil{opacity:1;}
   function list(){
     var S = SS();
     if(!Array.isArray(S.wishes)) S.wishes = [];
-    return S.wishes;
+    var arr = S.wishes;
+    for(var i = 0; i < arr.length; i++){
+      var w = arr[i];
+      if(!w) continue;
+      if(typeof w.goal !== 'number' || !(w.goal > 0)) w.goal = GOAL_DEFAULT;
+      if(typeof w.saved !== 'number' || !(w.saved >= 0)) w.saved = 0;
+      if(w.saved > w.goal) w.saved = w.goal;
+    }
+    return arr;
   }
 
   function sayLine(text){
@@ -5862,12 +5887,38 @@ body.night #nightVeil{opacity:1;}
     });
   }
 
+  function jarHtml(w, frozen){
+    var goal = w.goal || GOAL_DEFAULT;
+    var saved = Math.min(w.saved || 0, goal);
+    var pct = Math.round(saved / goal * 100);
+    var full = saved >= goal;
+    var state = frozen ? (full ? '\u6512\u591F\u4E86 \u00B7 \u5DF2\u51BB\u7ED3' : '\u5DF2\u51BB\u7ED3')
+                       : (full ? '\u6512\u591F\u4E86' : '\u8FD8\u5728\u6512');
+    return '<div class="wc-jar">'
+      + '<div class="wc-jarrow"><span>\u5DF2\u5B58 <b>' + saved + '</b> / ' + goal + ' \u7231\u5FC3</span>'
+      + '<span class="wc-state">' + state + '</span></div>'
+      + '<div class="wc-bar"><i style="width:' + pct + '%"></i></div>'
+      + '</div>';
+  }
+
   function cardHtml(w, i, done){
-    var h = '<div class="wcard' + (done ? ' done' : '') + '">'
+    var goal = w.goal || GOAL_DEFAULT;
+    var full = (w.saved || 0) >= goal;
+    var cls = 'wcard' + (done ? ' done' : '') + (full ? ' full' : '');
+    var h = '<div class="' + cls + '">'
       + '<div class="wc-city">' + esc(w.city) + '</div>';
     if(w.why) h += '<div class="wc-why">' + esc(w.why) + '</div>';
-    if(done) h += '<div class="wstamp">\u5DF2\u53BB\u8FC7</div>';
-    else h += '<div class="wc-row"><button class="wc-go" data-wish-go="' + i + '">\u53BB\u8FC7\u4E86</button></div>';
+    if(full) h += '<div class="wc-star">\u2728</div>';
+    h += jarHtml(w, done);
+    if(done){
+      h += '<div class="wstamp">\u5DF2\u53BB\u8FC7</div>';
+    }else{
+      h += '<div class="wc-row">'
+        + '<button class="wc-in" data-wish-in="' + i + '">\u5B58\u5165 10</button>'
+        + '<button class="wc-out" data-wish-out="' + i + '">\u53D6\u51FA 10</button>'
+        + '<button class="wc-go" data-wish-go="' + i + '">\u53BB\u8FC7\u4E86</button>'
+        + '</div>';
+    }
     h += '<button class="wc-del" data-wish-del="' + i + '" aria-label="\u5220\u9664">\u2715</button>';
     return h + '</div>';
   }
@@ -5893,11 +5944,74 @@ body.night #nightVeil{opacity:1;}
     }
   }
 
+  /* ---------- 存 / 取 ---------- */
+  function deposit(i){
+    var arr = list(), w = arr[i];
+    if(!w || w.done) return;
+    var goal = w.goal || GOAL_DEFAULT;
+    if((w.saved || 0) >= goal){ toast('\u8FD9\u4E2A\u7F50\u5B50\u5DF2\u7ECF\u6512\u591F\u4E86'); return; }
+    if(wallet() < STEP){ toast('\u7231\u5FC3\u4E0D\u591F\uFF0C\u5148\u53BB\u73A9\u6E38\u620F\u6512\u6512\u5427'); return; }
+    var room = goal - (w.saved || 0);
+    var move = Math.min(STEP, room);
+    var S = SS();
+    S.love = wallet() - move;
+    w.saved = (w.saved || 0) + move;
+    var justFull = w.saved >= goal && !w.cheered;
+    if(justFull) w.cheered = 1;
+    save(); rerender(); paint();
+    if(justFull){
+      sayLine('\u5C0F\u8D8A\uFF0C\u6211\u4EEC\u6512\u591F\u53BB ' + w.city + ' \u7684\u8DEF\u8D39\u5566\uFF01');
+    }else{
+      toast('\u5B58\u8FDB\u53BB ' + move + ' \u7231\u5FC3');
+    }
+  }
+
+  function withdraw(i){
+    var arr = list(), w = arr[i];
+    if(!w || w.done) return;
+    var saved = w.saved || 0;
+    if(saved <= 0){ toast('\u7F50\u5B50\u91CC\u8FD8\u6CA1\u5B58\u5462'); return; }
+    var move = Math.min(STEP, saved);
+    var S = SS();
+    S.love = wallet() + move;
+    w.saved = saved - move;
+    if(w.saved < (w.goal || GOAL_DEFAULT)) w.cheered = 0;
+    save(); rerender(); paint();
+    toast('\u53D6\u56DE\u6765 ' + move + ' \u7231\u5FC3');
+  }
+
+  function markDone(i){
+    var arr = list(), w = arr[i];
+    if(!w || w.done) return;
+    w.done = 1; w.doneT = Date.now();
+    save(); paint();
+    sayLine('\u6211\u4EEC\u771F\u7684\u53BB\u8FC7 ' + w.city + ' \u4E86\uFF01');
+    toast('\u5DF2\u7ECF\u653E\u8FDB\u300C\u53BB\u8FC7\u7684\u8DB3\u8FF9\u300D\u4E86\uFF0C\u7F50\u5B50\u7559\u4F5C\u7EAA\u5FF5');
+  }
+
+  function del(i){
+    var arr = list(), w = arr[i];
+    if(!w) return;
+    var city = w.city, back = w.saved || 0;
+    var go = function(){
+      if(back > 0){ var S = SS(); S.love = wallet() + back; }
+      arr.splice(i, 1);
+      save(); rerender(); paint();
+      toast(back > 0 ? ('\u5220\u6389\u4E86\uFF0C\u7F50\u91CC\u7684 ' + back + ' \u7231\u5FC3\u9000\u56DE\u94B1\u5305') : '\u5220\u6389\u4E86');
+    };
+    if(window.__ASK){
+      window.__ASK('\u5220\u6389\u8FD9\u4E2A\u5FC3\u613F\uFF1F',
+        '\u300C' + esc(city) + '\u300D\u4F1A\u4ECE\u5217\u8868\u91CC\u53BB\u6389' + (back > 0 ? ('\uFF0C\u7F50\u91CC\u7684 ' + back + ' \u7231\u5FC3\u4F1A\u9000\u56DE\u94B1\u5305') : '') + '\u3002', go);
+    }else{
+      go();
+    }
+  }
+
   function openAdd(){
     if(list().length >= MAX){ toast('\u5148\u53BB\u51E0\u4E2A\u518D\u52A0\u65B0\u7684\u5427'); return; }
     var m = el('wishModal');
     if(!m) return;
-    el('wCity').value = ''; el('wWhy').value = '';
+    el('wCity').value = ''; el('wWhy').value = ''; el('wGoal').value = '';
     el('wishHint').textContent = '\u6700\u591A 10 \u4E2A\u5B57';
     m.classList.add('on');
     setTimeout(function(){ el('wCity').focus(); }, 60);
@@ -5909,39 +6023,19 @@ body.night #nightVeil{opacity:1;}
   function doAdd(){
     var city = (el('wCity').value || '').trim();
     var why = (el('wWhy').value || '').trim();
+    var goal = parseInt(el('wGoal').value, 10);
     if(!city){ toast('\u5148\u5199\u4E2A\u5730\u65B9\u540D\u3002'); return; }
     if(city.length > 10) city = city.slice(0, 10);
     if(why.length > 30) why = why.slice(0, 30);
+    if(!(goal > 0)) goal = GOAL_DEFAULT;
+    if(goal < 10) goal = 10;
+    if(goal > 999) goal = 999;
     if(list().length >= MAX){ closeAdd(); toast('\u5148\u53BB\u51E0\u4E2A\u518D\u52A0\u65B0\u7684\u5427'); return; }
-    list().push({ city: city, why: why, done: 0, t: Date.now() });
+    list().push({ city: city, why: why, done: 0, t: Date.now(),
+                  goal: goal, saved: 0, cheered: 0 });
     save(); paint(); closeAdd();
     sayLine('\u5C0F\u8D8A\u60F3\u53BB ' + city + ' \u5440\uFF0C\u6211\u8BB0\u4E0B\u4E86\uFF0C\u4EE5\u540E\u5E26\u4F60\u53BB\u3002');
-    toast('\u8BB0\u4E0B\u4E86');
-  }
-
-  function markDone(i){
-    var arr = list();
-    if(!arr[i] || arr[i].done) return;
-    arr[i].done = 1; arr[i].doneT = Date.now();
-    save(); paint();
-    sayLine('\u6211\u4EEC\u771F\u7684\u53BB\u8FC7 ' + arr[i].city + ' \u4E86\uFF01');
-    toast('\u5DF2\u7ECF\u653E\u8FDB\u300C\u53BB\u8FC7\u7684\u8DB3\u8FF9\u300D\u4E86');
-  }
-  function del(i){
-    var arr = list();
-    if(!arr[i]) return;
-    var city = arr[i].city;
-    var go = function(){
-      arr.splice(i, 1);
-      save(); paint();
-      toast('\u5220\u6389\u4E86');
-    };
-    if(window.__ASK){
-      window.__ASK('\u5220\u6389\u8FD9\u4E2A\u5FC3\u613F\uFF1F',
-        '\u300C' + esc(city) + '\u300D\u4F1A\u4ECE\u5217\u8868\u91CC\u53BB\u6389\uFF0C\u5220\u4E86\u5C31\u6CA1\u4E86\u3002', go);
-    }else{
-      go();
-    }
+    toast('\u8BB0\u4E0B\u4E86\uFF0C\u8DEF\u8D39 ' + goal + ' \u7231\u5FC3');
   }
 
   function build(){
@@ -5970,6 +6064,7 @@ body.night #nightVeil{opacity:1;}
       + '<h3>\uD83D\uDCAD \u52A0\u4E00\u4E2A\u60F3\u53BB\u7684\u5730\u65B9</h3>'
       + '<input id="wCity" maxlength="10" placeholder="\u6BD4\u5982\uFF1A\u53A6\u95E8\uFF0C\u60F3\u53BB\u6D77\u8FB9\u8D70\u8D70">'
       + '<input id="wWhy" maxlength="30" placeholder="\u4E00\u53E5\u8BDD\u4E3A\u4EC0\u4E48\u60F3\u53BB\uFF08\u53EF\u4EE5\u7A7A\u7740\uFF09">'
+      + '<input id="wGoal" type="number" min="10" max="999" inputmode="numeric" placeholder="\u8DEF\u8D39\u76EE\u6807\uFF08\u4E0D\u586B\u5C31\u662F 100 \u7231\u5FC3\uFF09">'
       + '<div id="wishHint">\u6700\u591A 10 \u4E2A\u5B57</div>'
       + '<div class="wishRow"><button class="wishCancel" id="wishCancel">\u5148\u4E0D\u52A0</button>'
       + '<button class="wishOk" id="wishOk">\u8BB0\u4E0B\u6765</button></div>'
@@ -5991,8 +6086,15 @@ body.night #nightVeil{opacity:1;}
     el('wWhy').addEventListener('keydown', function(e){
       if(e.key === 'Enter'){ e.preventDefault(); doAdd(); }
     });
+    el('wGoal').addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); doAdd(); }
+    });
 
     nodes.addEventListener('click', function(e){
+      var a = e.target.closest('[data-wish-in]');
+      if(a){ deposit(parseInt(a.getAttribute('data-wish-in'), 10)); return; }
+      var b = e.target.closest('[data-wish-out]');
+      if(b){ withdraw(parseInt(b.getAttribute('data-wish-out'), 10)); return; }
       var g = e.target.closest('[data-wish-go]');
       if(g){ markDone(parseInt(g.getAttribute('data-wish-go'), 10)); return; }
       var d = e.target.closest('[data-wish-del]');
@@ -6017,7 +6119,8 @@ body.night #nightVeil{opacity:1;}
   setTimeout(boot, 900);
 
   window.__WISH = { paint: paint, add: doAdd, done: markDone, del: del,
-                    open: openAdd, list: list, say: sayLine };
+                    open: openAdd, list: list, say: sayLine,
+                    in: deposit, out: withdraw, wallet: wallet };
 })();
 </script>
 </body>
