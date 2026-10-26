@@ -5784,5 +5784,241 @@ body.night #nightVeil{opacity:1;}
   }, 10*60*1000);
 })();
 </script>
+
+<style>
+/* ===== 旅行心愿单 ===== */
+#wishSay{margin:8px 14px 0;font-size:12.5px;line-height:1.7;color:#7d6459;
+  background:#fff7f1;border-radius:12px;padding:8px 11px;display:none;
+  border:1px dashed #f0d8cc;}
+#wishSay.on{display:block;animation:wsIn .28s ease-out}
+@keyframes wsIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.wcard{margin:8px 12px 0;padding:11px 13px;border-radius:14px;background:#fffdf9;
+  box-shadow:0 4px 12px rgba(150,120,100,.10);position:relative;}
+.wcard.done{background:#fbf8f4;opacity:.85}
+.wc-city{font-size:14.5px;font-weight:700;color:#4a3b35;padding-right:26px;}
+.wc-why{margin-top:3px;font-size:12px;line-height:1.6;color:#8a746c;padding-right:26px;}
+.wc-row{margin-top:9px;display:flex;gap:8px;}
+.wc-go{border:0;border-radius:18px;padding:7px 14px;font-size:12.5px;cursor:pointer;
+  background:#ffe3ea;color:#c2607a;}
+.wc-go:active{transform:scale(.96)}
+.wc-del{position:absolute;right:9px;top:9px;width:22px;height:22px;border:0;border-radius:50%;
+  background:#f4ece6;color:#a08a80;font-size:12px;line-height:22px;text-align:center;cursor:pointer;padding:0;}
+.wstamp{position:absolute;right:12px;bottom:10px;transform:rotate(-7deg);
+  border:2px solid #eaa0ad;color:#e0889a;font-size:10px;padding:0 6px;border-radius:4px;
+  background:rgba(255,255,255,.7);letter-spacing:1px;}
+#wishModal{position:fixed;left:0;right:0;top:0;bottom:0;z-index:200;background:rgba(52,40,36,.55);
+  display:none;align-items:center;justify-content:center;padding:20px;}
+#wishModal.on{display:flex}
+#wishCard{background:#FFF8F0;border-radius:18px;padding:20px;width:100%;max-width:420px;
+  box-shadow:0 8px 30px rgba(0,0,0,.25);}
+#wishCard h3{margin:0 0 12px;font-size:17px;color:#4A3F3A;}
+#wishCard input{width:100%;box-sizing:border-box;margin-bottom:9px;padding:10px;
+  border:1px solid #e8d8ce;border-radius:10px;font-size:15px;background:#fff;}
+#wishCard .wishRow{margin-top:6px;display:flex;gap:10px;justify-content:flex-end;}
+#wishCard .wishRow button{border:0;border-radius:20px;padding:9px 18px;font-size:15px;cursor:pointer;}
+#wishCard .wishCancel{background:#f1e7e0;color:#7d6459}
+#wishCard .wishOk{background:#FF8FA3;color:#fff}
+#wishHint{margin:2px 0 0;font-size:11px;color:#a08a80;text-align:right;min-height:15px}
+</style>
+
+<script>
+/* ===== 旅行心愿单：她自己记下想去的地方（卫星脚本，不改主脚本） ===== */
+(function(){
+  "use strict";
+  var MAX = 20;
+
+  function SS(){ return window.__YS || {}; }
+  function save(){ if(window.__YSAVE) window.__YSAVE(); }
+  function el(id){ return document.getElementById(id); }
+  function toast(msg){
+    var t = el('toast');
+    if(t){ t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t);
+      toast._t = setTimeout(function(){ t.classList.remove('show'); }, 2200); return; }
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:300;'
+      + 'background:rgba(52,40,36,.92);color:#fff;font-size:13px;padding:9px 15px;border-radius:18px';
+    d.textContent = msg; document.body.appendChild(d);
+    setTimeout(function(){ d.remove(); }, 2200);
+  }
+
+  function list(){
+    var S = SS();
+    if(!Array.isArray(S.wishes)) S.wishes = [];
+    return S.wishes;
+  }
+
+  function sayLine(text){
+    var box = el('wishSay');
+    if(!box) return;
+    box.textContent = '\u4ED6\u8BF4\uFF1A' + text;
+    box.classList.add('on');
+    clearTimeout(sayLine._t);
+    sayLine._t = setTimeout(function(){ box.classList.remove('on'); }, 6000);
+  }
+
+  function esc(t){
+    return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c];
+    });
+  }
+
+  function cardHtml(w, i, done){
+    var h = '<div class="wcard' + (done ? ' done' : '') + '">'
+      + '<div class="wc-city">' + esc(w.city) + '</div>';
+    if(w.why) h += '<div class="wc-why">' + esc(w.why) + '</div>';
+    if(done) h += '<div class="wstamp">\u5DF2\u53BB\u8FC7</div>';
+    else h += '<div class="wc-row"><button class="wc-go" data-wish-go="' + i + '">\u53BB\u8FC7\u4E86</button></div>';
+    h += '<button class="wc-del" data-wish-del="' + i + '" aria-label="\u5220\u9664">\u2715</button>';
+    return h + '</div>';
+  }
+
+  function paint(){
+    var box = el('wishList'), doneBox = el('wishDone'), wrap = el('wishDoneWrap');
+    if(!box) return;
+    var arr = list(), want = [], went = [];
+    for(var i = 0; i < arr.length; i++){
+      (arr[i] && arr[i].done ? went : want).push({ w: arr[i], i: i });
+    }
+    box.innerHTML = want.length
+      ? want.map(function(x){ return cardHtml(x.w, x.i, false); }).join('')
+      : '<div class="empty" id="wishEmpty">\u5C0F\u8D8A\u60F3\u53BB\u54EA\u91CC\uFF1F\u52A0\u4E00\u4E2A\u5427\uFF0C\u4EE5\u540E\u4E00\u4E2A\u4E00\u4E2A\u53BB\u3002</div>';
+
+    if(went.length){
+      wrap.style.display = '';
+      var n = el('wishDoneN'); if(n) n.textContent = '(' + went.length + ')';
+      doneBox.innerHTML = went.map(function(x){ return cardHtml(x.w, x.i, true); }).join('');
+    }else{
+      wrap.style.display = 'none';
+      doneBox.innerHTML = '';
+    }
+  }
+
+  function openAdd(){
+    if(list().length >= MAX){ toast('\u5148\u53BB\u51E0\u4E2A\u518D\u52A0\u65B0\u7684\u5427'); return; }
+    var m = el('wishModal');
+    if(!m) return;
+    el('wCity').value = ''; el('wWhy').value = '';
+    el('wishHint').textContent = '\u6700\u591A 10 \u4E2A\u5B57';
+    m.classList.add('on');
+    setTimeout(function(){ el('wCity').focus(); }, 60);
+  }
+  function closeAdd(){
+    var m = el('wishModal');
+    if(m) m.classList.remove('on');
+  }
+  function doAdd(){
+    var city = (el('wCity').value || '').trim();
+    var why = (el('wWhy').value || '').trim();
+    if(!city){ toast('\u5148\u5199\u4E2A\u5730\u65B9\u540D\u3002'); return; }
+    if(city.length > 10) city = city.slice(0, 10);
+    if(why.length > 30) why = why.slice(0, 30);
+    if(list().length >= MAX){ closeAdd(); toast('\u5148\u53BB\u51E0\u4E2A\u518D\u52A0\u65B0\u7684\u5427'); return; }
+    list().push({ city: city, why: why, done: 0, t: Date.now() });
+    save(); paint(); closeAdd();
+    sayLine('\u5C0F\u8D8A\u60F3\u53BB ' + city + ' \u5440\uFF0C\u6211\u8BB0\u4E0B\u4E86\uFF0C\u4EE5\u540E\u5E26\u4F60\u53BB\u3002');
+    toast('\u8BB0\u4E0B\u4E86');
+  }
+
+  function markDone(i){
+    var arr = list();
+    if(!arr[i] || arr[i].done) return;
+    arr[i].done = 1; arr[i].doneT = Date.now();
+    save(); paint();
+    sayLine('\u6211\u4EEC\u771F\u7684\u53BB\u8FC7 ' + arr[i].city + ' \u4E86\uFF01');
+    toast('\u5DF2\u7ECF\u653E\u8FDB\u300C\u53BB\u8FC7\u7684\u8DB3\u8FF9\u300D\u4E86');
+  }
+  function del(i){
+    var arr = list();
+    if(!arr[i]) return;
+    var city = arr[i].city;
+    var go = function(){
+      arr.splice(i, 1);
+      save(); paint();
+      toast('\u5220\u6389\u4E86');
+    };
+    if(window.__ASK){
+      window.__ASK('\u5220\u6389\u8FD9\u4E2A\u5FC3\u613F\uFF1F',
+        '\u300C' + esc(city) + '\u300D\u4F1A\u4ECE\u5217\u8868\u91CC\u53BB\u6389\uFF0C\u5220\u4E86\u5C31\u6CA1\u4E86\u3002', go);
+    }else{
+      go();
+    }
+  }
+
+  function build(){
+    var page = el('p-travel');
+    if(!page || el('wishList')) return false;
+
+    var nodes = document.createElement('div');
+    nodes.id = 'wishZone';
+    nodes.innerHTML =
+      '<div class="sec-title">\uD83D\uDCAD \u60F3\u53BB\u7684\u5730\u65B9</div>'
+      + '<div id="wishSay"></div>'
+      + '<div id="wishList"></div>'
+      + '<div id="wishDoneWrap" style="display:none">'
+      +   '<div class="sec-title">\uD83D\uDEEB \u53BB\u8FC7\u7684\u8DB3\u8FF9 <span id="wishDoneN"></span></div>'
+      +   '<div id="wishDone"></div>'
+      + '</div>'
+      + '<div style="padding:10px 14px 2px">'
+      +   '<button class="wbtn" id="wishAdd">\uFF0B \u52A0\u4E00\u4E2A\u60F3\u53BB\u7684\u5730\u65B9</button>'
+      + '</div>'
+      + '<div style="height:14px"></div>';
+    page.appendChild(nodes);
+
+    var mm = document.createElement('div');
+    mm.id = 'wishModal';
+    mm.innerHTML = '<div id="wishCard">'
+      + '<h3>\uD83D\uDCAD \u52A0\u4E00\u4E2A\u60F3\u53BB\u7684\u5730\u65B9</h3>'
+      + '<input id="wCity" maxlength="10" placeholder="\u6BD4\u5982\uFF1A\u53A6\u95E8\uFF0C\u60F3\u53BB\u6D77\u8FB9\u8D70\u8D70">'
+      + '<input id="wWhy" maxlength="30" placeholder="\u4E00\u53E5\u8BDD\u4E3A\u4EC0\u4E48\u60F3\u53BB\uFF08\u53EF\u4EE5\u7A7A\u7740\uFF09">'
+      + '<div id="wishHint">\u6700\u591A 10 \u4E2A\u5B57</div>'
+      + '<div class="wishRow"><button class="wishCancel" id="wishCancel">\u5148\u4E0D\u52A0</button>'
+      + '<button class="wishOk" id="wishOk">\u8BB0\u4E0B\u6765</button></div>'
+      + '</div>';
+    document.body.appendChild(mm);
+
+    el('wishAdd').addEventListener('click', openAdd);
+    el('wishCancel').addEventListener('click', closeAdd);
+    el('wishOk').addEventListener('click', doAdd);
+    el('wishModal').addEventListener('click', function(e){
+      if(e.target === el('wishModal')) closeAdd();
+    });
+    el('wCity').addEventListener('input', function(){
+      el('wishHint').textContent = (this.value || '').length + ' / 10';
+    });
+    el('wCity').addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); el('wWhy').focus(); }
+    });
+    el('wWhy').addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); doAdd(); }
+    });
+
+    nodes.addEventListener('click', function(e){
+      var g = e.target.closest('[data-wish-go]');
+      if(g){ markDone(parseInt(g.getAttribute('data-wish-go'), 10)); return; }
+      var d = e.target.closest('[data-wish-del]');
+      if(d){ del(parseInt(d.getAttribute('data-wish-del'), 10)); return; }
+    });
+
+    paint();
+    return true;
+  }
+
+  document.addEventListener('click', function(e){
+    var t = e.target.closest && e.target.closest('[data-page="travel"]');
+    if(t) setTimeout(function(){ build(); paint(); }, 30);
+  });
+
+  function boot(){
+    if(!build()){ setTimeout(function(){ build(); }, 600); }
+    paint();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 900);
+
+  window.__WISH = { paint: paint, add: doAdd, done: markDone, del: del,
+                    open: openAdd, list: list, say: sayLine };
+})();
+</script>
 </body>
 </html>
