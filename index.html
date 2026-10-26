@@ -2424,9 +2424,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     }
     let h = "";
     if(her){
-      const adv = wxAdvice(her);
+      /* 顶部只留温度和天气，关心话交给问候区那句，避免同一件事说两遍 */
       h += '<span>' + WX_ICN(her.code) + ' 你那边 ' + her.t + '° ' + (WX_TXT[her.code]||"") + '</span>';
-      if(adv) h += '<span style="color:#c2566a">· ' + adv + '</span>';
     }
     if(his){
       h += '<span class="wt2">他那边 ' + WX_ICN(his.code) + ' ' + his.t + '°</span>';
