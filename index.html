@@ -1873,7 +1873,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       return s;
     }catch(e){ return defaultState(); }
   }
-  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+  function save(){
+    if(window.__WIPED) return;
+    try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+  }
   let S = load();
 
   /* ================= 花园 ================= */
@@ -3437,11 +3440,31 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   function wear(id){
     const i = S.wearing.indexOf(id);
     if(i >= 0){
-      S.wearing.splice(i,1); save(); render(); toast("脱下了"); return;
+      const cur = CLOTHES.find(c=>c.id===id);
+      S.wearing.splice(i,1);
+      /* 脱下后回到上一件（比如脱睡衣回到白天那件） */
+      const slot = cur && cur.slot;
+      const back = (slot && S._prevOutfit) ? S._prevOutfit[slot] : null;
+      if(back && S.wearing.indexOf(back) < 0
+         && (S.owned.clothes||[]).indexOf(back) >= 0
+         && CLOTHES.some(c=>c.id===back && c.slot===slot)){
+        delete S._prevOutfit[slot];
+        S.wearing.push(back);
+        const bi = CLOTHES.find(c=>c.id===back);
+        save(); render(); toast("脱下了，换回「"+(bi?bi.name:back)+"」");
+        return;
+      }
+      save(); render(); toast("脱下了"); return;
     }
     const it = CLOTHES.find(c=>c.id===id);
     if(it && it.slot){
-      /* 同一个部位只能穿一件：换新的先脱掉旧的 */
+      /* 同一个部位只能穿一件：记住被换下的那件 */
+      const old = S.wearing.map(w=>CLOTHES.find(c=>c.id===w))
+        .filter(o=>o && o.slot===it.slot && o.id!==id)[0];
+      if(old){
+        S._prevOutfit = S._prevOutfit || {};
+        S._prevOutfit[it.slot] = old.id;
+      }
       S.wearing = S.wearing.filter(w=>{
         const o = CLOTHES.find(c=>c.id===w);
         return !o || o.slot !== it.slot;
@@ -3451,6 +3474,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     save(); render(); toast("换上了");
   }
 
+  window.__WEAR = wear; window.__HARD_RESET = hardReset;
   /* ================= 旅行 ================= */
   function routeLeft(){ return Math.max(0, ROUTE.length - S.routeStep); }
 
@@ -3835,7 +3859,19 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   function hardReset(){
     askConfirm("重新开始？",
       "所有亲密度、衣服、照片、悄悄话都会清空。<br><b>清空以后找不回来。</b>",
-      function(){ try{ localStorage.removeItem(KEY); }catch(err){} location.reload(); });
+      function(){
+        window.__WIPED = true;
+        try{ localStorage.removeItem(KEY); }catch(err){}
+        try{
+          for(var k in localStorage){
+            if(k === KEY) continue;
+            if(/^(yueyue-|_pj|cap)/.test(k)) localStorage.removeItem(k);
+          }
+        }catch(err2){}
+        try{ localStorage.setItem(KEY + "-tomb", String(Date.now())); }catch(err3){}
+        S = defaultState();
+        location.reload();
+      });
     return;
   }
 
@@ -4774,7 +4810,12 @@ const FURN_ART = {"rug":"art/fn_rug.png","lamp":"art/fn_lamp.png","shelf":"art/f
   document.addEventListener("click", function(ev){
     var t = ev.target; if(!t.closest) return;
     if(t.closest("#decoBtn")){ openDeco(); return; }
-    if(t.closest("#storeBtn")){ openStore(); return; }
+    if(t.closest("#storeBtn")){
+      var used0 = {}; for(var k0 in S.furn){ used0[S.furn[k0]] = 1; }
+      var left0 = (S.furnOwned||[]).filter(function(id){ return !used0[id]; }).length;
+      if(left0) toast("\u8fd8\u6709 " + left0 + " \u4ef6\u5bb6\u5177\u6ca1\u6446\u8fdb\u623f\u95f4");
+      openStore(); return;
+    }
     var pp = t.closest("[data-paper]");
     if(pp){ S.paper = pp.getAttribute("data-paper"); if(window.__YSAVE) window.__YSAVE(); lastKey=""; applyDeco(); openDeco(); return; }
     var ff = t.closest("[data-floor]");
@@ -4802,6 +4843,8 @@ const FURN_ART = {"rug":"art/fn_rug.png","lamp":"art/fn_lamp.png","shelf":"art/f
       var used = {}; for(var k in S.furn){ used[S.furn[k]] = 1; }
       var n = (S.furnOwned||[]).filter(function(id){ return !used[id]; }).length;
       b.textContent = "📦" + (n ? n : "");
+      b.title = n ? ("\u8fd8\u6709 " + n + " \u4ef6\u5bb6\u5177\u4e70\u4e86\u6ca1\u6446\u8fdb\u623f\u95f4") : "\u5bb6\u5177\u90fd\u6446\u4e0a\u4e86";
+      b.setAttribute("aria-label", b.title);
     };
     upd(); setInterval(upd, 1200);
   }
