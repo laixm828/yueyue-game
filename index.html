@@ -2380,7 +2380,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
 
   async function wxFetch(lat, lon){
     const u = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon
-      + "&current=temperature_2m,precipitation,weather_code"
+      + "&current=temperature_2m,precipitation,weather_code,wind_speed_10m"
+      + "&daily=temperature_2m_max,temperature_2m_min"
       + "&hourly=precipitation_probability&forecast_days=1&timezone=auto";
     const r = await fetch(u);
     const j = await r.json();
@@ -2389,8 +2390,13 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const h0 = new Date().getHours();
     let rain6 = 0;
     for(let i=h0;i<Math.min(h0+6, probs.length);i++) rain6 = Math.max(rain6, probs[i]||0);
+    const dy = j.daily || {};
+    const f = (a)=> (a && a.length && a[0] != null) ? Math.round(a[0]) : null;
     return { t: Math.round(j.current.temperature_2m), code: j.current.weather_code,
-             precip: j.current.precipitation || 0, rain6: rain6, at: Date.now() };
+             precip: j.current.precipitation || 0, rain6: rain6,
+             tmax: f(dy.temperature_2m_max), tmin: f(dy.temperature_2m_min),
+             wind: (j.current.wind_speed_10m != null ? Math.round(j.current.wind_speed_10m) : null),
+             at: Date.now() };
   }
 
   async function wxLoad(force){
@@ -6121,6 +6127,120 @@ body.night #nightVeil{opacity:1;}
   window.__WISH = { paint: paint, add: doAdd, done: markDone, del: del,
                     open: openAdd, list: list, say: sayLine,
                     in: deposit, out: withdraw, wallet: wallet };
+})();
+</script>
+
+<!-- ===== 天气关心：她打开时按南京的天气说一句，每天一次 ===== -->
+<style>
+#wxCare{position:absolute;left:10px;right:10px;bottom:26px;z-index:5;display:none;
+  text-align:center;font-size:11.5px;line-height:1.55;color:#b2596e;pointer-events:none;
+  text-shadow:0 1px 2px rgba(255,255,255,.95)}
+#wxCare.on{display:block}
+#wxCare b{font-weight:700}
+body.is-trip #wxCare{display:none !important}
+</style>
+<script>
+(function(){
+  var NANJING = "\u5357\u4eac";
+
+  function bjDay(){
+    try{
+      return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai" })
+             .format(new Date());
+    }catch(e){
+      var d = new Date();
+      return d.getFullYear() + "-" + ("0" + (d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+    }
+  }
+  function isRain(w){
+    if(!w) return false;
+    if(isSnow(w)) return false;   /* 雪天的 precipitation 是水当量，别当成雨 */
+    if(w.precip > 0.05) return true;
+    if(w.code >= 51 && w.code <= 67) return true;
+    if(w.code >= 80 && w.code <= 82) return true;
+    return w.code >= 95;
+  }
+  function isSnow(w){
+    if(!w) return false;
+    return (w.code >= 71 && w.code <= 77) || (w.code >= 85 && w.code <= 86);
+  }
+  function cityName(){
+    var S = window.__YS || {};
+    var p = S.place && S.place.her;
+    return (p && p.name) ? p.name : NANJING;
+  }
+
+  /* 优先级：雨 > 雪 > 最高温 >= 35 > 最低温 < 5 > 风速 >= 30；晴好不说 */
+  function careLine(w){
+    if(!w) return "";
+    var c = cityName();
+    if(isRain(w)) return "小越，" + c + "今天下雨，出门记得带伞，别把鞋弄湿了。";
+    if(isSnow(w)) return "小越，" + c + "今天下雪，路滑，慢慢走。";
+    if(w.tmax != null && w.tmax >= 35) return "小越，今天好热，多喝水，别在太阳底下待太久。";
+    if(w.tmin != null && w.tmin < 5)  return "小越，今天挺冷的，穿暖和点再出门。";
+    if(w.wind != null && w.wind >= 30) return "小越，今天风大，帽子围巾戴好，别吹着了。";
+    return "";
+  }
+
+  function box(){
+    var el = document.getElementById("wxCare");
+    if(el) return el;
+    var hl = document.getElementById("homeLine");
+    if(!hl || !hl.parentNode) return null;
+    el = document.createElement("div");
+    el.id = "wxCare";
+    hl.parentNode.insertBefore(el, hl.nextSibling);
+    return el;
+  }
+
+  function paint(text){
+    var el = box();
+    if(!el) return false;
+    if(!text){ el.className = ""; el.textContent = ""; return false; }
+    el.textContent = text;
+    el.className = "on";
+    return true;
+  }
+
+  /* 天气还没到就先催一次（只在缺今日温度时） */
+  function warm(){
+    var S = window.__YS;
+    if(!S || !S.wx || !S.wx.her) return;
+    var w = S.wx.her;
+    var stale = !w.at || (Date.now() - w.at > 6*60*60*1000);
+    if((w.tmax == null || w.tmin == null || w.wind == null) && stale && window.__WX_LOAD){
+      try{ window.__WX_LOAD(true); }catch(e){}
+    }
+  }
+
+  function tick(){
+    var S = window.__YS;
+    if(!S || !S.wx || !S.wx.her){ paint(""); return "nwx"; }
+    var day = bjDay();
+    var line = careLine(S.wx.her);
+    if(!line){ paint(""); if(S.wxCareDay !== day){ S.wxCareDay = day; if(window.__YSAVE) window.__YSAVE(); } return "calm"; }
+    if(S.wxCareDay === day){
+      paint(line);
+      return "repeat";
+    }
+    S.wxCareDay = day;
+    if(window.__YSAVE) window.__YSAVE();
+    paint(line);
+    return "first";
+  }
+
+  window.__WXCARE = tick;
+  window.__WXCARE_LINE = careLine;
+
+  function boot(){
+    warm();
+    setTimeout(function(){ try{ tick(); }catch(e){} }, 700);
+    setTimeout(function(){ try{ tick(); }catch(e){} }, 3000);
+    setTimeout(function(){ try{ tick(); }catch(e){} }, 9000);
+    setInterval(function(){ try{ tick(); }catch(e){} }, 60000);
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
 })();
 </script>
 </body>
