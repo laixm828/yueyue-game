@@ -2342,6 +2342,17 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     if(c>=95) return "⛈";
     return "🌧";
   };
+  /* 深夜不用大太阳：晴/多云换成月亮 */
+  const WX_ICN = (c)=>{
+    const ic = WX_ICON(c);
+    const night = document.body.classList.contains("night")
+      || (window.__ISNIGHT ? window.__ISNIGHT() : false);
+    if(!night) return ic;
+    if(ic === "☀️") return "🌙";
+    if(ic === "🌤") return "🌙";
+    if(ic === "🌫" || ic === "☁️") return "☁️";
+    return ic;
+  };
   function wxRainy(w){ return w && (w.precip > 0.05 || (w.code>=51 && w.code<=67) || (w.code>=80 && w.code<=82) || w.code>=95); }
   function wxSnowy(w){ return w && ((w.code>=71 && w.code<=77) || (w.code>=85 && w.code<=86)); }
 
@@ -2407,11 +2418,11 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     let h = "";
     if(her){
       const adv = wxAdvice(her);
-      h += '<span>' + WX_ICON(her.code) + ' 你那边 ' + her.t + '° ' + (WX_TXT[her.code]||"") + '</span>';
+      h += '<span>' + WX_ICN(her.code) + ' 你那边 ' + her.t + '° ' + (WX_TXT[her.code]||"") + '</span>';
       if(adv) h += '<span style="color:#c2566a">· ' + adv + '</span>';
     }
     if(his){
-      h += '<span class="wt2">他那边 ' + WX_ICON(his.code) + ' ' + his.t + '°</span>';
+      h += '<span class="wt2">他那边 ' + WX_ICN(his.code) + ' ' + his.t + '°</span>';
     }
     bar.innerHTML = h;
     bar.hidden = false;
@@ -3352,7 +3363,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     }
     if((cat==="all" || cat==="furn") && window.__FURN){
       const n = Object.keys(S.furn||{}).length;
-      out.push('<div class="sec-title">🛋 家具 <span>('+n+"/"+window.__SLOTS+')</span></div>');
+      const ownedN = (S.furnOwned||[]).length;
+      out.push('<div class="sec-title">🛋 家具 <span>(摆了 '+n+'/'+window.__SLOTS+' · 拥有 '+ownedN+')</span></div>');
       out.push('<div class="grid2">'+ window.__FURN.map(f=>shopItem(f,"furn")).join("") +'</div>');
     }
     body.innerHTML = out.join("");
@@ -4977,7 +4989,9 @@ document.addEventListener("click", function(e){
 #nightVeil .stars{position:absolute;left:4%;right:0;top:3%;font-size:13px;letter-spacing:14px;opacity:.9;}
 body.night #nightVeil{opacity:1;}
 #soundBtn{position:fixed;right:52px;top:6px;z-index:60;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.88);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15);}
-#shareDayBtn{margin-left:8px;}
+#shareRow{margin:8px 12px 0;}
+#shareRow .wbtn{ width:100%; margin:0; }
+#shareDayBtn{margin:0;}
 #shareToast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:99;background:rgba(52,40,36,.92);color:#fff;font-size:14px;padding:10px 16px;border-radius:20px;pointer-events:none;}
 </style>
 <script>
@@ -4994,7 +5008,11 @@ body.night #nightVeil{opacity:1;}
   var NIGHT_LINE = '\u5929\u9ED1\u4E86\uFF0C\u706F\u7ED9\u4F60\u7559\u7740\uFF0C\u5C0F\u8D8A\uFF0C\u5230\u5BB6\u4E86\u8DDF\u6211\u8BF4\u4E00\u58F0\u3002';
   var nightGreeted = '';
   try{ nightGreeted = localStorage.getItem('yueyue-night-greet') || ''; }catch(e){}
-  function isNight(){ var h = new Date().getHours(); return h >= 18 || h < 6; }
+  function isNight(){
+    var h = window.__BJHOUR ? window.__BJHOUR() : new Date().getHours();
+    return h >= 18 || h < 6;
+  }
+  window.__ISNIGHT = isNight;
   function applyDayNight(){
     var night = isNight();
     document.body.classList.toggle('night', night);
@@ -5166,13 +5184,27 @@ body.night #nightVeil{opacity:1;}
       im.src = img.src;
     } else finish();
   }
-  var row = document.getElementById('explainRow');
-  if(row){
+  (function(){
+    var host = document.getElementById('dailyBar');
+    var bar = document.getElementById('dailyTasks');
+    var row = document.createElement('div');
+    row.id = 'shareRow';
     var b = document.createElement('button');
-    b.id = 'shareDayBtn'; b.textContent = '\uD83D\uDCE4 \u5206\u4EAB\u4ECA\u5929';
+    b.id = 'shareDayBtn';
+    b.className = 'wbtn';
+    b.textContent = '\uD83D\uDCE4 \u5206\u4EAB\u4ECA\u5929';
     b.addEventListener('click', shareCard);
     row.appendChild(b);
-  }
+    if(host && host.parentNode){
+      /* 放在签到条下面，永远可见，不依赖任何 .show */
+      host.parentNode.insertBefore(row, bar && bar.parentNode === host.parentNode ? bar : host.nextSibling);
+    }else if(bar && bar.parentNode){
+      bar.parentNode.insertBefore(row, bar);
+    }else{
+      var p2 = document.getElementById('p-home');
+      if(p2) p2.appendChild(row);
+    }
+  })();
 })();
 </script>
 <style>
@@ -5246,20 +5278,54 @@ body.night #nightVeil{opacity:1;}
     }
     return null;
   }
-  function isPajamaTime(){ var h = new Date().getHours(); return h >= 22 || h < 6; }
+  /* 一律按北京时间判断，不看设备时区 */
+  function bjHour(){
+    try{
+      var t = new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Shanghai', hour:'2-digit', hour12:false }).format(new Date());
+      var h = parseInt(t, 10);
+      if(!isNaN(h)) return h % 24;
+    }catch(e){}
+    return new Date().getHours();
+  }
+  window.__BJHOUR = bjHour;
+  function isPajamaTime(){
+    var h = (typeof window.__BJHOUR === 'function') ? window.__BJHOUR() : bjHour();
+    return h >= 22 || h < 6;
+  }
   function pajamaTick(){
     var st = S(); if(!st || st.trip) return;
+    if(!Array.isArray(st.wearing)) st.wearing = [];
     var night = isPajamaTime();
     if(zzz) zzz.style.display = night ? 'block' : 'none';
-    if(!night) return;
-    /* 不再替她换衣服，只提一句；换不换她自己决定 */
-    if(st._pjHintDay === todayStr()) return;
-    var cur = bodyItemOf(Array.isArray(st.wearing) ? st.wearing : []);
-    if(cur && cur.id === 'pajama') return;
-    st._pjHintDay = todayStr();
-    save();
-    say("快睡了吧。衣柜里有睡衣，想换就换，不换也行。");
+    var cur = bodyItemOf(st.wearing);
+    if(night){
+      if(cur && cur.id === 'pajama') return;
+      /* 她半夜自己换过别的衣服，就别抢回来 */
+      if(cur && st._dayOutfit && cur.id !== st._dayOutfit) return;
+      if(cur) st._dayOutfit = cur.id;
+      st.wearing = st.wearing.filter(function(id){
+        var it = null, list = window.__CLOTHES || [];
+        for(var k=0;k<list.length;k++){ if(list[k].id === id) it = list[k]; }
+        return !(it && it.slot === 'body');
+      });
+      st.wearing.push('pajama');
+      save();
+      if(window.__YRENDER) { try{ window.__YRENDER(); }catch(e){} }
+      if(st._pjSaid !== todayStr()){
+        st._pjSaid = todayStr(); save();
+        var b = document.getElementById('bubble');
+        if(b) b.textContent = '\u6362\u4E0A\u7761\u8863\u4E86\uFF0C\u5C0F\u8D8A\uFF0C\u4ECA\u665A\u65E9\u70B9\u7761\u3002';
+      }
+    } else {
+      if(cur && cur.id === 'pajama'){
+        st.wearing = st.wearing.filter(function(id){ return id !== 'pajama'; });
+        if(st._dayOutfit) st.wearing.push(st._dayOutfit);
+        save();
+        if(window.__YRENDER) { try{ window.__YRENDER(); }catch(e){} }
+      }
+    }
   }
+
 
 
   /* ---------- 时间胶囊：写信 + 选日子，到日子自动弹，不显示倒数 ---------- */
@@ -5357,6 +5423,17 @@ body.night #nightVeil{opacity:1;}
     if(changed){ save(); }
     paintLetterHint();
     paintCapLine();
+    /* 到日子的信：首开自动弹一次；读过（opened=1）就不会再弹 */
+    var st = S();
+    if(st && !st._capPopped){
+      var waiting = getCaps().filter(function(c){ return !c.opened && c.ready; });
+      if(waiting.length){
+        st._capPopped = 1;
+        waiting[0].opened = 1; waiting[0].ready = 0;
+        save(); paintLetterHint(); paintCapLine();
+        openLetter(waiting[0]);
+      }
+    }
   }
   function readyCaps(){
     return getCaps().filter(function(c){ return !c.opened && c.ready; });
@@ -5390,6 +5467,7 @@ body.night #nightVeil{opacity:1;}
     wList.parentNode.insertBefore(line, wList.nextSibling);
   }
   paintCapLine();
+  window.__PJTICK = pajamaTick; window.__CAPTICK = capsuleTick;
   try{ pajamaTick(); }catch(e){}
   try{ capsuleTick(); }catch(e){}
   setInterval(function(){
