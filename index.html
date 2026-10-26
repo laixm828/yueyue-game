@@ -6178,6 +6178,10 @@ body.is-trip #wxCare{display:none !important}
     if(w.tmax != null && w.tmax >= 35) return "小越，今天好热，多喝水，别在太阳底下待太久。";
     if(w.tmin != null && w.tmin < 5)  return "小越，今天挺冷的，穿暖和点再出门。";
     if(w.wind != null && w.wind >= 30) return "小越，今天风大，帽子围巾戴好，别吹着了。";
+    /* 风和日丽的天气也说一句，轻一点，不吓人 */
+    if(w.code >= 45 && w.code <= 48) return "小越，今天有雾，出门慢一点，看清路。";
+    if(w.code >= 1 && w.code <= 3)  return "小越，今天阴天，屋里暗，别熬太晚。";
+    if(w.code === 0)                return "小越，今天太阳好，出去晒晒吧，别一直待在屋里。";
     return "";
   }
 
