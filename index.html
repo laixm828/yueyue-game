@@ -760,6 +760,7 @@ h1{ font-weight:800; letter-spacing:.06em;
   padding:14px;z-index:61;transition:transform .22s;box-shadow:0 -8px 24px rgba(40,24,14,.25);
   max-height:70vh;overflow:auto}
 .roomPanel.on{transform:translateX(-50%) translateY(0)}
+.roomPanel:not(.on){ pointer-events:none !important; visibility:hidden !important; }
 .roomPanel .fpt{font-size:13px;color:#8a746a;margin-bottom:10px;text-align:center}
 .roomPanel .wmsg{font-size:12px;color:#c0553f;text-align:center;margin-top:6px}
 .roomPanel .fcat{font-size:12px;color:#6b564c;margin:8px 0 6px;font-weight:700}
@@ -920,6 +921,7 @@ h1{ font-weight:800; letter-spacing:.06em;
 #nav .tab.hasdot::after{ content:""; position:absolute; top:6px; right:14px; width:7px; height:7px;
   border-radius:50%; background:#ff5b7f; box-shadow:0 0 0 2px #fffdf9; }
 #nav .tab{ position:relative; }
+#nav{ z-index:80 !important; }
 
 /* ===== 签到 / 每日任务 ===== */
 #dailyBar{ display:flex; align-items:center; gap:8px; margin:2px 12px 0; }
@@ -2471,7 +2473,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     props.hidden = !on;
     const hl = document.getElementById("homeLine");
     if(hl){
-      hl.textContent = on ? "灯给你留着，茶还热着。" : "今天也在这里等你回家。";
+      hl.textContent = homeLineText();
       hl.style.display = S.trip ? "none" : "block";
     }
   }
@@ -3784,6 +3786,13 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     }
     return DAYPARTS[DAYPARTS.length-1];
   }
+  function homeLineText(){
+    if(S.missHome === todayKey()) return "灯给你留着，茶还热着。";
+    const eve = festEveSoon();
+    if(eve) return "明天是" + eve.name + "，我记着呢。你早点睡。";
+    return dayPart().line;
+  }
+  window.__HOMELINE = homeLineText;
   function daypartTick(){
     const p = dayPart(), box = $("dayProp");
     if(box){
@@ -3791,11 +3800,12 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       box.className = "on p-" + p.id;
     }
     const hl = $("homeLine");
-    if(hl && !S.trip && S.missHome !== dpToday() && !festToday() && !festEveSoon()){
-      hl.textContent = p.line;
-    }
+    if(hl && !S.trip){ hl.textContent = homeLineText(); hl.style.display = "block"; }
     renderFestProp();
   }
+  /* 首屏就位：不等 1.5 秒，立刻做一次，再补两次兜底 */
+  setTimeout(daypartTick, 0);
+  setTimeout(daypartTick, 260);
   window.__DAYPART = function(){ return dayPart().id; };
   window.__FEST_TICK = festTick;
   window.__DAYPART_TICK = daypartTick;
@@ -3867,11 +3877,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
           + (f.gift ? '<div style="margin-top:12px;color:#8a7466;font-size:12px">' + f.gift + '</div>' : ''));
       }
     }
-    const eve = festEveSoon();
     const hl = $("homeLine");
-    if(hl && eve && !S.trip && S.missHome !== key){
-      hl.textContent = "明天是" + eve.name + "，我记着呢。你早点睡。";
-    }
+    if(hl && !S.trip){ hl.textContent = homeLineText(); }
     renderFestProp();
   }
   function renderFestProp(){
@@ -3924,20 +3931,15 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     if(S.gachaDay === dpToday()){ toast("今天的扭蛋抽过了"); return; }
     S.gachaDay = dpToday();
     const r = Math.random() * 100;
+    const GAIN = 5;
     let ico, title, text, rare = false, line = "";
-    if(r < 30){
-      const c = 15; S.coins += c;
-      ico = "🪙"; title = "硬币 +" + c; text = "扭出来一小把硬币，叮当一声。";
-    } else if(r < 48){
-      const c = 30; S.coins += c;
-      ico = "🪙"; title = "硬币 +" + c; text = "今天手气不错，哗啦一声。";
-    } else if(r < 56){
-      const c = 60; S.coins += c; rare = true;
-      ico = "💰"; title = "硬币 +" + c; text = "整袋都是硬币，你听他笑。";
-    } else if(r < 68){
-      const l = 3; S.love += l;
-      ico = "💞"; title = "亲密度 +" + l; text = "不知道哪来的，反正更近了一点。";
-    } else if(r < 80){
+    if(r < 55){
+      S.coins += GAIN;
+      ico = "🪙"; title = "币 +" + GAIN; text = "扭出来几个硬币，叮当一声。";
+    } else if(r < 70){
+      S.love += GAIN;
+      ico = "💞"; title = "爱心 +" + GAIN; text = "不知道哪来的，反正更近了一点。";
+    } else if(r < 82){
       ico = "📝"; title = "一张小纸条";
       line = NOTE_WORDS[Math.floor(Math.random()*NOTE_WORDS.length)];
       text = "纸条上写着字。";
@@ -3953,8 +3955,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
         text = "「" + c.name + "」——" + (c.desc || "");
         line = "已经放进衣柜了，去换上看。";
       } else {
-        const c2 = 40; S.coins += c2;
-        ico = "🪙"; title = "硬币 +" + c2; text = "衣服都抽过了，就给你零钱。";
+        S.coins += GAIN;
+        ico = "🪙"; title = "币 +" + GAIN; text = "衣服都抽过了，就给你几个硬币。";
       }
     } else {
       const f = gachaPoolFurn();
@@ -3963,8 +3965,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
         ico = f.e || "🪑"; title = "抽到了一件家具";
         text = "「" + f.n + "」——已经放进房间仓库，去摆上。";
       } else {
-        const c3 = 50; S.coins += c3;
-        ico = "🪙"; title = "硬币 +" + c3; text = "家具也抽齐了，给你零钱。";
+        S.coins += GAIN;
+        ico = "🪙"; title = "币 +" + GAIN; text = "家具也抽齐了，给你几个硬币。";
       }
     }
     const rec = { d: dpToday(), ico: ico, title: title, text: line || text, at: Date.now() };
@@ -5089,8 +5091,18 @@ const FURN_ART = {"rug":"art/fn_rug.png","lamp":"art/fn_lamp.png","shelf":"art/f
       });
       h += '</div>';
     }
-    e.innerHTML = h; e.classList.add("on");
+    e.innerHTML = h;
+    panel("storePick");             /* 重建内容后补回 ✕ */
+    e.classList.add("on");
   }
+  window.__STORE_REFRESH = function(){
+    var e = document.getElementById("storePick");
+    if(e && e.classList.contains("on")) openStore();
+  };
+  window.__STORE_CLOSE = function(){
+    var e = document.getElementById("storePick");
+    if(e) e.classList.remove("on");
+  };
 
   document.addEventListener("click", function(ev){
     var t = ev.target; if(!t.closest) return;
@@ -5114,6 +5126,7 @@ const FURN_ART = {"rug":"art/fn_rug.png","lamp":"art/fn_lamp.png","shelf":"art/f
       if(window.__FPUT) window.__FPUT(id, free);
       closeAll(); return;
     }
+    if(t.closest("[data-store]")){ setTimeout(function(){ if(window.__STORE_REFRESH) window.__STORE_REFRESH(); }, 60); }
     if(!t.closest(".roomPanel")) closeAll();
   }, true);
 
