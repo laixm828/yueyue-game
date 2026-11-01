@@ -1192,6 +1192,33 @@ body.is-trip #homeLine, body.is-trip .missprops{ display:none !important; }
         <canvas id="herChart" width="620" height="240"></canvas>
         <div id="herWNote" style="font-size:11px;color:#9a8280;text-align:center;line-height:1.7"></div>
         <div style="padding:6px 0 0"><button class="wbtn" id="btnHerPeriod" style="margin:0">🩸 经期开始了</button></div>
+        <style>
+.herp{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:11.5px;color:#7a6a66}
+.herp label{flex:0 0 auto}
+.herp input{flex:1 1 auto;min-width:0;height:34px;border:2px solid #f0dcd6;border-radius:10px;
+  background:#fff;padding:0 8px;font-size:12.5px;color:#5a4a46;font-family:inherit}
+.herp .hbtn{flex:0 0 auto;height:34px;padding:0 12px;border:none;border-radius:10px;
+  background:linear-gradient(#FFB6C6,#FF9DB5);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer}
+.herp .hbtn2{flex:0 0 auto;height:34px;padding:0 10px;border:2px solid #f0dcd6;border-radius:10px;
+  background:#fff;color:#8a746c;font-size:12px;cursor:pointer}
+.herp2{display:flex;align-items:center;gap:6px;margin:7px 0 0;font-size:11px;color:#8a746c}
+.herp2 input{width:58px;height:30px;border:2px solid #f0dcd6;border-radius:9px;background:#fff;
+  text-align:center;font-size:12px;color:#5a4a46;font-family:inherit}
+.herpnote{margin:5px 0 0;font-size:10.5px;color:#a89490;line-height:1.6}
+</style>
+        <div class="herp">
+          <label>上次开始</label>
+          <input id="herPStart" type="date">
+          <button class="hbtn2" id="btnHerD2">前天</button>
+          <button class="hbtn2" id="btnHerToday">今天</button>
+          <button class="hbtn" id="btnHerSave">保存</button>
+        </div>
+        <div class="herp2">
+          <span>周期</span><input id="herCycle" type="number" inputmode="numeric" min="20" max="45" step="1">
+          <span>天 · 经期</span><input id="herPLen" type="number" inputmode="numeric" min="2" max="10" step="1">
+          <span>天</span>
+        </div>
+        <div class="herpnote">改日期就能改这一轮从哪天算。经期那几天目标自动减半，不用自己改。</div>
       </div>
 
       <div class="sec-title">💡 她每天该动多少</div>
@@ -3090,6 +3117,36 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const st = new Date(p[0], p[1]-1, p[2]);
     return Math.floor((Date.now() - st.getTime())/86400000);
   }
+  function herPadDateStr(v){
+    if(!v) return "";
+    if(v instanceof Date){
+      return v.getFullYear() + "-" + ("0"+(v.getMonth()+1)).slice(-2) + "-" + ("0"+v.getDate()).slice(-2);
+    }
+    const p = String(v).split("-").map(Number);
+    if(!p[0] || !p[1] || !p[2]) return "";
+    return p[0] + "-" + ("0"+p[1]).slice(-2) + "-" + ("0"+p[2]).slice(-2);
+  }
+  function saveHerPeriod(){
+    const pv = ($("herPStart") || {}).value || "";
+    let cy = parseInt(($("herCycle") || {}).value, 10);
+    let pl = parseInt(($("herPLen") || {}).value, 10);
+    if(!cy || cy < 20 || cy > 45) cy = 28;
+    if(!pl || pl < 2 || pl > 10) pl = 5;
+    S.her.cycle = cy;
+    S.her.periodDays = pl;
+    if(!pv){
+      S.her.periodStart = "";
+      save(); renderHer();
+      toast("经期记录清空了");
+      return;
+    }
+    S.her.periodStart = herPadDateStr(pv);
+    save(); renderHer();
+    const d = herDaysSincePeriod();
+    if(d < 0){ toast("这个日期在未来，先记这一轮开始的日期"); return; }
+    if(d < pl) toast("第 " + (d+1) + " 天，这几天目标减半");
+    else toast("第 " + (d+1) + " 天，已经过去了，目标照常");
+  }
   function herCheck(k){
     herResetDay();
     if(S.her[k]){ toast("今天这项已经记过了"); return; }
@@ -3214,7 +3271,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
         if(leftD > 0 && leftD <= 40){
           const dt = new Date();
           dt.setDate(dt.getDate() + leftD);
-          tip += (tip ? " " : "") + "🩸 上次 " + S.her.periodStart + " · 第 " + d + " 天 · 预计下次 "
+          tip += (tip ? " " : "") + "🩸 上次 " + herPadDateStr(S.her.periodStart) + " · 第 " + (d+1) + " 天 · 预计下次 "
             + (dt.getMonth()+1) + " 月 " + dt.getDate() + " 日左右（还有 " + leftD + " 天）";
         }
       }
@@ -3226,6 +3283,20 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     $("herTip").innerHTML = tip
       || (doneAll ? "三样都做到了。今天很好。" : (done2 ? "两样了，够本。" : "今天三样里做到两样就够了，剩下的不用补。"));
     $("btnHerPeriod").textContent = per ? "🩸 经期中（点我结束）" : "🩸 经期开始了";
+    /* 日期可自己改 */
+    const psEl = $("herPStart"), cyEl = $("herCycle"), plEl = $("herPLen");
+    if(psEl) psEl.value = herPadDateStr(S.her.periodStart);
+    if(cyEl) cyEl.value = S.her.cycle || 28;
+    if(plEl) plEl.value = S.her.periodDays || 5;
+    const bsEl = $("btnHerSave");
+    if(bsEl && !bsEl._bd){ bsEl._bd = 1; bsEl.onclick = saveHerPeriod; }
+    const btEl = $("btnHerToday");
+    if(btEl && !btEl._bd){ btEl._bd = 1; btEl.onclick = function(){ if(psEl) psEl.value = herPadDateStr(new Date()); }; }
+    const b2El = $("btnHerD2");
+    if(b2El && !b2El._bd){ b2El._bd = 1; b2El.onclick = function(){
+      const d = new Date(); d.setDate(d.getDate() - 2);
+      if(psEl) psEl.value = herPadDateStr(d);
+    }; }
     try{ renderHerExtra(); }catch(e){}
     const ws = S.her.weight || [];
     let note = "";
