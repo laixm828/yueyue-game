@@ -2754,6 +2754,13 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     ["love100","亲密度满级",  function(){ return (S.love||0) >= 100; }],
     ["bloom",  "树开过花",    function(){ return ((S.tree||{}).blooms||0) > 0; }],
     ["whisper10","写满 10 句",function(){ return (S.whispers||[]).length >= 10; }],
+    ["sign30", "连签 30 天",  function(){ return (S.signStreak||0) >= 30; }],
+    ["jar1",   "攒满第一个罐子",function(){ return (S.wishes||[]).some(function(w){ return (w.goal||0) > 0 && (w.saved||0) >= w.goal; }); }],
+    ["gacha1", "扭到第一件稀有",function(){ return (S.gachaLog||[]).some(function(g){ return (g.title||"").indexOf("\u62bd\u5230\u4e86") >= 0; }); }],
+    ["photo1", "第一张旅行照片",function(){ return (S.postcards||[]).length >= 1; }],
+    ["whisper1","写下第一句", function(){ return (S.whispers||[]).length >= 1; }],
+    ["happy100","幸福指数 100",function(){ return (S.happy||0) >= 100; }],
+    ["furn8",  "房间摆满 8 件",function(){ return Object.keys(S.furn||{}).length >= 8; }],
     ["set",    "集齐一套上衣",function(){
         const tops = CLOTHES.filter(function(c){ return c.cat === "top" && !c.limit; });
         return tops.length > 0 && tops.every(function(c){ return has("clothes", c.id); });
@@ -3188,8 +3195,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const goalStep = rest ? 0 : (per ? 3500 : 7000);
     const items = [
       ["c1", "🚶", "走 " + goalStep + " 步"],
-      ["c2", "🥚", "蛋白三份"],
-      ["c3", "💪", per ? "动 10 分钟" : "动 10 分钟"]
+      ["c2", "🥚", per ? "蛋白两份" : "蛋白三份"],
+      ["c3", "💪", per ? "散步 10 分钟" : "动 10 分钟"]
     ];
     $("herChecks").innerHTML = items.map(function(it){
       return '<button data-hercheck="' + it[0] + '" class="' + (S.her[it[0]] ? "done" : "") + '">'
@@ -3200,6 +3207,17 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     else {
       const d = herDaysSincePeriod();
       if(d >= 0 && d >= 21 && d <= 30) tip += "🩸 大概这几天了？到了点下面按钮，目标会自动减半。";
+      /* 按周期给个大概日子，只作参考，不说死 */
+      if(S.her.periodStart && d >= 0){
+        const cyc = S.her.cycle || 28;
+        const leftD = cyc - d;
+        if(leftD > 0 && leftD <= 40){
+          const dt = new Date();
+          dt.setDate(dt.getDate() + leftD);
+          tip += (tip ? " " : "") + "🩸 上次 " + S.her.periodStart + " · 第 " + d + " 天 · 预计下次 "
+            + (dt.getMonth()+1) + " 月 " + dt.getDate() + " 日左右（还有 " + leftD + " 天）";
+        }
+      }
     }
     const doneAll = S.her.c1 && S.her.c2 && S.her.c3;
     const done2 = (S.her.c1?1:0) + (S.her.c2?1:0) + (S.her.c3?1:0) >= 2;
@@ -6240,6 +6258,99 @@ body.is-trip #wxCare{display:none !important}
     setTimeout(function(){ try{ tick(); }catch(e){} }, 700);
     setTimeout(function(){ try{ tick(); }catch(e){} }, 3000);
     setTimeout(function(){ try{ tick(); }catch(e){} }, 9000);
+    setInterval(function(){ try{ tick(); }catch(e){} }, 60000);
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+</script>
+
+<!-- ===== 里程碑轮询 / 经期照顾（首页） ===== -->
+<style>
+#pmsCare{position:absolute;left:10px;right:10px;bottom:44px;z-index:5;display:none;
+  text-align:center;font-size:11.5px;line-height:1.55;color:#b2596e;pointer-events:none;
+  text-shadow:0 1px 2px rgba(255,255,255,.95)}
+#pmsCare.on{display:block}
+body.is-trip #pmsCare{display:none !important}
+</style>
+<script>
+(function(){
+  /* ---- 里程碑：不只开屏查一次，玩的时候也会解锁 ---- */
+  var last = 0;
+  function ach(){
+    if(!window.__ACH_TEST) return;
+    var now = Date.now();
+    if(now - last < 1500) return;     /* 防抖，别点了就弹一堆 */
+    last = now;
+    try{ window.__ACH_TEST(); }catch(e){}
+  }
+  setInterval(ach, 10000);
+  document.addEventListener("pointerup", ach, true);
+  document.addEventListener("change", ach, true);
+
+  /* ---- 经期照顾：首页一句，一天一次 ---- */
+  function bjDay(){
+    try{ return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai" }).format(new Date()); }
+    catch(e){
+      var d = new Date();
+      return d.getFullYear() + "-" + ("0" + (d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+    }
+  }
+  function daysSince(start){
+    if(!start) return -1;
+    var p = String(start).split("-").map(Number);
+    var a = new Date(p[0], p[1]-1, p[2]);
+    var n = bjDay().split("-").map(Number);
+    var b = new Date(n[0], n[1]-1, n[2]);
+    return Math.round((b - a) / 86400000);
+  }
+  function box(){
+    var el = document.getElementById("pmsCare");
+    if(el) return el;
+    var wc = document.getElementById("wxCare");
+    var host = wc && wc.parentNode ? wc.parentNode : document.getElementById("stage");
+    if(!host) return null;
+    el = document.createElement("div");
+    el.id = "pmsCare";
+    if(wc && wc.parentNode) host.insertBefore(el, wc);
+    else host.appendChild(el);
+    return el;
+  }
+  function paint(text){
+    var el = box(); if(!el) return;
+    if(!text){ el.className = ""; el.textContent = ""; return; }
+    el.textContent = text;
+    el.className = "on";
+  }
+  function tick(){
+    var S = window.__YS;
+    if(!S || !S.her) return "noh";
+    var h = S.her, day = bjDay();
+    if(!h.periodStart){ paint(""); return "off"; }
+    var d = daysSince(h.periodStart);
+    var len = h.periodDays || 5;
+    if(d >= 0 && d < len){
+      if(S._pmsDay !== day){
+        S._pmsDay = day;
+        if(window.__YSAVE) window.__YSAVE();
+      }
+      paint("小越，这几天别硬撑。热水泡杯红糖，早点睡，剩下的明天再说。");
+      return "in";
+    }
+    /* 刚过去那一天，说一句辛苦了 */
+    if(d >= len && d <= len + 2 && S._pmsEnd !== day){
+      S._pmsEnd = day;
+      if(window.__YSAVE) window.__YSAVE();
+      paint("这几天辛苦了。今天想吃点什么？");
+      return "end";
+    }
+    paint("");
+    return "calm";
+  }
+  window.__PMSCARE = tick;
+  function boot(){
+    setTimeout(function(){ try{ tick(); }catch(e){} }, 900);
+    setTimeout(function(){ try{ tick(); }catch(e){} }, 3200);
     setInterval(function(){ try{ tick(); }catch(e){} }, 60000);
   }
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
