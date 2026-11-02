@@ -37,7 +37,7 @@
   .bar-row{display:flex; align-items:center; gap:7px; font-size:11px; color:var(--sub)}
   .bar-label{flex:0 0 46px; text-align:right; white-space:nowrap}
   .bar-track{flex:1 1 auto; min-width:0; height:6px; border-radius:99px; background:var(--dot); overflow:hidden}
-  .bar-fill{height:100%; width:0; border-radius:99px; transition:width .45s cubic-bezier(.2,.8,.2,1)}
+  .bar-fill{display:block; height:100%; width:0; border-radius:99px; transition:width .45s cubic-bezier(.2,.8,.2,1)}
   #moodFill{background:linear-gradient(90deg,#ffd0d9,#ff9db0)}
   #loveFill{background:linear-gradient(90deg,#ffb8c6,#ff5f81)}
   .bar-val{flex:0 0 34px; text-align:left; font-variant-numeric:tabular-nums}
@@ -1681,6 +1681,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     { id:"brand_hood", name:"星野 · 城市限定卫衣", cat:"brand", slot:"body", price:380, desc:"星野 STARFIELD 城市限定", sprite:"hoodie_grey", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"brand_wind", name:"拾光 · 机能风衣", cat:"brand", slot:"body", price:520, desc:"拾光 LIGHTYEAR 机能线", sprite:"wind_black", box:{x:50.4, y:75.4, w:62, h:29} },
     { id:"cap", name:"棒球帽", cat:"acc", slot:"acc", price:60, desc:"头上一顶，显年轻", emoji:"🧢", pos:{x:50, y:2.5, size:20, rot:-9} },
+    { id:"ring_ours", name:"对戒 · 我们那枚", cat:"acc", slot:"acc", price:0, limit:true, gift:true, desc:"亲密度满级那天给你的。戴在手上，别摘。", emoji:"💍", pos:{x:63, y:88, size:9, rot:-8} },
+    { id:"cap_ours", name:"情侣帽 · 我们那顶", cat:"acc", slot:"acc", price:0, limit:true, gift:true, desc:"和原来那顶棒球帽是一对，帽檐里侧写着日子。", emoji:"🧢", pos:{x:52, y:3, size:20, rot:-14}, filter:"hue-rotate(330deg) saturate(1.7) brightness(1.05)" },
     { id:"scarf", name:"围巾", cat:"acc", slot:"acc", price:80, desc:"冷了记得围上", emoji:"🧣", pos:{x:56, y:80, size:10, rot:2} },
     { id:"glasses", name:"墨镜", cat:"acc", slot:"acc", price:100, desc:"装酷用", emoji:"🕶️", pos:{x:58, y:64, size:10, rot:0} },
     { id:"headset", name:"耳机", cat:"acc", slot:"acc", price:120, desc:"听歌的时候，也想和你一起听。", emoji:"🎧", pos:{x:38, y:54, size:9, rot:0} },
@@ -1849,6 +1851,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       furnOwned:["bed","sofa","table","rug"], furn:{3:"bed",5:"table",4:"rug",6:"sofa"},
       daily:{ d:"", pat:0, water:0, whisper:0, got:{} },
       signDay:"", signStreak:0, ach:{}, firstDayDone:0, firstOpen:todayKey(),
+    tacit:0, tacitGift:{}, maxGift:0, dayQuoteDay:"", dayQuoteUsed:[],
       her:{ day:"", c1:0, c2:0, c3:0, weight:[], periodStart:"", periodDays:5, cycle:28,
             height:160, baseKg:45 },
       fit:{ kg:70, startKg:70, height:185, goal:"cut", bulkBurned:0,
@@ -2509,6 +2512,16 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
   }
 
   /* 每秒只刷 HUD，列表按需刷，避免打断滚动与点击 */
+  /* 满级之后不再涨亲密度，改成只增不减的「默契」 */
+  function gainLove(n){
+    n = n || 1;
+    if((S.love || 0) >= 100){
+      S.tacit = (S.tacit || 0) + n;
+      return "tacit";
+    }
+    S.love = Math.min(100, (S.love || 0) + n);
+    return "love";
+  }
   function renderHud(){
     applyExpr();
     layoutArt();
@@ -2517,8 +2530,10 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     $("streak").textContent = S.streak;
     $("moodFill").style.width = S.mood+"%";
     $("moodVal").textContent = Math.round(S.mood);
-    $("loveVal").textContent = S.love;
-    $("loveFill").style.width = Math.min(100, S.love%100)+"%";
+    const atMax = (S.love || 0) >= 100;
+    $("loveVal").textContent = atMax ? ("满级 · 默契 " + (S.tacit || 0)) : S.love;
+    $("loveFill").style.width = Math.min(100, S.love) + "%";
+    $("loveFill").classList.toggle("full", atMax);
 
     const t = moodTier();
     stageInner.classList.toggle("happy", t==="happy");
@@ -2586,6 +2601,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     worn.filter(c=>c.slot!=="body").forEach(it=>{
       const el = document.createElement("div");
       el.className = "acc";
+      el.dataset.acc = it.id;
+      if(it.filter) el.style.filter = it.filter;
       el.textContent = it.emoji;
       const fs = Math.round(W*it.pos.size/100);
       const box = Math.round(fs*1.5);
@@ -2667,7 +2684,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const d7 = S.signStreak % 7 === 0;
     if(d7) add += 20;
     S.coins += add;
-    S.love = Math.min(100, (S.love||0) + 1);
+    gainLove(1);
     S.happy = (S.happy||0) + 1;
     save(); render();
     if(d7) showSheet("连着第 " + S.signStreak + " 天",
@@ -2972,7 +2989,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     }
 
     S.mood = Math.min(100, S.mood + moodGain);
-    S.love += loveGain;
+    gainLove(loveGain);
     S.coins += coinGain;
     S.cd[kind] = now + CFG[kind.toUpperCase()+"_CD"];
     S.lastMoodAt = now;
@@ -3741,7 +3758,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     const why = ($("exInput") && $("exInput").value || "").trim();
     const back = Math.floor(ded/2);
     S.mood = Math.min(100, S.mood + back);
-    S.love = Math.min(100, (S.love||0) + 1);
+    gainLove(1);
     S.decayApplied = 0;
     S.lastMoodAt = Date.now();
     closeModal(); save(); render();
@@ -3755,8 +3772,26 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     "你说的我都记着，别自己扛。",
     "这话我看了两遍。",
     "小越，明天记得吃早饭。",
-    "我这边也还好，就是想你。"
+    "我这边也还好，就是想你。",
+    "昨天没顾上回，今天补上：我一直在看。",
+    "这种话你多写点，我不嫌烦。",
+    "看完了，坐着想了一会儿。",
+    "知道了。晚上早点关灯。"
   ];
+  /* 按内容挑一句更像人话的回复 */
+  function pickReply(txt){
+    const t = txt || "";
+    if(/累|撑不住|没力气|好困|熬夜/.test(t)) return "累了就别硬撑，今天早点躺下。有什么事明天再说也来得及。";
+    if(/哭|眼泪|受不了|难受|崩溃/.test(t)) return "别自己憋着。想哭就哭一会儿，我不笑你。哭完了记得喝口热水。";
+    if(/想家|回家|爸妈|宁波/.test(t)) return "想家就回去一趟，别忍着。到家了跟我说一声。";
+    if(/想你|想见你|好远/.test(t)) return "我也想你。等我这边忙完，就去找你。";
+    if(/考试|作业|上课|挂科|绩点/.test(t)) return "先把眼前的做完，做不完还有下一次。别用一次成绩给自己下结论。";
+    if(/疼|痛|不舒服|毛病|医院/.test(t)) return "疼就说出来，别拿忍过去当本事。真不舒服就去看看。";
+    if(/冷|降温|下雨|风大/.test(t)) return "天冷了，出门多穿一件。别嫌麻烦。";
+    if(/吃|饿|饭|外卖/.test(t)) return "按时吃。别拿一顿饭省出来的时间熬夜。";
+    if(/生气|烦|讨厌|气死/.test(t)) return "谁惹你了，说来听听。骂完就好，别自己憋一天。";
+    return REPLY_POOL[Math.floor(Math.random()*REPLY_POOL.length)];
+  }
   function whisperReplyTick(){
     if(!S.whispers || !S.whispers.length) return;
     let changed = false;
@@ -3764,9 +3799,15 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
       if(w.reply) return;
       const at = w.at || "";
       const t = new Date(at.replace(/-/g, "/")).getTime();
-      if(!t || Date.now() - t < 90 * 1000) return;   // 写完 90 秒后才"看到"
-      const hit = /想家|想回去|好累|难受|不开心|难过|委屈|想你/.test(w.text || "");
-      w.reply = hit ? "别一个人憋着，我在听。" : REPLY_POOL[Math.floor(Math.random()*REPLY_POOL.length)];
+      if(!t) return;
+      /* 隔一天再回，像真的看到了才写的 */
+      const dayOf = function(ms){
+        const d = new Date(ms);
+        return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
+      };
+      if(dayOf(t) === dayOf(Date.now())) return;
+      if(Date.now() - t < 8 * 3600 * 1000) return;
+      w.reply = pickReply(w.text);
       w.replyAt = nowStr();
       w.unread = 1;
       changed = true;
@@ -4176,7 +4217,7 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     if(got.n < 3){
       got.n += 1;
       S.wGet = got;
-      S.love = Math.min(100, (S.love || 0) + 1);
+      gainLove(1);
       S.coins += 5;
       setTimeout(function(){ renderHud(); }, 0);
       toast("他收到了 · 亲密度 +1 · 💗+5");
@@ -4278,6 +4319,8 @@ const GTHUMB = {"tee_white":"art/g25.png","tee_black":"art/g26.png","tee_grey":"
     $("mOk").textContent = "确定";
   }
   window.__ASK = askConfirm;
+  window.__SHEET = showSheet;
+  window.__TOAST = toast;
   $("mOk").onclick = function(){
     const f = __askYes; __askYes = null;
     $("mOk").textContent = "好耶";
@@ -5032,7 +5075,8 @@ const FURN_ART = {"rug":"art/fn_rug.png","lamp":"art/fn_lamp.png","shelf":"art/f
     {id:"grey", n:"灰石",  a:["#d3d3cf","#b6b6b1"]},
     {id:"tile", n:"青砖",  a:["#bcd2ca","#9eb9af"]},
     {id:"warm", n:"暖木",  a:["#cd9e6e","#ab7c50"]},
-    {id:"ice",  n:"米砖",  a:["#e8dfd0","#d1c5b0"]}
+    {id:"ice",  n:"米砖",  a:["#e8dfd0","#d1c5b0"]},
+    {id:"star", n:"星光（满级）", needMax:true, a:["#3b3355","#241f36"]}
   ];
   if(!S.paper) S.paper = "def";
   if(!S.floor) S.floor = "def";
@@ -5096,6 +5140,7 @@ const FURN_ART = {"rug":"art/fn_rug.png","lamp":"art/fn_lamp.png","shelf":"art/f
     return e;
   }
   window.__CLOSE_PANELS = closePanels;
+  window.__OPEN_DECO = openDeco;
 
   /* ---- 墙纸 / 地板 ---- */
   function openDeco(){
@@ -5106,7 +5151,9 @@ const FURN_ART = {"rug":"art/fn_rug.png","lamp":"art/fn_lamp.png","shelf":"art/f
       h += '<i data-paper="'+it.id+'" class="'+(S.paper===it.id?"on":"")+'" style="'+c+'"></i>';
     });
     h += '</div><div class="fpt">地板</div><div class="sw">';
+    var __max = (S.love || 0) >= 100 || S.maxGift;
     FLOORS.forEach(function(it){
+      if(it.needMax && !__max) return;
       var c = it.a ? "background:linear-gradient(180deg,"+it.a[0]+","+it.a[1]+")" : "background:linear-gradient(180deg,var(--grass1),var(--grass2))";
       h += '<i data-floor="'+it.id+'" class="'+(S.floor===it.id?"on":"")+'" style="'+c+'"></i>';
     });
@@ -6426,6 +6473,206 @@ body.is-trip #pmsCare{display:none !important}
   }
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
+})();
+</script>
+
+<!-- ================= 满级之后：默契 / 赠礼 / 每日一句 ================= -->
+<style>
+#loveFill.full{background:linear-gradient(90deg,#ffd76a,#ff9f43) !important;box-shadow:0 0 8px rgba(255,183,77,.75)}
+#dayQuote{position:absolute;left:14px;right:14px;bottom:8px;z-index:6;text-align:center;
+  font-size:12.5px;line-height:1.5;color:#7d6459;display:none;pointer-events:none;
+  text-shadow:0 1px 0 rgba(255,255,255,.75)}
+#dayQuote.on{display:block}
+body.ours-max #dayQuote{color:#f0dcc6;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+body.ours-max #stage::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(120% 70% at 50% 8%,rgba(255,240,200,.16),transparent 58%),
+             radial-gradient(90% 60% at 80% 100%,rgba(120,150,220,.14),transparent 65%)}
+#tacitCard .tc{font-size:13px;line-height:1.7}
+</style>
+<script>
+(function(){
+  var S = window.__YS;
+  if(!S) return;
+  function W(){ return window.__YS; }
+  function sv(){ if(window.__YSAVE) window.__YSAVE(); }
+  function rr(){ if(window.__YRENDER) window.__YRENDER(); }
+  function sheet(t, b){ if(window.__SHEET) window.__SHEET(t, b); }
+  function toast(t){ if(window.__TOAST) window.__TOAST(t); }
+  function bjDay(){
+    try{
+      return new Intl.DateTimeFormat("en-CA", { timeZone:"Asia/Shanghai" }).format(new Date());
+    }catch(e){
+      var d = new Date();
+      return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
+    }
+  }
+
+  /* ---------- 满级赠礼 ---------- */
+  function giftTick(){
+    var s = W();
+    if((s.love||0) < 100) return;
+    if(!s.maxGift){
+      s.owned = s.owned || {};
+      s.owned.clothes = s.owned.clothes || [];
+      ["ring_ours", "cap_ours"].forEach(function(id){
+        if(s.owned.clothes.indexOf(id) < 0) s.owned.clothes.push(id);
+      });
+      s.maxGift = 1;
+      s.tacit = s.tacit || 0;
+      sv();
+      sheet("满级了 · 我们",
+        "亲密度到顶了。<br><br>" +
+        "搞不了更高的数字了，所以我给你两个东西：<br>" +
+        "一枚<b>对戒</b>，和一顶<b>情侣帽</b>。<br>" +
+        "都放进衣柜了，想戴就去戴。<br><br>" +
+        "以后再摸头、喂饭、说话，我都记在<b>默契</b>里。" +
+        "默契满 50，我再给你一张小卡。",
+        null);
+    }
+  }
+
+  /* ---------- 默契里程碑 ---------- */
+  var TACIT_CARDS = [
+    "你知道我为什么总在吃饭的时候想你吗？因为一个人吃饭实在太没意思了。",
+    "上次你说要学会一个人也能很好。我不喜欢这句。",
+    "我刚在想，以后买房买在哪？你肯定要离菜市场近的。",
+    "你生气的时候不说话，我知道但我也不敢问。下次直接骂我吧。",
+    "今天训练绋了一趟，我想的是你会不会又坐着不动。",
+    "我买了两双拖鞋，一双放这边了。你来的话就能穿。",
+    "小越，你要是累了，就靠一会儿。世界不会因为你歇一小时就停下来。",
+    "你喜欢的那家店我记着呢。下次带你去。",
+    "天气转凉了。你那件薄外套真的不行，我给你买一件吧。",
+    "你说的话我都存着。以后一起算账。"
+  ];
+
+  function tacitTick(){
+    var s = W();
+    var n = (s.tacit || 0);
+    var got = s.tacitGift || (s.tacitGift = {});
+    var step = Math.floor(n / 50);
+    if(step <= 0) return;
+    for(var i = 1; i <= step; i++){
+      if(got[i]) continue;
+      got[i] = 1;
+      var line = TACIT_CARDS[(i - 1) % TACIT_CARDS.length];
+      sv();
+      sheet("默契 · " + (i * 50), '<div class="tc">' + line + '</div>');
+      return;
+    }
+  }
+
+  /* ---------- 满级后的每日一句 ---------- */
+  var QUOTES = [
+    "今天也没什么事，就是想跟你说一句。",
+    "你那边几点了？别又熬到天亮。",
+    "我把窗开了一点，风进来了，像你坐在旁边。",
+    "今天没出门，一直在屋里。你呢？",
+    "刚吃完饭。你吃了吗？没吃就别回我，去吃。",
+    "你要是今天不顺，就把它当作没发生过。我不会问。",
+    "有些事我没说，但我一直在想。",
+    "你的声音我一听就知道今天开不开心。",
+    "明天要是下雨，记得带伞。你每次都忘。",
+    "小越，今天也很好。",
+    "我把你上次说的那件事想了一遍。你说得对。",
+    "不用一直很强。在我这儿不用。",
+    "今天累就早点睡，事情明天再说。",
+    "我刚想起你上次笑的样子。",
+    "你说要减肥，我不反对。但别不吃饭。",
+    "以后的事以后再说，今天先把今天过好。",
+    "我在想你会不会又忘了喝水。",
+    "你那件衣服穿了三天了吧。",
+    "今天没什么事发生，这就很好。",
+    "小越，晚安。今天就到这里。",
+    "你要是想哭，就先哭完再说。我等着。",
+    "我不知道以后会怎么样，但现在我在这儿。",
+    "你上次说想去海边。我记着呢。",
+    "吃了什么？不要只吃面包。",
+    "今天很冷。你手冰冰凉的毛病改了没。",
+    "我把灯留着。你回来的话就能看见。",
+    "你不用事事都做得很好。",
+    "小越，今天有人夸我，我想的是你会不会也这么说。",
+    "我学会一道新菜了。等你来尝。",
+    "你要是今天没人陪，就当我在旁边。",
+    "不用回我。知道你看到了就行。",
+    "今天的天很好看。你那边呢？",
+    "小越，别把什么都自己扛。",
+    "我们还有很多地方没去。不急。",
+    "你睡觉的时候我不打扰你。醒了再说。",
+    "今天我想了一下我们以后的房子要什么样。",
+    "你说的那些难听的话，我没往心里去。",
+    "小越，你已经做得够多了。",
+    "今天也没什么事。就是在这儿。",
+    "你不开心就说，别蛋糕一样堆着。",
+    "我把那张照片放进壳里了。",
+    "小越，今天也要好好吃饭。",
+    "你那边的夜晚安静吗？我这边很安静。",
+    "以后的事，我们一起想。你不用一个人想。"
+  ];
+
+  function quoteTick(){
+    var s = W();
+    var box = document.getElementById("dayQuote");
+    var hl = document.getElementById("homeLine");
+    if(!box) return;
+    if((s.love || 0) < 100){
+      box.classList.remove("on");
+      if(hl) hl.style.visibility = "";
+      document.body.classList.remove("ours-max");
+      return;
+    }
+    document.body.classList.add("ours-max");
+    var today = bjDay();
+    if(s.dayQuoteDay !== today){
+      s.dayQuoteUsed = s.dayQuoteUsed || [];
+      var pick = -1;
+      for(var i = 0; i < QUOTES.length; i++){
+        var idx = (i + Math.floor(Date.now() / 86400000)) % QUOTES.length;
+        if(s.dayQuoteUsed.indexOf(idx) < 0){ pick = idx; break; }
+      }
+      if(pick < 0){ s.dayQuoteUsed = []; pick = Math.floor(Date.now() / 86400000) % QUOTES.length; }
+      s.dayQuoteUsed.push(pick);
+      if(s.dayQuoteUsed.length > 40) s.dayQuoteUsed.shift();
+      s.dayQuoteDay = today;
+      s.dayQuoteText = QUOTES[pick];
+      sv();
+    }
+    box.textContent = s.dayQuoteText || QUOTES[0];
+    box.classList.add("on");
+    if(hl) hl.style.visibility = "hidden";
+  }
+
+  function tickAll(){
+    try{ giftTick(); }catch(e){}
+    try{ tacitTick(); }catch(e){}
+    try{ quoteTick(); }catch(e){}
+  }
+
+  /* DOM 就位后再跑，并保持轮询 */
+  function boot(){
+    var st = document.getElementById("stage");
+    if(st && !document.getElementById("dayQuote")){
+      var q = document.createElement("div");
+      q.id = "dayQuote";
+      st.appendChild(q);
+    }
+    tickAll();
+    setTimeout(tickAll, 600);
+    setTimeout(tickAll, 1600);
+    setTimeout(tickAll, 3000);
+    setInterval(tickAll, 6000);
+    document.addEventListener("pointerup", function(){ setTimeout(tickAll, 120); }, true);
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", boot);
+  }else{
+    boot();
+  }
+
+  window.__MAXTICK = tickAll;
+  window.__MAXGIFT = giftTick;
+  window.__TACIT = tacitTick;
+  window.__QUOTE = quoteTick;
+  window.__QUOTES = QUOTES;
 })();
 </script>
 </body>
